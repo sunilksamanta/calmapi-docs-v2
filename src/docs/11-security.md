@@ -237,20 +237,89 @@ const comparePassword = async (password, hash) => {
 - Enforce strong password policies (length, complexity)
 - Implement password reset with time-limited tokens
 
-### 6. HTTPS/SSL
+### 6. Reverse Proxy & HTTPS/SSL
 
-Always use HTTPS in production:
+Always use HTTPS in production. The recommended approach is to use a reverse proxy like Nginx or Apache to handle SSL/TLS termination.
 
-```javascript
-// Redirect HTTP to HTTPS
-app.use((req, res, next) => {
-  if (req.header('x-forwarded-proto') !== 'https' && process.env.NODE_ENV === 'production') {
-    res.redirect(`https://${req.header('host')}${req.url}`);
-  } else {
-    next();
-  }
-});
+**Using Nginx as a reverse proxy:**
+
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com;
+    
+    # Redirect all HTTP traffic to HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name yourdomain.com;
+    
+    # SSL certificate files
+    ssl_certificate /path/to/ssl/certificate.crt;
+    ssl_certificate_key /path/to/ssl/private.key;
+    
+    # SSL configuration
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    
+    # Proxy to your Node.js application
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
 ```
+
+**Using Apache as a reverse proxy:**
+
+```apache
+<VirtualHost *:80>
+    ServerName yourdomain.com
+    Redirect permanent / https://yourdomain.com/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName yourdomain.com
+    
+    SSLEngine on
+    SSLCertificateFile /path/to/ssl/certificate.crt
+    SSLCertificateKeyFile /path/to/ssl/private.key
+    
+    SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1
+    SSLCipherSuite HIGH:!aNULL:!MD5
+    
+    ProxyPreserveHost On
+    ProxyPass / http://localhost:3000/
+    ProxyPassReverse / http://localhost:3000/
+    
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port "443"
+</VirtualHost>
+```
+
+**Benefits of using a reverse proxy:**
+- Offloads SSL/TLS processing from your Node.js application
+- Better performance and resource utilization
+- Centralized SSL certificate management
+- Easy to configure load balancing
+- Additional security features (rate limiting, IP filtering)
+- Static file serving without hitting your application
+
+**Getting SSL certificates:**
+- Use [Let's Encrypt](https://letsencrypt.org/) for free SSL certificates
+- Use [Certbot](https://certbot.eff.org/) to automate certificate installation and renewal
+- For Nginx with Let's Encrypt: `sudo certbot --nginx -d yourdomain.com`
+- For Apache with Let's Encrypt: `sudo certbot --apache -d yourdomain.com`
 
 ### 7. Database Security
 
