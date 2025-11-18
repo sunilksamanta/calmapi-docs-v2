@@ -1,0 +1,101 @@
+.sidebar {
+  width: 280px;
+  background-color: #f8f9fa;
+  border-right: 1px solid #e0e0e0;
+  padding: 1.5rem 0;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  height: calc(100vh - 70px);
+}
+
+.sidebar-nav {
+  padding: 0 1rem;
+}
+
+.nav-section {
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 0.5rem;
+  padding: 0 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-list li {
+  margin-bottom: 0.25rem;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  color: #333;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+}
+
+.nav-link:hover {
+  background-color: #e9ecef;
+  color: #667eea;
+}
+
+.nav-link.active {
+  background-color: #667eea;
+  color: white;
+  font-weight: 500;
+}
+
+.nav-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sidebar {
+    background-color: #1e1e1e;
+    border-right-color: #333;
+  }
+  
+  .section-title {
+    color: #999;
+  }
+  
+  .nav-link {
+    color: #e8eaed;
+  }
+  
+  .nav-link:hover {
+    background-color: #2d2d2d;
+    color: #8b9dc3;
+  }
+  
+  .nav-link.active {
+    background-color: #667eea;
+    color: white;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+  }
+}
