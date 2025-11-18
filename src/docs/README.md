@@ -2,7 +2,7 @@
 
 **Production-Ready Modular REST API Framework using NodeJS & MongoDB**
 
-> Keep Calm and REST
+![CalmAPI Logo](https://repository-images.githubusercontent.com/352502404/d0e11c00-dce4-11eb-80de-9959e403a244)
 
 ---
 
