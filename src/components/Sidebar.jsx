@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Rocket, Layers, Package, Database, Gamepad2, Settings, FileText, Route, Puzzle, Zap, BookOpen, Lightbulb, FileCode, Bot, Shield } from 'lucide-react';
+import { Home, Rocket, Layers, Package, Database, Gamepad2, Settings, FileText, Route, Puzzle, Zap, BookOpen, Lightbulb, FileCode, Bot, Shield, Cloud } from 'lucide-react';
 import './Sidebar.css';
 
 const navigationItems = [
@@ -18,6 +18,7 @@ const navigationItems = [
       { path: '/built-in-modules', label: 'Built-in Modules', icon: Puzzle },
       { path: '/advanced', label: 'Advanced', icon: Zap },
       { path: '/security', label: 'Security', icon: Shield },
+      { path: '/deployment', label: 'Deployment', icon: Cloud },
     ]
   },
   {

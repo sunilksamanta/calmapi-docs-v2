@@ -16,6 +16,7 @@ import routing from '../docs/08-routing.md?raw';
 import builtInModules from '../docs/09-built-in-modules.md?raw';
 import advanced from '../docs/10-advanced.md?raw';
 import security from '../docs/11-security.md?raw';
+import deployment from '../docs/12-deployment.md?raw';
 import quickReference from '../docs/QUICK-REFERENCE.md?raw';
 import exampleProject from '../docs/EXAMPLE-PROJECT.md?raw';
 import copilotSetup from '../docs/copilot-setup.md?raw';
@@ -33,6 +34,7 @@ const docsContent = {
   'built-in-modules': builtInModules,
   'advanced': advanced,
   'security': security,
+  'deployment': deployment,
   'quick-reference': quickReference,
   'example-project': exampleProject,
   'copilot-setup': copilotSetup,
