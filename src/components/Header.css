@@ -98,7 +98,7 @@
 
 @media (max-width: 768px) {
   .header-content {
-    padding: 1rem;
+    padding: 1rem 1rem 1rem 4rem;
   }
   
   .logo h1 {

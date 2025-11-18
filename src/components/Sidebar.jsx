@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Rocket, Layers, Package, Database, Gamepad2, Settings, FileText, Route, Puzzle, Zap, BookOpen, Lightbulb, FileCode, Bot, Shield, Cloud } from 'lucide-react';
+import { Home, Rocket, Layers, Package, Database, Gamepad2, Settings, FileText, Route, Puzzle, Zap, BookOpen, Lightbulb, FileCode, Bot, Shield, Cloud, Menu, X } from 'lucide-react';
 import './Sidebar.css';
 
 const navigationItems = [
@@ -38,8 +39,23 @@ const navigationItems = [
 ];
 
 function Sidebar() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const closeSidebar = () => {
+    setIsOpen(false);
+  };
+
   return (
-    <aside className="sidebar">
+    <>
+      <button className="sidebar-toggle" onClick={toggleSidebar} aria-label="Toggle menu">
+        {isOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+      {isOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
+      <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
       <nav className="sidebar-nav">
         {navigationItems.map((item, index) => {
           if (item.items) {
@@ -65,6 +81,7 @@ function Sidebar() {
                           <NavLink
                             to={subItem.path}
                             className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+                            onClick={closeSidebar}
                           >
                             <Icon size={16} className="nav-icon" />
                             <span>{subItem.label}</span>
@@ -85,6 +102,7 @@ function Sidebar() {
                   <NavLink
                     to={item.path}
                     className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+                    onClick={closeSidebar}
                   >
                     <Icon size={16} className="nav-icon" />
                     <span>{item.label}</span>
@@ -96,6 +114,7 @@ function Sidebar() {
         })}
       </nav>
     </aside>
+    </>
   );
 }
 
