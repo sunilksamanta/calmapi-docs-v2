@@ -28,8 +28,8 @@ const navigationItems = [
   {
     label: 'Copilot Setup',
     items: [
-      { path: '/copilot-setup', label: 'Copilot Setup', icon: '🤖' },
       { path: '/src/docs/copilot-instructions.md', label: 'copilot-instructions.md', icon: '📄', isExternal: true },
+      { path: '/copilot-setup', label: 'Copilot Setup Guide', icon: '🤖' },
     ]
   }
 ];
