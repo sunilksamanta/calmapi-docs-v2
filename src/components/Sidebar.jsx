@@ -1,35 +1,36 @@
 import { NavLink } from 'react-router-dom';
+import { Home, Rocket, Layers, Package, Database, Gamepad2, Settings, FileText, Route, Puzzle, Zap, BookOpen, Lightbulb, FileCode, Bot } from 'lucide-react';
 import './Sidebar.css';
 
 const navigationItems = [
-  { path: '/', label: 'Introduction', icon: '🏠' },
+  { path: '/', label: 'Introduction', icon: Home },
   { 
     label: 'Guide',
     items: [
-      { path: '/getting-started', label: '1. Getting Started', icon: '🚀' },
-      { path: '/architecture', label: '2. Architecture', icon: '🏗️' },
-      { path: '/creating-modules', label: '3. Creating Modules', icon: '📦' },
-      { path: '/models', label: '4. Models', icon: '🗃️' },
-      { path: '/controllers', label: '5. Controllers', icon: '🎮' },
-      { path: '/services', label: '6. Services', icon: '⚙️' },
-      { path: '/dtos', label: '7. DTOs', icon: '📋' },
-      { path: '/routing', label: '8. Routing', icon: '🛤️' },
-      { path: '/built-in-modules', label: '9. Built-in Modules', icon: '🧩' },
-      { path: '/advanced', label: '10. Advanced', icon: '🚀' },
+      { path: '/getting-started', label: 'Getting Started', icon: Rocket },
+      { path: '/architecture', label: 'Architecture', icon: Layers },
+      { path: '/creating-modules', label: 'Creating Modules', icon: Package },
+      { path: '/models', label: 'Models', icon: Database },
+      { path: '/controllers', label: 'Controllers', icon: Gamepad2 },
+      { path: '/services', label: 'Services', icon: Settings },
+      { path: '/dtos', label: 'DTOs', icon: FileText },
+      { path: '/routing', label: 'Routing', icon: Route },
+      { path: '/built-in-modules', label: 'Built-in Modules', icon: Puzzle },
+      { path: '/advanced', label: 'Advanced', icon: Zap },
     ]
   },
   {
     label: 'Resources',
     items: [
-      { path: '/quick-reference', label: 'Quick Reference', icon: '📖' },
-      { path: '/example-project', label: 'Example Project', icon: '💡' },
+      { path: '/quick-reference', label: 'Quick Reference', icon: BookOpen },
+      { path: '/example-project', label: 'Example Project', icon: Lightbulb },
     ]
   },
   {
     label: 'Copilot Setup',
     items: [
-      { path: '/src/docs/copilot-instructions.md', label: 'copilot-instructions.md', icon: '📄', isExternal: true },
-      { path: '/copilot-setup', label: 'Copilot Setup Guide', icon: '🤖' },
+      { path: '/src/docs/copilot-instructions.md', label: 'copilot-instructions.md', icon: FileCode, isExternal: true },
+      { path: '/copilot-setup', label: 'Copilot Setup Guide', icon: Bot },
     ]
   }
 ];
@@ -44,33 +45,37 @@ function Sidebar() {
               <div key={index} className="nav-section">
                 <h3 className="section-title">{item.label}</h3>
                 <ul className="nav-list">
-                  {item.items.map((subItem) => (
-                    <li key={subItem.path}>
-                      {subItem.isExternal ? (
-                        <a
-                          href={subItem.path}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="nav-link"
-                        >
-                          <span className="nav-icon">{subItem.icon}</span>
-                          <span>{subItem.label}</span>
-                        </a>
-                      ) : (
-                        <NavLink
-                          to={subItem.path}
-                          className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
-                        >
-                          <span className="nav-icon">{subItem.icon}</span>
-                          <span>{subItem.label}</span>
-                        </NavLink>
-                      )}
-                    </li>
-                  ))}
+                  {item.items.map((subItem) => {
+                    const Icon = subItem.icon;
+                    return (
+                      <li key={subItem.path}>
+                        {subItem.isExternal ? (
+                          <a
+                            href={subItem.path}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="nav-link"
+                          >
+                            <Icon size={16} className="nav-icon" />
+                            <span>{subItem.label}</span>
+                          </a>
+                        ) : (
+                          <NavLink
+                            to={subItem.path}
+                            className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+                          >
+                            <Icon size={16} className="nav-icon" />
+                            <span>{subItem.label}</span>
+                          </NavLink>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             );
           }
+          const Icon = item.icon;
           return (
             <div key={index} className="nav-section">
               <ul className="nav-list">
@@ -79,7 +84,7 @@ function Sidebar() {
                     to={item.path}
                     className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
                   >
-                    <span className="nav-icon">{item.icon}</span>
+                    <Icon size={16} className="nav-icon" />
                     <span>{item.label}</span>
                   </NavLink>
                 </li>

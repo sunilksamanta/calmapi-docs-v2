@@ -90,12 +90,7 @@ PORT=3000
 NODE_ENV=development
 
 # Database Configuration
-DB_HOST=localhost
-DB_PORT=27017
-DB_NAME=my_awesome_api
-
-# If using MongoDB Atlas:
-# DB_CONNECTION_STRING=mongodb+srv://username:password@cluster.mongodb.net/
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/your-db-name
 
 # JWT Secret (Change this!)
 JWT_SECRET=your-super-secret-key-change-this-in-production
