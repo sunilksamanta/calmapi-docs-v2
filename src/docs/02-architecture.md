@@ -8,33 +8,7 @@
 
 CalmAPI follows a **layered architecture** pattern. Think of it like a restaurant:
 
-```
-┌─────────────────────────────────────┐
-│  ROUTES (The Menu)                  │ <- Defines what's available
-│  "What endpoints can customers use?"│
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│  CONTROLLER (The Waiter)            │ <- Handles requests
-│  "Take orders, deliver food"        │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│  DTO (Quality Control)              │ <- Validates data
-│  "Check the order is correct"       │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│  SERVICE (The Chef)                 │ <- Business logic
-│  "Prepare the meal"                 │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│  MODEL (The Ingredients)            │ <- Database schema
-│  "Recipe and ingredients"           │
-└─────────────────────────────────────┘
-```
-
+![MVC Architecture Flow](/mvc-architecture-flow.svg)
 ---
 
 ## Module Structure
@@ -319,8 +293,12 @@ class Post {
             this.slug = slugify(this.title);
             next();
         });
+        try{
+            mongoose.model('post', schema);
+        } catch(e) {
 
-        mongoose.model('post', schema);
+        }
+        
     }
 
     getInstance() {

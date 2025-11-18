@@ -1,0 +1,188 @@
+<svg viewBox="0 0 750 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Define arrow marker -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#6366f1" />
+    </marker>
+    
+    <!-- Gradient definitions -->
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#818cf8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Glow filter -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Routes Box -->
+  <g id="routes">
+    <rect x="100" y="50" width="400" height="100" rx="8" fill="#f0f9ff" stroke="#3b82f6" stroke-width="2">
+      <animate attributeName="opacity" values="0;1" dur="0.5s" fill="freeze"/>
+    </rect>
+    <text x="300" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#1e40af">
+      <tspan>
+        ROUTES (The Menu)
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="0.2s" fill="freeze"/>
+      </tspan>
+    </text>
+    <text x="300" y="110" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#3b82f6">
+      <tspan>
+        "What endpoints can customers use?"
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="0.3s" fill="freeze"/>
+      </tspan>
+    </text>
+    <text x="520" y="85" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#6b7280">
+      <tspan>
+        ← Defines what's available
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="0.4s" fill="freeze"/>
+      </tspan>
+    </text>
+  </g>
+  
+  <!-- Arrow 1 -->
+  <line x1="300" y1="150" x2="300" y2="190" stroke="#6366f1" stroke-width="3" marker-end="url(#arrowhead)">
+    <animate attributeName="stroke-dasharray" values="0,100;100,0" dur="0.6s" begin="0.5s" fill="freeze"/>
+    <animate attributeName="opacity" values="0;1" dur="0.3s" begin="0.5s" fill="freeze"/>
+  </line>
+  <circle cx="300" cy="170" r="4" fill="#6366f1">
+    <animate attributeName="cy" values="150;190" dur="1.5s" begin="1.1s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0" dur="1.5s" begin="1.1s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Controller Box -->
+  <g id="controller">
+    <rect x="100" y="200" width="400" height="100" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2">
+      <animate attributeName="opacity" values="0;1" dur="0.5s" begin="0.6s" fill="freeze"/>
+    </rect>
+    <text x="300" y="235" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#b45309">
+      <tspan>
+        CONTROLLER (The Waiter)
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="0.8s" fill="freeze"/>
+      </tspan>
+    </text>
+    <text x="300" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#f59e0b">
+      <tspan>
+        "Take orders, deliver food"
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="0.9s" fill="freeze"/>
+      </tspan>
+    </text>
+    <text x="520" y="235" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#6b7280">
+      <tspan>
+        ← Handles requests
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="1s" fill="freeze"/>
+      </tspan>
+    </text>
+  </g>
+  
+  <!-- Arrow 2 -->
+  <line x1="300" y1="300" x2="300" y2="340" stroke="#6366f1" stroke-width="3" marker-end="url(#arrowhead)">
+    <animate attributeName="stroke-dasharray" values="0,100;100,0" dur="0.6s" begin="1.1s" fill="freeze"/>
+    <animate attributeName="opacity" values="0;1" dur="0.3s" begin="1.1s" fill="freeze"/>
+  </line>
+  <circle cx="300" cy="320" r="4" fill="#6366f1">
+    <animate attributeName="cy" values="300;340" dur="1.5s" begin="1.7s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0" dur="1.5s" begin="1.7s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- DTO Box -->
+  <g id="dto">
+    <rect x="100" y="350" width="400" height="100" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="2">
+      <animate attributeName="opacity" values="0;1" dur="0.5s" begin="1.2s" fill="freeze"/>
+    </rect>
+    <text x="300" y="385" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#be185d">
+      <tspan>
+        DTO (Quality Control)
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="1.4s" fill="freeze"/>
+      </tspan>
+    </text>
+    <text x="300" y="410" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#ec4899">
+      <tspan>
+        "Check the order is correct"
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="1.5s" fill="freeze"/>
+      </tspan>
+    </text>
+    <text x="520" y="385" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#6b7280">
+      <tspan>
+        ← Validates data
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="1.6s" fill="freeze"/>
+      </tspan>
+    </text>
+  </g>
+  
+  <!-- Arrow 3 -->
+  <line x1="300" y1="450" x2="300" y2="490" stroke="#6366f1" stroke-width="3" marker-end="url(#arrowhead)">
+    <animate attributeName="stroke-dasharray" values="0,100;100,0" dur="0.6s" begin="1.7s" fill="freeze"/>
+    <animate attributeName="opacity" values="0;1" dur="0.3s" begin="1.7s" fill="freeze"/>
+  </line>
+  <circle cx="300" cy="470" r="4" fill="#6366f1">
+    <animate attributeName="cy" values="450;490" dur="1.5s" begin="2.3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0" dur="1.5s" begin="2.3s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Service Box -->
+  <g id="service">
+    <rect x="100" y="500" width="400" height="100" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="2">
+      <animate attributeName="opacity" values="0;1" dur="0.5s" begin="1.8s" fill="freeze"/>
+    </rect>
+    <text x="300" y="535" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#15803d">
+      <tspan>
+        SERVICE (The Chef)
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="2s" fill="freeze"/>
+      </tspan>
+    </text>
+    <text x="300" y="560" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#22c55e">
+      <tspan>
+        "Prepare the meal"
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="2.1s" fill="freeze"/>
+      </tspan>
+    </text>
+    <text x="520" y="535" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#6b7280">
+      <tspan>
+        ← Business logic
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="2.2s" fill="freeze"/>
+      </tspan>
+    </text>
+  </g>
+  
+  <!-- Arrow 4 -->
+  <line x1="300" y1="600" x2="300" y2="640" stroke="#6366f1" stroke-width="3" marker-end="url(#arrowhead)">
+    <animate attributeName="stroke-dasharray" values="0,100;100,0" dur="0.6s" begin="2.3s" fill="freeze"/>
+    <animate attributeName="opacity" values="0;1" dur="0.3s" begin="2.3s" fill="freeze"/>
+  </line>
+  <circle cx="300" cy="620" r="4" fill="#6366f1">
+    <animate attributeName="cy" values="600;640" dur="1.5s" begin="2.9s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0" dur="1.5s" begin="2.9s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Model Box -->
+  <g id="model">
+    <rect x="100" y="650" width="400" height="100" rx="8" fill="#e0e7ff" stroke="#6366f1" stroke-width="2">
+      <animate attributeName="opacity" values="0;1" dur="0.5s" begin="2.4s" fill="freeze"/>
+    </rect>
+    <text x="300" y="685" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#4338ca">
+      <tspan>
+        MODEL (The Ingredients)
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="2.6s" fill="freeze"/>
+      </tspan>
+    </text>
+    <text x="300" y="710" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#6366f1">
+      <tspan>
+        "Recipe and ingredients"
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="2.7s" fill="freeze"/>
+      </tspan>
+    </text>
+    <text x="520" y="685" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#6b7280">
+      <tspan>
+        ← Database schema
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="2.8s" fill="freeze"/>
+      </tspan>
+    </text>
+  </g>
+</svg>
