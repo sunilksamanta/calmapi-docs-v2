@@ -21,6 +21,7 @@ function App() {
           <Route path="/advanced" element={<DocsPage docKey="advanced" />} />
           <Route path="/quick-reference" element={<DocsPage docKey="quick-reference" />} />
           <Route path="/example-project" element={<DocsPage docKey="example-project" />} />
+          <Route path="/copilot-setup" element={<DocsPage docKey="copilot-setup" />} />
         </Route>
       </Routes>
     </Router>

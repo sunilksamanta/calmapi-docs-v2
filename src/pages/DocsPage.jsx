@@ -17,6 +17,7 @@ import builtInModules from '../docs/09-built-in-modules.md?raw';
 import advanced from '../docs/10-advanced.md?raw';
 import quickReference from '../docs/QUICK-REFERENCE.md?raw';
 import exampleProject from '../docs/EXAMPLE-PROJECT.md?raw';
+import copilotSetup from '../docs/copilot-setup.md?raw';
 
 const docsContent = {
   'introduction': introduction,
@@ -32,6 +33,7 @@ const docsContent = {
   'advanced': advanced,
   'quick-reference': quickReference,
   'example-project': exampleProject,
+  'copilot-setup': copilotSetup,
 };
 
 function DocsPage({ docKey }) {

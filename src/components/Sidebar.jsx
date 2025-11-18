@@ -24,6 +24,13 @@ const navigationItems = [
       { path: '/quick-reference', label: 'Quick Reference', icon: '📖' },
       { path: '/example-project', label: 'Example Project', icon: '💡' },
     ]
+  },
+  {
+    label: 'Copilot Setup',
+    items: [
+      { path: '/copilot-setup', label: 'Copilot Setup', icon: '🤖' },
+      { path: '/src/docs/copilot-instructions.md', label: 'copilot-instructions.md', icon: '📄', isExternal: true },
+    ]
   }
 ];
 
@@ -39,13 +46,25 @@ function Sidebar() {
                 <ul className="nav-list">
                   {item.items.map((subItem) => (
                     <li key={subItem.path}>
-                      <NavLink
-                        to={subItem.path}
-                        className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
-                      >
-                        <span className="nav-icon">{subItem.icon}</span>
-                        <span>{subItem.label}</span>
-                      </NavLink>
+                      {subItem.isExternal ? (
+                        <a
+                          href={subItem.path}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="nav-link"
+                        >
+                          <span className="nav-icon">{subItem.icon}</span>
+                          <span>{subItem.label}</span>
+                        </a>
+                      ) : (
+                        <NavLink
+                          to={subItem.path}
+                          className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+                        >
+                          <span className="nav-icon">{subItem.icon}</span>
+                          <span>{subItem.label}</span>
+                        </NavLink>
+                      )}
                     </li>
                   ))}
                 </ul>
