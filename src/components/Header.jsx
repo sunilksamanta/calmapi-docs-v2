@@ -6,10 +6,10 @@ function Header() {
   return (
     <header className="header">
       <div className="header-content">
-        <div className="logo">
+        <a href="/" className="logo">
           <h1>CalmAPI</h1>
           <span className="tagline">Keep Calm and REST</span>
-        </div>
+        </a>
         <div className="header-actions">
           <ThemeToggle />
           <nav className="header-nav">
