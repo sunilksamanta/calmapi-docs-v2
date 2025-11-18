@@ -33,8 +33,12 @@ class ModelName {
         });
 
         // Add hooks, methods, indexes here
-
-        mongoose.model('modelname', schema);
+        try{
+            mongoose.model('modelname', schema);
+        } catch(e) {
+            
+        }
+        
     }
 
     getInstance() {

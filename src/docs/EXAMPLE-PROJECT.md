@@ -53,7 +53,13 @@ class Category {
             next();
         });
 
-        mongoose.model('category', schema);
+        try {
+            mongoose.model('category', schema);
+        } catch(e) {
+
+        }
+
+        
     }
 
     getInstance() {
@@ -108,7 +114,12 @@ class Product {
         schema.index({ name: 'text', description: 'text' });
         schema.index({ category: 1, status: 1 });
 
-        mongoose.model('product', schema);
+        try {
+            mongoose.model('product', schema);
+        } catch(e) {
+
+        }
+        
     }
 
     getInstance() {
@@ -262,7 +273,12 @@ class Cart {
             total: { type: Number, default: 0 }
         }, { timestamps: true });
 
-        mongoose.model('cart', schema);
+        try {
+            mongoose.model('cart', schema);
+        } catch(e) {
+
+        }
+        
     }
 
     getInstance() {
@@ -420,7 +436,12 @@ class Order {
             }
         }, { timestamps: true });
 
-        mongoose.model('order', schema);
+        try {
+            mongoose.model('order', schema);
+        } catch(e) {
+
+        }
+        
     }
 
     getInstance() {
@@ -467,8 +488,12 @@ class Review {
         }, { timestamps: true });
 
         schema.index({ product: 1, user: 1 }, { unique: true });
-
-        mongoose.model('review', schema);
+        try {
+            mongoose.model('review', schema);
+        } catch(e) {
+            
+        }
+        
     }
 
     getInstance() {

@@ -62,8 +62,11 @@ class ModuleName {
             // Logic here
             next();
         });
-
-        mongoose.model('modulename', schema);
+        try {
+            mongoose.model('modulename', schema);
+        } catch (e) {
+            // Model already registered
+        }
     }
 
     getInstance() {
