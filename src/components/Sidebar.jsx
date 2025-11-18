@@ -31,7 +31,7 @@ const navigationItems = [
   {
     label: 'Copilot Setup',
     items: [
-      { path: '/src/docs/copilot-instructions.md', label: 'copilot-instructions.md', icon: FileCode, isExternal: true },
+      { path: '/copilot-instructions.md', label: 'copilot-instructions.md', icon: FileCode, isExternal: true },
       { path: '/copilot-setup', label: 'Copilot Setup Guide', icon: Bot },
     ]
   }
