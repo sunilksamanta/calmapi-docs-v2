@@ -1,0 +1,62 @@
+.theme-toggle {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: #ecf0f1;
+  border-radius: 0.5rem;
+  border: 1px solid #dfe4ea;
+}
+
+.theme-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  color: #7f8c8d;
+  cursor: pointer;
+  border-radius: 0.375rem;
+  transition: all 0.15s ease;
+}
+
+.theme-button:hover {
+  background: #dfe4ea;
+  color: #2c3e50;
+}
+
+.theme-button.active {
+  background: #5f7c8a;
+  color: #ffffff;
+}
+
+:root.dark .theme-toggle {
+  background: #2f3640;
+  border-color: #3d4654;
+}
+
+:root.dark .theme-button {
+  color: #a4b0be;
+}
+
+:root.dark .theme-button:hover {
+  background: #3d4654;
+  color: #e4e6eb;
+}
+
+:root.dark .theme-button.active {
+  background: #778ca3;
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .theme-toggle {
+    padding: 0.125rem;
+  }
+  
+  .theme-button {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+}

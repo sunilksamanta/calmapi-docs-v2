@@ -1,4 +1,5 @@
 import { Globe, Github } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 import './Header.css';
 
 function Header() {
@@ -9,16 +10,19 @@ function Header() {
           <h1>CalmAPI</h1>
           <span className="tagline">Keep Calm and REST</span>
         </div>
-        <nav className="header-nav">
-          <a href="https://calmapi.dev" target="_blank" rel="noopener noreferrer">
-            <Globe size={18} />
-            <span>Website</span>
-          </a>
-          <a href="https://github.com/sunilksamanta/calmapi" target="_blank" rel="noopener noreferrer">
-            <Github size={18} />
-            <span>GitHub</span>
-          </a>
-        </nav>
+        <div className="header-actions">
+          <ThemeToggle />
+          <nav className="header-nav">
+            <a href="https://calmapi.dev" target="_blank" rel="noopener noreferrer">
+              <Globe size={18} />
+              <span>Website</span>
+            </a>
+            <a href="https://github.com/sunilksamanta/calmapi" target="_blank" rel="noopener noreferrer">
+              <Github size={18} />
+              <span>GitHub</span>
+            </a>
+          </nav>
+        </div>
       </div>
     </header>
   );
