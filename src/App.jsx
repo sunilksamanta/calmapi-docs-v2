@@ -21,6 +21,7 @@ function App() {
             <Route path="/routing" element={<DocsPage docKey="routing" />} />
             <Route path="/built-in-modules" element={<DocsPage docKey="built-in-modules" />} />
             <Route path="/advanced" element={<DocsPage docKey="advanced" />} />
+            <Route path="/security" element={<DocsPage docKey="security" />} />
             <Route path="/quick-reference" element={<DocsPage docKey="quick-reference" />} />
             <Route path="/example-project" element={<DocsPage docKey="example-project" />} />
             <Route path="/copilot-setup" element={<DocsPage docKey="copilot-setup" />} />
