@@ -583,8 +583,8 @@ async doStuff(req, res, next)
 
 You now understand Controllers! Let's dive into the Service layer where business logic lives.
 
-**Next:** [Services Layer →](06-services.md)
+**Next:** [Services Layer →](services)
 
 ---
 
-[← Previous: Models](04-models.md) | [Back to Index](README.md) | [Next: Services →](06-services.md)
+[← Previous: Models](models) | [Back to Index](/) | [Next: Services →](services)

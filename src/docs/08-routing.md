@@ -244,4 +244,4 @@ router.get('/:id/images', ...);
 
 ---
 
-[← Previous: DTOs](07-dtos.md) | [Back to Index](README.md) | [Next: Built-in Modules →](09-built-in-modules.md)
+[← Previous: DTOs](dtos) | [Back to Index](/) | [Next: Built-in Modules →](built-in-modules)

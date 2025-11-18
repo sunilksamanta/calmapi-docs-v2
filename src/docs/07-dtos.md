@@ -318,4 +318,4 @@ this.featured = props.featured || false;
 
 ---
 
-[← Previous: Services](06-services.md) | [Back to Index](README.md) | [Next: Routing →](08-routing.md)
+[← Previous: Services](services) | [Back to Index](/) | [Next: Routing →](routing)

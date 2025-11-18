@@ -328,4 +328,4 @@ curl -X DELETE http://localhost:3000/api/posts/POST_ID \
 
 ---
 
-[← Previous: Routing](08-routing.md) | [Back to Index](README.md) | [Next: Advanced →](10-advanced.md)
+[← Previous: Routing](routing) | [Back to Index](/) | [Next: Advanced →](advanced)

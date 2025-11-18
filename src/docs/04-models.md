@@ -777,8 +777,8 @@ schema.pre('save', function(next) {
 
 Now you can create powerful database schemas! Let's learn how Controllers use these models.
 
-**Next:** [Controllers Made Easy →](05-controllers.md)
+**Next:** [Controllers Made Easy →](controllers)
 
 ---
 
-[← Previous: Creating Modules](03-creating-modules.md) | [Back to Index](README.md) | [Next: Controllers →](05-controllers.md)
+[← Previous: Creating Modules](creating-modules) | [Back to Index](/) | [Next: Controllers →](controllers)

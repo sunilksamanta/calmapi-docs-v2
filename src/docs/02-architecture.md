@@ -544,8 +544,8 @@ class ProductController extends CalmController {
 
 Now you understand the architecture! Let's create your first custom module.
 
-**Next:** [Creating Your First Module →](03-creating-modules.md)
+**Next:** [Creating Your First Module →](creating-modules)
 
 ---
 
-[← Previous: Getting Started](01-getting-started.md) | [Back to Index](README.md) | [Next: Creating Modules →](03-creating-modules.md)
+[← Previous: Getting Started](getting-started) | [Back to Index](/) | [Next: Creating Modules →](creating-modules)

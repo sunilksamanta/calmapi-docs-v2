@@ -273,4 +273,4 @@ if (!product) {
 
 ---
 
-[← Previous: Controllers](05-controllers.md) | [Back to Index](README.md) | [Next: DTOs →](07-dtos.md)
+[← Previous: Controllers](controllers) | [Back to Index](/) | [Next: DTOs →](dtos)

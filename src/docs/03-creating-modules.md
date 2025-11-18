@@ -662,8 +662,8 @@ router.get('/', ProductController.getAll);  // Must have this
 
 You can now generate modules! Let's dive deeper into models.
 
-**Next:** [Working with Models →](04-models.md)
+**Next:** [Working with Models →](models)
 
 ---
 
-[← Previous: Architecture](02-architecture.md) | [Back to Index](README.md) | [Next: Models →](04-models.md)
+[← Previous: Architecture](architecture) | [Back to Index](/) | [Next: Models →](models)

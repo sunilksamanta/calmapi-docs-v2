@@ -378,7 +378,7 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/posts
 
 Now that your project is running, let's understand how it works!
 
-**Next:** [Understanding the Architecture →](02-architecture.md)
+**Next:** [Understanding the Architecture →](architecture)
 
 ---
 
@@ -403,4 +403,4 @@ npm run lint
 
 ---
 
-[← Back to Index](README.md) | [Next: Architecture →](02-architecture.md)
+[← Back to Index](/) | [Next: Architecture →](architecture)

@@ -8,16 +8,16 @@
 
 ## 📚 Table of Contents
 
-1. [Getting Started](01-getting-started.md) - Installation and project setup
-2. [Understanding the Architecture](02-architecture.md) - Core concepts and structure
-3. [Creating Your First Module](03-creating-modules.md) - Quick start guide to building APIs
-4. [Working with Models](04-models.md) - Database schema and validation
-5. [Controllers Made Easy](05-controllers.md) - Request handling and super methods
-6. [Services Layer](06-services.md) - Business logic and database operations
-7. [Data Transfer Objects (DTOs)](07-dtos.md) - Input validation and response formatting
-8. [Routing & Configuration](08-routing.md) - Custom paths and nested routes
-9. [Built-in Modules](09-built-in-modules.md) - Auth, User, Media & Post
-10. [Advanced Techniques](10-advanced.md) - Tips, tricks, and best practices
+1. [Getting Started](getting-started) - Installation and project setup
+2. [Understanding the Architecture](architecture) - Core concepts and structure
+3. [Creating Your First Module](creating-modules) - Quick start guide to building APIs
+4. [Working with Models](models) - Database schema and validation
+5. [Controllers Made Easy](controllers) - Request handling and super methods
+6. [Services Layer](services) - Business logic and database operations
+7. [Data Transfer Objects (DTOs)](dtos) - Input validation and response formatting
+8. [Routing & Configuration](routing) - Custom paths and nested routes
+9. [Built-in Modules](built-in-modules) - Auth, User, Media & Post
+10. [Advanced Techniques](advanced) - Tips, tricks, and best practices
 
 ---
 
@@ -83,7 +83,7 @@ src/modules/product/
 
 ## 🚀 Ready to Build?
 
-Start with [Getting Started](01-getting-started.md) to install CalmAPI and create your first project!
+Start with [Getting Started](getting-started) to install CalmAPI and create your first project!
 
 ---
 
