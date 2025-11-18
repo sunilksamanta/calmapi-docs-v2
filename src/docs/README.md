@@ -18,6 +18,8 @@
 8. [Routing & Configuration](routing) - Custom paths and nested routes
 9. [Built-in Modules](built-in-modules) - Auth, User, Media & Post
 10. [Advanced Techniques](advanced) - Tips, tricks, and best practices
+11. [Built in Security & Best Practices](security) - Securing your API
+12. [Deployment Guide](deployment) - From local to production
 
 ---
 
