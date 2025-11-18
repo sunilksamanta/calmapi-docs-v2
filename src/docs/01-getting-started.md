@@ -90,7 +90,7 @@ PORT=3000
 NODE_ENV=development
 
 # Database Configuration
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/your-db-name
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/my_awesome_api
 
 # JWT Secret (Change this!)
 JWT_SECRET=your-super-secret-key-change-this-in-production
@@ -138,7 +138,7 @@ my-awesome-api/
 ### Key Directories
 
 - **`src/modules/`** - This is where YOU create APIs. Each folder is a module.
-- **`system/`** - CalmAPI's core code. You can read it, but usually don't need to modify it.
+- **`system/`** - CalmAPI's core code. You can read it, admire it, maybe send it a compliment. But modifying it? That's "I know what I'm doing" territory, and if you're reading this documentation, statistically speaking...
 - **`.env`** - Your configuration. Keep it secret!
 
 ---
