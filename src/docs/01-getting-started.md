@@ -333,19 +333,25 @@ Or use MongoDB Atlas cloud database.
 
 ## Development Tips
 
-### 1. Hot Reload (Optional)
+### 1. Hot Reload (Optional – Use with Caution)
 
-Install `nodemon` for automatic restarts:
-
+You can install `nodemon` for automatic restarts during development:
 ```bash
 npm install -g nodemon
 ```
 
 Then run:
-
 ```bash
 nodemon index.js
 ```
+
+> ⚠️ **Why we don't recommend nodemon for database-heavy projects:**
+> 
+> Automatic restarts on file save can cause subtle, hard-to-debug issues—especially when working with database schemas. For example, if you modify a Mongoose model's index configuration, nodemon may restart the server mid-change and apply a partial or unintended index to your database. When you save again with the correct configuration, the damage is already done, but there's no obvious error—leaving you chasing a phantom bug.
+> 
+> **Safer alternatives:**
+> - Run your server manually with `node index.js` and restart only when needed
+> - Use nodemon selectively by ignoring database model files: `nodemon --ignore 'models/'`
 
 ### 2. ESLint
 
