@@ -37,6 +37,7 @@ npx calm add jobs
 | [mcp-server](/docs/blocks/mcp-server) | Your resources as MCP tools for AI agents, enforced by your API's rules |
 | [audit-log](/docs/blocks/audit-log) | Who changed what, with field diffs (private values never logged) |
 | [soft-delete](/docs/blocks/soft-delete) | `softDelete: true` per resource, with trash and restore |
+| [totp](/docs/blocks/totp) | Two-factor authentication with authenticator apps, recovery codes and replay protection |
 | [api-docs](/docs/blocks/api-docs) | Interactive API reference at `/docs` |
 | [mail-resend](/docs/blocks/mail-resend) / [mail-smtp](/docs/blocks/mail-smtp) | Email delivery |
 | [rate-limit-mongo](/docs/blocks/rate-limit-mongo) | Rate limits shared across instances |

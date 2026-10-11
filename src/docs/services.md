@@ -162,6 +162,7 @@ After each write, the service emits an event on the app's in-process bus:
 | `<resource>.deleted` | `{ doc, resource, user }` |
 | `auth.registered`, `auth.login`, `auth.password_changed`, `auth.password_reset_requested` | `{ user }` |
 | `auth.password_reset` | `{ userId }` |
+| `security.login_failed`, `security.account_locked`, `security.forbidden`... | Depends on the event: failed sign-ins, lockouts, bad tokens, rejected writes, `403`s, rate limits (see [Security events](/docs/security#security-events)) |
 
 `user` is the signed-in user who made the change, or `null`. Blocks add their own (`job.completed`, `job.failed`, `<resource>.restored`).
 

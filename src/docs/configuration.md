@@ -71,6 +71,7 @@ Invalid configuration:
 | `apiPrefix` | `'/api'` | Where every route is mounted |
 | `trustProxy` | `TRUST_PROXY`, else `false` | Express `trust proxy`. `'true'`, `'false'`, a hop count (`1`) or a value like `'loopback'` |
 | `bodyLimit` | `'1mb'` | Maximum JSON body |
+| `jsonLimits` | `{ maxDepth: 20, maxKeys: 10000 }` | Deepest nesting and most values a JSON body may have; more is a `400` (see [Security](/docs/security#json-guard)) |
 | `db.uri` | `MONGODB_URI` | Required |
 | `db.autoIndex` | `true` | Build indexes declared on fields at startup |
 | `db.connectRetries` | `5` | Attempts with exponential backoff (up to 10 s apart) |
@@ -89,6 +90,8 @@ Invalid configuration:
 | `auth.resetTokenTtlMinutes` | `30` | |
 | `auth.resetUrl` | `<app.url>/reset-password` | The page of your frontend that receives `?token=` |
 | `auth.password` | `{ logN: 15, r: 8, p: 3 }` | scrypt cost; length rules live on `f.password()` (8 to 128 characters) |
+| `auth.lockout` | `{ maxAttempts: 5, windowMinutes: 15, lockMinutes: 15 }` | Per account [lockout](/docs/authentication#account-lockout) after failed sign-ins; `maxAttempts: 0` turns it off |
+| `encryption.keys` | `CALM_ENCRYPTION_KEYS` | Keys for `.encrypted()` fields. Keep them in the environment, not in this file. |
 | `openapi.enabled` | `true` | Serve the OpenAPI document |
 | `openapi.path` | `'/openapi.json'` | Relative to `apiPrefix` |
 | `devtools.enabled` | `true` in development | Forced off in production |
@@ -113,7 +116,8 @@ Read the effective configuration anywhere through `ctx.config` or `app.config`.
 | `LOG_LEVEL` | `debug`, `info`, `warn`, `error`, `silent` |
 | `CALM_SKIP_ENV_FILE` | `1` to ignore `.env` |
 | `CALM_MAIL_PRINT` | `1` to print email bodies to the console in development |
-| `MONGODB_TEST_URI` | Server used by `createTestApp` (default `mongodb://127.0.0.1:27017`) |
+| `CALM_ENCRYPTION_KEYS` | Keys for `.encrypted()` fields: `k2:<base64>,k1:<base64>`, the first one encrypts. Create with `npx calm keygen --write` (see [Encryption at rest](/docs/security#encryption-at-rest)) |
+| `MONGODB_TEST_URI` | Server used by `createTestApp` and `calm audit` (default `mongodb://127.0.0.1:27017`) |
 | `CALM_TEST_LOG` | Log level inside tests, for example `info` |
 | `CALM_DEBUG` | Print stack traces for CLI errors |
 

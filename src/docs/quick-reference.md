@@ -10,7 +10,10 @@ npm run dev                                 # watch mode + devtools at /_calm
 npx calm make resource product name:string!+searchable price:number! status:enum:draft,live=draft category:ref --service --routes
 npx calm add jobs storage-s3 api-docs       # blocks (calm add --list)
 npx calm routes                             # routes and policies
-npx calm doctor --prod --ci                 # checks, CI friendly
+npx calm doctor --prod --ci                 # checks, CI friendly (--audit adds npm audit)
+npx calm audit --ci                         # every route as every role, on a throwaway database
+npx calm admin ada@example.com              # grant the admin role (--revoke to remove)
+npx calm keygen --write                     # CALM_ENCRYPTION_KEYS for .encrypted() fields (rotates)
 npx calm openapi --out openapi.json
 npx calm upgrade --dry-run                  # merge framework updates into calm/
 claude mcp add calm -- npx calm mcp         # MCP server for coding agents
@@ -49,6 +52,7 @@ export default resource('product', {
 | Types | `f.string() text() email() url() password() number() integer() boolean() date() enum([...]) id() ref('name') array(f) object({...}) json()` |
 | Validation | `.required() .optional() .default(v) .min(n) .max(n) .pattern(re) .trim() .lowercase() .uppercase() .unique() .index() .check(fn) .schema(standardSchema)` |
 | Visibility | `.hidden() .writeOnly() .readOnly() .immutable() .writableBy('admin') .visibleTo('owner \| admin')` |
+| Storage | `.encrypted()` (AES-256-GCM at rest, needs `CALM_ENCRYPTION_KEYS`, cannot be queried) |
 | Queries | `.filterable([ops]) .sortable() .searchable()` |
 | Relations | `.owner()` (on `f.ref('user')`) `.populate()` |
 | Docs | `.describe(text) .example(value)` |
@@ -134,7 +138,7 @@ POST /api/auth/password/reset    { token, password }              -> 204
 GET  /api/auth/sessions   DELETE /api/auth/sessions/:sessionId
 ```
 
-Header: `Authorization: Bearer calm_...`. [Authentication](/docs/authentication)
+Header: `Authorization: Bearer calm_...`. 5 failed sign-ins for an email lock it for 15 minutes (`429`). Two-factor: the [totp](/docs/blocks/totp) block. [Authentication](/docs/authentication)
 
 ## Config and environment
 
@@ -144,7 +148,7 @@ import { defineConfig } from '#calm';
 export default defineConfig({ pagination: { maxLimit: 100 }, auth: { register: true }, mail: { from: 'App <no-reply@example.com>' } });
 ```
 
-`NODE_ENV` (default production) · `MONGODB_URI` · `APP_URL` (required in production) · `PORT` (5001) · `CORS_ORIGINS` · `TRUST_PROXY` · `LOG_LEVEL`. [Configuration](/docs/configuration)
+`NODE_ENV` (default production) · `MONGODB_URI` · `APP_URL` (required in production) · `PORT` (5001) · `CORS_ORIGINS` · `TRUST_PROXY` · `LOG_LEVEL` · `CALM_ENCRYPTION_KEYS`. [Configuration](/docs/configuration)
 
 ## Testing
 

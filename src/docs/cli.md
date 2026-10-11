@@ -9,7 +9,10 @@ calm make resource <name> [fields...]   scaffold a resource
 calm add <block...>                     copy blocks into your project (calm add --list)
 calm routes                             every route with its policy and source file
 calm openapi                            write openapi.json
-calm doctor [--prod] [--ci]             security and correctness checks
+calm doctor [--prod] [--audit] [--ci]   security and correctness checks
+calm audit [--ci]                       test every route as every role on a throwaway database
+calm admin <email> [--revoke]           grant (or remove) the admin role
+calm keygen [--write]                   encryption key for .encrypted() fields (rotates)
 calm upgrade                            merge framework updates into calm/
 calm mcp                                MCP server for coding agents
 ```
@@ -41,6 +44,8 @@ calm dev
 
 Starts the app in development mode: `NODE_ENV=development`, file watching (`node --watch` on `app/`, `calm/`, `calm.config.js`, `server.js` and `.env`, so new resource folders restart the server too) and devtools at `http://localhost:<port>/_calm`. Extra arguments are passed to `node`, for example `calm dev --inspect`.
 
+It also records every file change (with a line diff, marked as made by an AI agent or by you), restart and crash in `.calm/activity.jsonl`. The contents of `.env` are never recorded. Devtools shows this log live in the **Activity** panel; see [Watching an agent work](/docs/ai-agents#watching-an-agent-work).
+
 ## calm make resource
 
 ```text
@@ -71,6 +76,8 @@ Field syntax: `name:type[!][=default][+modifier...]`
 | `publishedAt:date=now` | `f.date().default(() => new Date()).sortable().filterable()` |
 
 Types: `string text email url password number integer boolean date enum ref id json` (also `str`, `num`, `float`, `int`, `bool`, `datetime`, `object`). Modifiers: `searchable sortable filterable unique index hidden writeOnly readOnly immutable populate owner`. Enums, booleans and refs are made filterable, numbers and dates filterable and sortable.
+
+A field spec `owner:ref:user` becomes the owner field (`f.ref('user').filterable().owner()`), and no second owner field is added.
 
 ```bash
 npx calm make resource invoice number:string!+unique amount:number! status:enum:draft,sent,paid=draft customer:ref:user notes:text --service
@@ -124,17 +131,18 @@ Writes the OpenAPI 3.1 document generated from your resources and routes (defaul
 ## calm doctor
 
 ```text
-calm doctor [--prod] [--ci] [--strict] [--json]
+calm doctor [--prod] [--audit] [--ci] [--strict] [--json]
 ```
 
-Security and correctness checks: config, policies, private fields, risky code patterns, framework drift and published advisories. Also works inside CalmAPI 1.x projects (`npx calmapi@next doctor`), where it reports the advisories published for 1.x. See [Security](/docs/security#what-calm-doctor-checks).
+Security and correctness checks: config, policies, private fields, personal data exposure, hardcoded secrets, `.env` in git, risky code patterns, framework drift and published advisories. Also works inside CalmAPI 1.x projects (`npx calmapi@next doctor`), where it reports the advisories published for 1.x. See [Security](/docs/security#what-calm-doctor-checks) for every check.
 
 | Option | Meaning |
 |---|---|
 | `--prod` | Evaluate with production rules (`NODE_ENV=production`) |
+| `--audit` | Also run `npm audit` on production dependencies |
 | `--ci` | Exit with code 1 when there are errors |
 | `--strict` | With `--ci`: also fail on warnings |
-| `--json` | Machine readable output |
+| `--json` | Machine readable output: `{ findings, errors, warnings }` |
 
 ```text
   CalmAPI doctor · my-api · production rules
@@ -148,6 +156,68 @@ Security and correctness checks: config, policies, private fields, risky code pa
 ```
 
 Doctor boots your app in a child process to inspect it, without connecting to MongoDB.
+
+## calm audit
+
+```text
+calm audit [--json] [--ci]
+```
+
+Authorization testing for your API. Boots the app on a throwaway database (`MONGODB_TEST_URI`, default `mongodb://127.0.0.1:27017`), creates a user per persona (anonymous, owner, another user, admin, custom roles), seeds records and calls every CRUD route as every persona. It checks status codes against your policies, owner-only lists, field leaks, mass assignment, query injection, the page size cap, error hygiene and token handling. Your real database is never touched. See [Security audit](/docs/audit).
+
+| Option | Meaning |
+|---|---|
+| `--ci` | Exit with code 1 when a check fails |
+| `--json` | Machine readable report |
+
+```text
+  note /notes
+    action  Anonymous  Signed-in user  Owner        Admin
+    list    ✔ deny     ✖ own (200)     ✖ own (200)  ✖ own (200)
+    read    ✔ deny     ✔ deny          ✔ allow      ✔ deny
+    create  ✔ deny     ✔ allow         ✔ allow      ✔ allow
+    update  ✔ deny     ✔ deny          ✔ allow      ✔ deny
+    delete  ✔ deny     ✔ deny          ✔ allow      ✔ deny
+    ✖ list as Signed-in user: returned 2 record(s) owned by someone else
+    ✖ list as Owner: returned 1 record(s) owned by someone else
+    ✖ list as Admin: returned 5 record(s) owned by someone else
+```
+
+That is one resource of a failing run: its service ignores the owner scope on `list`.
+
+## calm admin
+
+```text
+calm admin <email> [--revoke]
+```
+
+Gives an existing user the `admin` role, or removes it with `--revoke`. It connects to `MONGODB_URI` from `.env`, and the change applies to the user's next request. To make your first admin, sign up through `POST /api/auth/register`, then:
+
+```bash
+npx calm admin ada@example.com
+```
+
+```text
+✔ Ada Lovelace <ada@example.com> roles: user, admin
+```
+
+## calm keygen
+
+```text
+calm keygen [--write]
+```
+
+Generates a 32-byte key for [`.encrypted()` fields](/docs/security#encryption-at-rest) and prints it as a `CALM_ENCRYPTION_KEYS=k1:<key>` line. With `--write`, it adds the line to `.env`. If `CALM_ENCRYPTION_KEYS` already exists, the new key goes first (it encrypts from now on) and the old keys stay (they still decrypt existing data): that is key rotation.
+
+```text
+$ npx calm keygen --write
+✔ Added CALM_ENCRYPTION_KEYS to .env (key k1).
+
+$ npx calm keygen --write
+✔ Rotated: k2 encrypts new data; k1 still decrypts existing data.
+```
+
+Put the same keys in your production secrets. Never commit them.
 
 ## calm upgrade
 
@@ -175,4 +245,4 @@ Starts a Model Context Protocol server on stdio for AI coding agents. Register i
 claude mcp add calm -- npx calm mcp
 ```
 
-or add `{ "command": "npx", "args": ["calm", "mcp"] }` to your agent's MCP configuration. See [AI agents](/docs/ai-agents) for the tools it offers.
+or add `{ "command": "npx", "args": ["calm", "mcp"] }` to your agent's MCP configuration. It offers 17 tools: inspect the project, scaffold, call the dev API as any user (`calm_http`), run tests, doctor and the audit, and read requests, logs, emails, security events and project activity. Every tool call is logged to `.calm/activity.jsonl` with the client's name, so you can follow it in devtools. See [AI agents](/docs/ai-agents) for the list.

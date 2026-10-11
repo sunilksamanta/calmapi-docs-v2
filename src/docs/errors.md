@@ -24,7 +24,7 @@ Every error that leaves the API has the same shape, whatever caused it:
 
 | Status | Code | When |
 |---|---|---|
-| 400 | `BAD_REQUEST` | Invalid list query, or `badRequest()` from your code |
+| 400 | `BAD_REQUEST` | Invalid list query, a JSON body nested too deep or with too many values (`jsonLimits`), or `badRequest()` from your code |
 | 400 | `INVALID_JSON` | The body is not valid JSON |
 | 400 | `INVALID_TOKEN` | Password reset token unknown, expired or used |
 | 401 | `UNAUTHORIZED` | No valid session where one is needed, or wrong login |
@@ -33,7 +33,7 @@ Every error that leaves the API has the same shape, whatever caused it:
 | 409 | `CONFLICT` | Duplicate value on a `.unique()` field |
 | 413 | `PAYLOAD_TOO_LARGE` | Body larger than `bodyLimit` (1 MB) |
 | 422 | `VALIDATION_ERROR` | Body failed validation; see `details` |
-| 429 | `RATE_LIMITED` | Too many requests; see `Retry-After` |
+| 429 | `RATE_LIMITED` | Too many requests (see `Retry-After`), or a sign-in for a locked account |
 | 500 | `INTERNAL_ERROR` | Anything unexpected |
 
 ## Throwing errors

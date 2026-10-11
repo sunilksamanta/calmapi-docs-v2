@@ -157,3 +157,11 @@ npx calm routes
 ```
 
 Defaulted policies are shown as `authenticated (default)`. The devtools **Routes** panel shows the same, with a filter for routes whose policy is not explicit.
+
+To see the result of all your rules at once, open the devtools **Security** panel: the [exposure matrix](/docs/security#exposure-matrix) lists, for each resource, what anonymous visitors, signed-in users, owners, each custom role and admins may do, and which fields each of them can read and write. Then check that the running API agrees:
+
+```bash
+npx calm audit
+```
+
+[`calm audit`](/docs/audit) calls every route as every one of those personas on a throwaway database, and reports each answer that does not match the policy, owner-only lists that return other people's records, and fields that leak to someone who should not see them.

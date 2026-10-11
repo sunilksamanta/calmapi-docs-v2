@@ -11,10 +11,11 @@ TRUST_PROXY=1 \
 npm start
 ```
 
-Before deploying, run the checks with production rules:
+Before deploying, run the checks with production rules, and the authorization audit (it needs a MongoDB server for its throwaway database):
 
 ```bash
-npx calm doctor --prod --ci
+npx calm doctor --prod --audit --ci
+npx calm audit --ci
 ```
 
 ## Production defaults
@@ -42,6 +43,7 @@ Staging and preview environments are production too: anything other than `develo
 | `CORS_ORIGINS` | for browsers | Comma separated frontend origins |
 | `TRUST_PROXY` | behind a proxy | Usually `1`; see below |
 | `LOG_LEVEL` | | Default `info` |
+| `CALM_ENCRYPTION_KEYS` | with `.encrypted()` fields | The same keys as wherever else this database is read; see [Encryption at rest](/docs/security#encryption-at-rest) |
 
 Plus the variables of your blocks (`RESEND_API_KEY`, `S3_BUCKET`, `JOBS_WORKER`...). Install production dependencies only: the CLI and devtools are dev dependencies and are not needed to run the app.
 
@@ -152,6 +154,7 @@ Sessions live in MongoDB, so any instance can serve any user. A few things are p
 - `NODE_ENV=production`, `APP_URL`, `MONGODB_URI` and `CORS_ORIGINS` are set.
 - `TRUST_PROXY` matches your proxy setup.
 - A mail block is configured.
-- `npx calm doctor --prod --ci` passes, and `npm test` passes.
+- `npx calm doctor --prod --audit --ci`, `npx calm audit --ci` and `npm test` pass.
+- `CALM_ENCRYPTION_KEYS` is set if you use `.encrypted()` fields, and the keys are backed up in your secret store.
 - The readiness probe uses `/health/ready`, and the stop timeout is above 10 seconds.
 - MongoDB has backups, and the app's database user only has access to its own database.

@@ -45,15 +45,16 @@ npm test
 ## createTestApp(options)
 
 ```js
-const t = await createTestApp({ root, config });
+const t = await createTestApp({ root, config, baseUri });
 ```
 
 | Option | Meaning |
 |---|---|
 | `root` | The project folder (default `process.cwd()`) |
 | `config` | Config overrides, merged over everything else (see below) |
+| `baseUri` | MongoDB server to create the test database on (default `MONGODB_TEST_URI`) |
 
-It creates a database named `calm_test_<time>_<random>` on `MONGODB_TEST_URI` (default `mongodb://127.0.0.1:27017`), starts the app with `mode: 'test'` and listens on a random port. In test mode rate limits are off, logs are silent, devtools is off and password hashing uses cheap parameters so tests stay fast.
+It creates a database named `calm_test_<time>_<random>` on `MONGODB_TEST_URI` (default `mongodb://127.0.0.1:27017`), starts the app with `mode: 'test'` and listens on a random port. In test mode rate limits are off, logs are silent, devtools is off and password hashing uses cheap parameters so tests stay fast. `.encrypted()` fields work without setup: tests use `CALM_ENCRYPTION_KEYS` when it is set, and a random key otherwise.
 
 ```bash
 MONGODB_TEST_URI=mongodb://localhost:27018 npm test   # another server
@@ -148,4 +149,8 @@ jobs:
       - run: npx calm doctor --ci
       - run: npm test
         env: { MONGODB_TEST_URI: 'mongodb://127.0.0.1:27017' }
+      - run: npx calm audit --ci
+        env: { MONGODB_TEST_URI: 'mongodb://127.0.0.1:27017' }
 ```
+
+`calm audit` uses the same throwaway database setup to call every route as every kind of user. See [Security audit](/docs/audit).

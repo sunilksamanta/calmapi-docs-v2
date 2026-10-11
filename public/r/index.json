@@ -108,6 +108,16 @@
         "storage",
         "uploads"
       ]
+    },
+    {
+      "name": "totp",
+      "title": "Two-factor authentication (TOTP)",
+      "description": "Authenticator-app codes (RFC 6238) on login: setup with an otpauth URL, hashed single-use recovery codes, replay protection, attempt limits. Zero dependencies.",
+      "version": "1.0.0",
+      "categories": [
+        "security",
+        "auth"
+      ]
     }
   ]
 }

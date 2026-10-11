@@ -1,6 +1,6 @@
 # Authentication
 
-Projects created from the `api` template have accounts, sessions and password flows under `/api/auth`. The code is in `calm/auth/`, so you can read and change every decision.
+Projects created from the `api` template have accounts, sessions and password flows under `/api/auth`. The code is in `calm/auth/`, so you can read and change every decision. For two-factor authentication, add the [totp](/docs/blocks/totp) block.
 
 Auth turns on when `config.auth.enabled` is `true` (the default) **and** the project has a `user` resource with an `email` field and an `f.password()` field. The `minimal` template has no `user` resource and therefore no auth.
 
@@ -37,7 +37,7 @@ curl -X POST http://localhost:5001/api/auth/register -H 'Content-Type: applicati
 }
 ```
 
-The body is validated against the `user` resource, like `POST /api/users`, but with no signed-in user: fields protected by `writableBy('admin')` (`roles`, `status`) are rejected with `422`. A duplicate email is `409 CONFLICT`, a password shorter than 8 characters is `422`. Set `auth.register: false` to close sign-ups (`403`).
+The body is validated against the `user` resource, like `POST /api/users`, but with no signed-in user: fields protected by `writableBy('admin')` (`roles`, `status`) are rejected with `422`. A duplicate email is `409 CONFLICT`. A password shorter than 8 characters, a common one, or one that contains the user's email or name is `422` (see [Password rules](#password-rules)). Set `auth.register: false` to close sign-ups (`403`).
 
 ### Login
 
@@ -46,7 +46,9 @@ curl -X POST http://localhost:5001/api/auth/login -H 'Content-Type: application/
   -d '{"email":"ada@example.com","password":"correct-horse-battery"}'
 ```
 
-Same response shape as register. A wrong email and a wrong password both answer `401` with `Invalid email or password`, after the same amount of work, so the response does not reveal whether an account exists. A user whose `status` is `disabled` gets `403`.
+Same response shape as register. A wrong email and a wrong password both answer `401` with `Invalid email or password`, after the same amount of work, so the response does not reveal whether an account exists. A user whose `status` is `disabled` gets `403`. After 5 failed attempts for the same email, sign-ins for it answer `429` for 15 minutes (see [Account lockout](#account-lockout)).
+
+With the [totp](/docs/blocks/totp) block, users who turned on two-factor authentication get `{ mfaRequired: true, mfaToken, methods, expiresAt }` instead of a session, and finish with `POST /api/auth/2fa/verify`.
 
 ### Use the token
 
@@ -128,6 +130,34 @@ Register, login, password change, forgot and reset share the **auth** limiter: 1
 
 Limits are counted per process in memory. Behind a proxy set `TRUST_PROXY` so the real client IP is used, and with several instances add [rate-limit-mongo](/docs/blocks/rate-limit-mongo). Rate limiting is off in tests (`mode: 'test'`).
 
+## Account lockout
+
+Rate limits count requests per IP. Lockout counts failed sign-ins per account, so guesses spread over many IPs still hit it. After 5 failed sign-ins for the same email within 15 minutes, that email is locked for 15 minutes. While it is locked, every sign-in answers `429`, even with the right password:
+
+```json
+{ "error": { "code": "RATE_LIMITED", "message": "Too many failed sign-in attempts. Try again in 15 minutes.", "requestId": "..." } }
+```
+
+- Attempts are counted per email address whether or not an account exists, so a lock does not reveal which emails are registered.
+- A successful sign-in clears the count, and so does a password reset.
+- Attempts are stored in `calm_login_attempts`, keyed by a hash of the email, and expire on their own (TTL index).
+- A failed sign-in emits `security.login_failed`, a new lock `security.account_locked`, and a sign-in during a lock `security.locked_login_attempt` (see [Security events](/docs/security#security-events)).
+
+Change the numbers with `auth.lockout` (see [Configuration](#configuration)); `maxAttempts: 0` turns lockout off.
+
+## Password rules
+
+`f.password()` fields accept 8 to 128 characters. There are no composition rules ("one digit, one symbol"), but passwords that are easy to guess are refused with `422`:
+
+| Rule | Message |
+|---|---|
+| One of the most common leaked passwords (`password123`, `qwerty123`, `iloveyou`...) | `This password is too common, choose another one` |
+| One repeated character or a straight run (`aaaaaaaa`, `23456789`, `abcdefghij`) | `This password is too easy to guess` |
+| Contains the part of the email before the `@` (when it has 4 or more characters) | `Your password must not contain your email address` |
+| Contains a word of the user's name (4 or more characters) | `Your password must not contain your name` |
+
+The first two rules apply wherever a password field is validated. The email and name rules apply on register, password change and reset. The list of common passwords is in `calm/auth/password-policy.js`; add your own words (your product name, for example) there.
+
 ## Configuration
 
 ```js
@@ -140,6 +170,7 @@ export default defineConfig({
     resetTokenTtlMinutes: 30,
     resetUrl: 'https://app.example.com/reset-password', // default: APP_URL + /reset-password
     password: { logN: 15, r: 8, p: 3 },                 // scrypt cost
+    lockout: { maxAttempts: 5, windowMinutes: 15, lockMinutes: 15 }, // per account, 0 disables
   },
   rateLimit: { auth: { windowMs: 15 * 60_000, max: 10 } },
 });
@@ -149,13 +180,13 @@ export default defineConfig({
 
 - **Opaque session tokens, not JWT.** A token is 32 random bytes (`calm_...`). Only its SHA-256 hash is stored (collection `calm_sessions`), so a database leak does not leak usable sessions. There is no signing secret to configure, rotate or leak, and logout really ends a session. The price is one indexed lookup per request.
 - **scrypt from `node:crypto`.** No native addon to compile. Parameters follow the OWASP cheat sheet (N=2^15, r=8, p=3) and are stored inside each hash, so raising `auth.password` later upgrades users transparently the next time they log in.
-- **No account enumeration.** Login spends the same time for unknown emails, and forgot always answers the same.
+- **No account enumeration.** Login spends the same time for unknown emails, forgot always answers the same, and lockout counts unknown emails like real ones.
 - **Single-use reset tokens.** Random, hashed at rest (collection `calm_password_resets`), claimed atomically, short-lived, and they revoke every session when used.
 - **Expiry is automatic.** Both collections have TTL indexes, so MongoDB deletes expired sessions and tokens itself. `lastUsedAt` is refreshed at most every 5 minutes.
 - **Disabled accounts stop at once.** Setting `status: 'disabled'` rejects their existing sessions on the next request.
 
 ## In your code
 
-`ctx.user` is the signed-in user (the stored record with `id` as a string, without the password hash), `ctx.session` is `{ id, expiresAt }`. The auth service is available as `app.auth.service` (for example `app.auth.service.createSession(user)` in a script). Events: `auth.registered`, `auth.login`, `auth.password_changed`, `auth.password_reset_requested`, `auth.password_reset`.
+`ctx.user` is the signed-in user (the stored record with `id` as a string, without the password hash), `ctx.session` is `{ id, expiresAt }`. The auth service is available as `app.auth.service` (for example `app.auth.service.createSession(user)` in a script). Events: `auth.registered`, `auth.login`, `auth.password_changed`, `auth.password_reset_requested`, `auth.password_reset`, plus the [`security.*` events](/docs/security#security-events) for failed sign-ins, lockouts and bad tokens.
 
-There are no social logins, magic links or two-factor authentication built in. Since `calm/auth/` is your code, you can add them, and the session model stays the same.
+Two-factor authentication is available as the [totp](/docs/blocks/totp) block. It plugs into login with the `loginChallenge` [plugin hook](/docs/publishing-blocks#the-plugin-api), which you can use for other second factors too. There are no social logins or magic links built in. Since `calm/auth/` is your code, you can add them, and the session model stays the same.

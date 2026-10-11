@@ -85,7 +85,7 @@ export const SECTIONS = [
         slug: 'authentication',
         title: 'Authentication',
         icon: 'KeyRound',
-        description: 'Register, login, sessions, password change and reset: every /api/auth endpoint with examples.',
+        description: 'Register, login, sessions, password change and reset, lockout and password rules: every /api/auth endpoint with examples.',
       },
       {
         slug: 'errors',
@@ -108,7 +108,7 @@ export const SECTIONS = [
         slug: 'devtools',
         title: 'Devtools',
         icon: 'Gauge',
-        description: 'The local dashboard at /_calm: requests with their MongoDB queries, data privacy lens, mail catcher, act as any user.',
+        description: 'The local dashboard at /_calm: requests with their MongoDB queries, data privacy lens, mail catcher, act as any user, agent activity and security.',
       },
       {
         slug: 'testing',
@@ -117,16 +117,22 @@ export const SECTIONS = [
         description: 'Write API tests with createTestApp and node:test against a throwaway database.',
       },
       {
+        slug: 'audit',
+        title: 'Security audit',
+        icon: 'ScanSearch',
+        description: 'calm audit calls every route as every role on a throwaway database and checks policies, field leaks, mass assignment and token handling.',
+      },
+      {
         slug: 'cli',
         title: 'CLI reference',
         icon: 'Terminal',
-        description: 'Every calm command and flag: create, dev, make, add, routes, openapi, doctor, upgrade and mcp.',
+        description: 'Every calm command and flag: create, dev, make, add, routes, openapi, doctor, audit, admin, keygen, upgrade and mcp.',
       },
       {
         slug: 'ai-agents',
         title: 'AI agents',
         icon: 'Bot',
-        description: 'AGENTS.md, the calm mcp server for coding agents, and the mcp-server block that exposes your API to agents.',
+        description: 'AGENTS.md, the calm mcp server for coding agents, the activity log that shows what they change, and the mcp-server block.',
       },
       {
         slug: 'upgrading',
@@ -144,7 +150,7 @@ export const SECTIONS = [
         nav: 'Overview',
         title: 'Blocks',
         icon: 'Blocks',
-        description: 'Production features you copy into your project with calm add: jobs, storage, realtime, MCP, audit log and more.',
+        description: 'Production features you copy into your project with calm add: jobs, storage, realtime, MCP, audit log, two-factor auth and more.',
       },
       block('api-docs', 'API docs', 'An interactive API reference at /docs, rendered from your OpenAPI document.', 'BookOpen'),
       block('audit-log', 'Audit log', 'Who changed what and when, with field-level diffs that never record private values.', 'ClipboardList'),
@@ -157,6 +163,7 @@ export const SECTIONS = [
       block('soft-delete', 'Soft delete', 'Opt-in soft delete per resource, with trash and restore for admins.', 'ArchiveRestore'),
       block('storage-local', 'Local file storage', 'File uploads to local disk with type and size allowlists, magic-byte checks and safe downloads.', 'HardDrive'),
       block('storage-s3', 'S3 file storage', 'Direct-to-S3 uploads with presigned URLs for AWS S3, Cloudflare R2 and MinIO.', 'CloudUpload'),
+      block('totp', 'Two-factor authentication', 'Authenticator-app codes on login, with single-use recovery codes, replay protection and secrets encrypted at rest.', 'Smartphone'),
       {
         slug: 'publishing-blocks',
         nav: 'Publishing a block',
@@ -179,7 +186,7 @@ export const SECTIONS = [
         slug: 'security',
         title: 'Security',
         icon: 'Shield',
-        description: 'How to report a vulnerability, what is secure by default, and what calm doctor checks.',
+        description: 'Reporting vulnerabilities, secure defaults, encryption at rest, login lockout, security events, the exposure matrix and calm doctor.',
       },
       {
         slug: 'security-advisories',

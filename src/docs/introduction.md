@@ -40,21 +40,24 @@ One `f.*()` line drives the Mongoose schema, input validation, what the API retu
 - Every route has an access policy. Routes without an explicit one default to `authenticated` and `calm doctor` flags them.
 - Unknown, read-only and hidden fields in a request body are rejected with `422`, so there is no mass assignment.
 - List queries are allowlisted: clients can only filter, sort and search on fields you marked.
-- Sessions and password reset tokens are random, opaque and stored as SHA-256 hashes. Passwords use scrypt from `node:crypto`.
-- Auth endpoints are rate limited and never reveal whether an email is registered.
-- `NODE_ENV` defaults to `production`. Production refuses to boot without `APP_URL`, and devtools cannot be turned on there.
+- Sessions and password reset tokens are random, opaque and stored as SHA-256 hashes. Passwords use scrypt from `node:crypto`, and common passwords are refused.
+- Auth endpoints are rate limited, accounts lock after repeated failed sign-ins, and responses never reveal whether an email is registered.
+- `.encrypted()` fields are stored as AES-256-GCM ciphertext, with key rotation.
+- Anything but `development` or `test` runs as production. Production refuses to boot without `APP_URL`, and devtools cannot be turned on there.
+
+You can check the result: `calm audit` calls every route as every kind of user on a throwaway database and reports where the API and your policies disagree. See [Security](/docs/security) and [Security audit](/docs/audit).
 
 ### Devtools
 
-A local dashboard at `/_calm` shows every request with its MongoDB queries and timings, explain plans, logs, a privacy lens that puts what is stored next to what the API returns, a mail catcher for password reset links, "act as" any user, and doctor findings. See [Devtools](/docs/devtools).
+A local dashboard at `/_calm` shows every request with its MongoDB queries and timings, explain plans, logs, a privacy lens that puts what is stored next to what the API returns, a mail catcher for password reset links, "act as" any user, doctor findings, and who can access what. See [Devtools](/docs/devtools).
 
 ### Agent native
 
-Every project ships with `AGENTS.md`. `calm mcp` is an MCP server that gives coding agents tools to inspect routes and resources, scaffold resources, add blocks, run doctor and read live requests from the dev server. See [AI agents](/docs/ai-agents).
+Every project ships with `AGENTS.md`. `calm mcp` is an MCP server that gives coding agents tools to inspect routes and resources, scaffold resources, call the API as any user, run tests, doctor and the security audit, and read live requests from the dev server. Everything an agent does (tool calls, file diffs, restarts, crashes, requests) shows up live in devtools, so you can watch it work. See [AI agents](/docs/ai-agents).
 
 ### Blocks, shadcn style
 
-`calm add jobs` copies production code into your project: a MongoDB job queue, file storage on disk or S3, realtime events, an audit log, soft delete, an MCP server for your API and more. You own that code too, and anyone can publish blocks in the shadcn registry format. See [Blocks](/docs/blocks).
+`calm add jobs` copies production code into your project: a MongoDB job queue, file storage on disk or S3, realtime events, an audit log, soft delete, two-factor authentication, an MCP server for your API and more. You own that code too, and anyone can publish blocks in the shadcn registry format. See [Blocks](/docs/blocks).
 
 ## A resource
 

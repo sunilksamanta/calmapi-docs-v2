@@ -21,6 +21,7 @@ my-api/
 ├── calm.config.js            config overrides (no secrets)
 ├── calm.lock                 framework and block file hashes, used by `calm upgrade`
 ├── .env / .env.example       secrets and environment
+├── .calm/                    activity log written by calm dev and calm mcp (git-ignored)
 ├── AGENTS.md / CLAUDE.md     instructions for AI coding agents
 ├── Dockerfile / .dockerignore
 ├── eslint.config.js
@@ -44,8 +45,9 @@ The framework itself, copied from the `calmapi` package when the project was cre
 | `resource/routes.js` | The five CRUD routes |
 | `resource/service.js` | `ResourceService` |
 | `http/router.js` | The route builder, request context (`ctx`), item authorization, responses |
-| `http/middleware.js` | Request ids, security headers, CORS, rate limiting, access log |
-| `auth/` | Register, login, sessions, password change and reset; scrypt hashing; tokens |
+| `http/middleware.js` | Request ids, security headers, CORS, rate limiting, JSON guard, access log |
+| `auth/` | Register, login, sessions, password change and reset, lockout, password rules; scrypt hashing; tokens |
+| `security/` | Field encryption (`encryption.js`), the exposure matrix (`exposure.js`) and the `calm audit` engine (`audit.js`) |
 | `errors.js` | `CalmError`, helpers and the mapping of every error to a safe response |
 | `events.js`, `mail.js`, `logger.js`, `context.js` | Event bus, mailer, structured logger, per-request context |
 | `openapi.js`, `doctor.js`, `testing.js` | OpenAPI 3.1 generator, runtime checks, test helpers |

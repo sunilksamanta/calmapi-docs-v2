@@ -220,6 +220,7 @@ The dev server restarts and `/api/products` is live with all five CRUD routes. O
 ```bash
 npx calm routes    # every route with its policy
 npx calm doctor    # security and correctness checks
+npx calm audit     # every route as every role, on a throwaway database
 npm test           # node --test, needs MongoDB
 ```
 

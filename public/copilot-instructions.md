@@ -40,7 +40,10 @@ across resources; use `this.service('name')` inside services or `ctx.services.na
 5. **Business logic goes in the service**, using hooks (`beforeCreate`, `afterUpdate`, `scope`...) before
    overriding whole methods. Keep queries scoped with `this.filterFor(ctx, filter)`.
 6. **Never return raw documents from non-resource routes**; use `ctx.serialize(doc, 'resource')`.
-7. Run `npx calm doctor` after changes and `npm test` before finishing. Fix every `error` finding.
+7. Sensitive data: `.visibleTo('owner | admin')` for personal fields, `.encrypted()` for secrets at rest
+   (needs `CALM_ENCRYPTION_KEYS`, see `npx calm keygen --write`). Never log secrets.
+8. Before finishing: `npm test`, `npx calm doctor` (fix every `error`) and, after changing policies or
+   fields, `npx calm audit` (it calls every route as every role and must pass).
 
 ## Patterns
 
@@ -141,6 +144,7 @@ test('only the author can edit', async () => {
 npm run dev                 start with watch mode and devtools (http://localhost:5001/_calm)
 npx calm routes             every route with its policy
 npx calm doctor             security and config checks
+npx calm audit              authorization test of every route as every role (throwaway database)
 npx calm add <block>        add a block from the registry (e.g. @calmapi/jobs)
 npx calm openapi            write openapi.json
 npm test                    run tests (needs MongoDB; MONGODB_TEST_URI to override)

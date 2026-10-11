@@ -79,6 +79,7 @@ fields: {
 | `.check(fn, message?)` | Custom rule, sync or async: return `true`, or an error message string |
 | `.schema(standardSchema)` | Validate with Zod, Valibot, ArkType or any [Standard Schema](https://standardschema.dev) library |
 | `.describe(text)`, `.example(value)` | Description and example in the OpenAPI document |
+| `.encrypted()` | Stored as AES-256-GCM ciphertext, decrypted on read (see [Encrypted fields](#encrypted-fields)) |
 
 ```js
 fields: {
@@ -119,6 +120,19 @@ export default resource('user', {
   policy: { list: 'admin', read: 'owner | admin', create: 'admin', update: 'owner | admin', delete: 'admin' },
 });
 ```
+
+## Encrypted fields
+
+`.encrypted()` encrypts a value before it reaches MongoDB and decrypts it when it is read, so database dumps and backups only hold ciphertext while the API, your services and hooks see the plain value:
+
+```js
+fields: {
+  nationalId: f.string().required().encrypted().visibleTo('owner | admin'),
+  webhookSecret: f.string().encrypted().hidden(),
+}
+```
+
+It needs `CALM_ENCRYPTION_KEYS` (create it with `npx calm keygen --write`). Encryption is about storage, not about who reads the field, so combine it with `.visibleTo()` or `.hidden()`. Ciphertext cannot be queried: an encrypted field cannot also be `.filterable()`, `.sortable()`, `.searchable()`, `.unique()`, `.index()` or `.owner()`, and `f.ref()` and `f.id()` fields cannot be encrypted. Keys and rotation are covered in [Security](/docs/security#encryption-at-rest).
 
 ## Query modifiers
 
