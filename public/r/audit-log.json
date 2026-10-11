@@ -1,0 +1,34 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "audit-log",
+  "type": "registry:item",
+  "title": "Audit log",
+  "description": "Who changed what and when: every create, update and delete with a field-level diff (private fields never recorded). Admin API included.",
+  "version": "1.0.0",
+  "author": "CalmAPI",
+  "categories": [
+    "security",
+    "compliance"
+  ],
+  "dependencies": [],
+  "devDependencies": [],
+  "registryDependencies": [],
+  "envVars": {
+    "AUDIT_RETENTION_DAYS": "365"
+  },
+  "docs": "Every resource write is recorded automatically. Read it: GET /api/audit-log?resource=post&recordId=<id> (admins only).\nExclude a resource with `audit: false` in its resource() options.",
+  "meta": {
+    "calmapi": {
+      "minVersion": "2.0.0-alpha.0",
+      "conflicts": []
+    }
+  },
+  "files": [
+    {
+      "path": "registry/blocks/audit-log/files/app/blocks/audit-log/index.js",
+      "type": "registry:file",
+      "target": "app/blocks/audit-log/index.js",
+      "content": "import { isDeepStrictEqual } from 'node:util';\nimport { definePlugin, currentRequest } from '#calm';\n\n// Records every create/update/delete. Hidden, write-only and password fields are\n// never stored in the log, only the fact that they changed.\nexport default definePlugin({\n  name: 'audit-log',\n  setup(calm) {\n    const { Schema } = calm.mongoose;\n    const days = Number(process.env.AUDIT_RETENTION_DAYS || 365);\n    const schema = new Schema(\n      {\n        action: { type: String, enum: ['created', 'updated', 'deleted'], required: true },\n        resource: { type: String, required: true },\n        recordId: { type: String, required: true },\n        user: { type: Schema.Types.ObjectId, ref: 'user' },\n        changes: Schema.Types.Mixed,\n        requestId: String,\n        ip: String,\n        at: { type: Date, default: () => new Date() },\n      },\n      { collection: 'calm_audit_log', versionKey: false },\n    );\n    schema.index({ resource: 1, recordId: 1, at: -1 });\n    schema.index({ user: 1, at: -1 });\n    schema.index({ at: 1 }, { expireAfterSeconds: days * 86_400 });\n    const Audit = calm.mongoose.model('calmAudit', schema);\n    calm.provide('audit', Audit);\n\n    calm.on('*', async (payload, name) => {\n      const m = /^([\\w-]+)\\.(created|updated|deleted)$/.exec(name);\n      if (!m) return;\n      const entry = calm.app.registry.get(m[1]);\n      if (!entry || entry.def.options.audit === false) return;\n      const req = currentRequest()?.req;\n      await Audit.create({\n        action: m[2],\n        resource: m[1],\n        recordId: String(payload.doc._id),\n        user: payload.user?.id ?? null,\n        changes: diff(entry.def, m[2] === 'created' ? {} : payload.previous ?? payload.doc, m[2] === 'deleted' ? {} : payload.doc),\n        requestId: currentRequest()?.id,\n        ip: req?.ip,\n      });\n    });\n\n    calm.routes(\n      (r) => {\n        r.get('/', { policy: 'admin', summary: 'Audit trail', tags: ['audit'] }, async (ctx) => {\n          const filter = {};\n          for (const key of ['resource', 'recordId', 'action']) if (typeof ctx.query[key] === 'string') filter[key] = ctx.query[key];\n          if (typeof ctx.query.user === 'string' && /^[a-f\\d]{24}$/i.test(ctx.query.user)) filter.user = ctx.query.user;\n          const limit = Math.min(Number(ctx.query.limit) || 50, 200);\n          const rows = await Audit.find(filter).sort({ at: -1 }).limit(limit).populate({ path: 'user', select: 'name' }).lean();\n          return rows.map(({ _id, user, ...rest }) => ({ id: String(_id), user: user ? { id: String(user._id), name: user.name } : null, ...rest }));\n        });\n      },\n      { prefix: '/audit-log' },\n    );\n  },\n});\n\nfunction diff(def, before, after) {\n  const changes = {};\n  for (const [key, field] of Object.entries(def.fields)) {\n    const a = before?.[key];\n    const b = after?.[key];\n    if (isDeepStrictEqual(normalize(a), normalize(b))) continue;\n    changes[key] = field.isOutput ? { from: normalize(a) ?? null, to: normalize(b) ?? null } : { changed: true };\n  }\n  return changes;\n}\n\nconst normalize = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));\n"
+    }
+  ]
+}

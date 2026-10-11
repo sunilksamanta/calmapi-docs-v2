@@ -1,0 +1,113 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "calmapi",
+  "homepage": "https://calmapi.dev",
+  "items": [
+    {
+      "name": "api-docs",
+      "title": "API docs",
+      "description": "Interactive API reference at /docs, generated from your OpenAPI document (Scalar).",
+      "version": "1.0.0",
+      "categories": [
+        "docs"
+      ]
+    },
+    {
+      "name": "audit-log",
+      "title": "Audit log",
+      "description": "Who changed what and when: every create, update and delete with a field-level diff (private fields never recorded). Admin API included.",
+      "version": "1.0.0",
+      "categories": [
+        "security",
+        "compliance"
+      ]
+    },
+    {
+      "name": "jobs",
+      "title": "Background jobs",
+      "description": "Background jobs and cron on MongoDB (no Redis): retries with backoff, schedules, event triggers, admin API and a devtools panel.",
+      "version": "1.0.0",
+      "categories": [
+        "jobs",
+        "queue",
+        "cron"
+      ]
+    },
+    {
+      "name": "mail-resend",
+      "title": "Email via Resend",
+      "description": "Deliver emails (password resets, notifications) through the Resend HTTP API. No SDK, just fetch.",
+      "version": "1.0.0",
+      "categories": [
+        "mail"
+      ]
+    },
+    {
+      "name": "mail-smtp",
+      "title": "Email via SMTP",
+      "description": "Deliver emails through any SMTP server (SES, Postmark, Mailgun, your own) with Nodemailer.",
+      "version": "1.0.0",
+      "categories": [
+        "mail"
+      ]
+    },
+    {
+      "name": "mcp-server",
+      "title": "MCP server",
+      "description": "Expose your resources to AI agents as Model Context Protocol tools (Streamable HTTP at /mcp). Every call goes through the same policies, validation and serialization as the REST API.",
+      "version": "1.0.0",
+      "categories": [
+        "ai",
+        "mcp"
+      ]
+    },
+    {
+      "name": "rate-limit-mongo",
+      "title": "Shared rate limits (MongoDB)",
+      "description": "Store rate limit counters in MongoDB so limits hold across every instance of your API.",
+      "version": "1.0.0",
+      "categories": [
+        "security",
+        "scaling"
+      ]
+    },
+    {
+      "name": "realtime-sse",
+      "title": "Realtime (SSE)",
+      "description": "Live resource changes over Server-Sent Events, filtered per subscriber with the same policies, scopes and field visibility as the REST API.",
+      "version": "1.0.0",
+      "categories": [
+        "realtime"
+      ]
+    },
+    {
+      "name": "soft-delete",
+      "title": "Soft delete",
+      "description": "Opt-in soft delete per resource: DELETE marks records deleted, queries hide them, admins can list and restore them.",
+      "version": "1.0.0",
+      "categories": [
+        "data"
+      ]
+    },
+    {
+      "name": "storage-local",
+      "title": "Local file storage",
+      "description": "File uploads to local disk: a 'file' resource, type and size allowlists, magic-byte checks and safe downloads.",
+      "version": "1.0.0",
+      "categories": [
+        "storage",
+        "uploads"
+      ]
+    },
+    {
+      "name": "storage-s3",
+      "title": "S3 file storage",
+      "description": "Direct-to-S3 uploads with presigned URLs (AWS S3, Cloudflare R2, MinIO): a 'file' resource, type and size allowlists, verified completion and private downloads.",
+      "version": "1.0.0",
+      "categories": [
+        "storage",
+        "uploads"
+      ]
+    }
+  ]
+}

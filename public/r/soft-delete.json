@@ -1,0 +1,31 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "soft-delete",
+  "type": "registry:item",
+  "title": "Soft delete",
+  "description": "Opt-in soft delete per resource: DELETE marks records deleted, queries hide them, admins can list and restore them.",
+  "version": "1.0.0",
+  "author": "CalmAPI",
+  "categories": [
+    "data"
+  ],
+  "dependencies": [],
+  "devDependencies": [],
+  "registryDependencies": [],
+  "envVars": {},
+  "docs": "Enable per resource: resource('post', { softDelete: true, fields: {...} })\nDELETE /api/posts/:id now sets deletedAt. Admins: GET /api/posts/trash, POST /api/posts/:id/restore.",
+  "meta": {
+    "calmapi": {
+      "minVersion": "2.0.0-alpha.0",
+      "conflicts": []
+    }
+  },
+  "files": [
+    {
+      "path": "registry/blocks/soft-delete/files/app/blocks/soft-delete/index.js",
+      "type": "registry:file",
+      "target": "app/blocks/soft-delete/index.js",
+      "content": "import { definePlugin, f, notFound } from '#calm';\n\n// resource('post', { softDelete: true, ... }) turns deletes into a deletedAt timestamp.\n// Every query on that resource ignores deleted records unless its filter mentions\n// deletedAt itself (e.g. { deletedAt: { $ne: null } }) or it sets { withDeleted: true }.\n\nconst QUERY_HOOKS = ['find', 'findOne', 'countDocuments', 'findOneAndUpdate', 'updateOne', 'updateMany'];\n\nfunction excludeDeleted(schema) {\n  for (const hook of QUERY_HOOKS) {\n    schema.pre(hook, function () {\n      if (this.getOptions().withDeleted) return;\n      const filter = this.getFilter();\n      if (filter.deletedAt === undefined) this.where({ deletedAt: null });\n    });\n  }\n  schema.pre('aggregate', function () {\n    if (!this.options.withDeleted) this.pipeline().unshift({ $match: { deletedAt: null } });\n  });\n}\n\nexport default definePlugin({\n  name: 'soft-delete',\n  setup(calm) {\n    const enabled = new Set();\n\n    calm.onResource((def) => {\n      if (!def.options.softDelete) return def;\n      enabled.add(def.name);\n      def.fields.deletedAt = f.date().hidden();\n      def.options.schemaPlugins = [...(def.options.schemaPlugins ?? []), excludeDeleted];\n      return def;\n    });\n\n    calm.onService(({ def, model, service }) => {\n      if (!enabled.has(def.name)) return;\n      service.remove = async (id, ctx = {}) => {\n        const doc = await model.findOne(service.filterFor(ctx, { _id: id })).select(service.internalSelect).lean();\n        if (!doc) throw notFound(`${def.name} not found`);\n        await service.beforeDelete(doc, ctx);\n        await model.updateOne({ _id: doc._id }, { $set: { deletedAt: new Date() } });\n        await service.afterDelete(doc, ctx);\n        calm.events.emit(`${def.name}.deleted`, { doc, resource: def.name, user: ctx.user ?? null, soft: true });\n        return doc;\n      };\n      service.restore = async (id, ctx = {}) => {\n        const doc = await model.findOneAndUpdate({ _id: id, deletedAt: { $ne: null } }, { $set: { deletedAt: null } }, { returnDocument: 'after' }).lean();\n        if (!doc) throw notFound(`No deleted ${def.name} with that id`);\n        calm.events.emit(`${def.name}.restored`, { doc, resource: def.name, user: ctx.user ?? null });\n        return doc;\n      };\n    });\n\n    calm.onStart((app) => {\n      for (const name of enabled) {\n        const entry = app.registry.get(name);\n        app.log.debug(`soft-delete enabled for ${name}`, { path: entry.def.path });\n      }\n    });\n\n    calm.routes((r) => {\n      for (const name of calm.app.registry.keys()) {\n        if (!enabled.has(name)) continue;\n        const entry = calm.app.registry.get(name);\n        const base = entry.def.path;\n        r.get(`${base}/trash`, { policy: 'admin', summary: `Deleted ${name} records`, tags: [name] }, async (ctx) => {\n          const docs = await entry.model.find({ deletedAt: { $ne: null } }).sort({ deletedAt: -1 }).limit(100).lean();\n          return Promise.all(docs.map((d) => ctx.serialize(d, name)));\n        });\n        r.post(`${base}/:recordId/restore`, { policy: 'admin', summary: `Restore a deleted ${name}`, tags: [name] }, async (ctx) =>\n          ctx.serialize(await entry.service.restore(ctx.params.recordId, ctx), name),\n        );\n      }\n    });\n  },\n});\n"
+    }
+  ]
+}

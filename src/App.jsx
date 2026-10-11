@@ -1,31 +1,28 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/Layout';
 import DocsPage from './pages/DocsPage';
+import NotFound from './pages/NotFound';
+import { findPage, redirectFor } from './lib/docs.js';
 import './App.css';
+
+/** Every URL is resolved against src/docs/manifest.js: a page, a redirect, or the 404 page. */
+function PageResolver() {
+  const { pathname, hash } = useLocation();
+  const page = findPage(pathname);
+  if (page) return <DocsPage key={page.path} page={page} />;
+  const target = redirectFor(pathname);
+  if (target) return <Navigate to={target.includes('#') ? target : `${target}${hash}`} replace />;
+  return <NotFound />;
+}
 
 function App() {
   return (
     <ThemeProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<DocsPage docKey="introduction" />} />
-            <Route path="/getting-started" element={<DocsPage docKey="getting-started" />} />
-            <Route path="/architecture" element={<DocsPage docKey="architecture" />} />
-            <Route path="/creating-modules" element={<DocsPage docKey="creating-modules" />} />
-            <Route path="/models" element={<DocsPage docKey="models" />} />
-            <Route path="/controllers" element={<DocsPage docKey="controllers" />} />
-            <Route path="/services" element={<DocsPage docKey="services" />} />
-            <Route path="/dtos" element={<DocsPage docKey="dtos" />} />
-            <Route path="/routing" element={<DocsPage docKey="routing" />} />
-            <Route path="/built-in-modules" element={<DocsPage docKey="built-in-modules" />} />
-            <Route path="/advanced" element={<DocsPage docKey="advanced" />} />
-            <Route path="/security" element={<DocsPage docKey="security" />} />
-            <Route path="/deployment" element={<DocsPage docKey="deployment" />} />
-            <Route path="/quick-reference" element={<DocsPage docKey="quick-reference" />} />
-            <Route path="/example-project" element={<DocsPage docKey="example-project" />} />
-            <Route path="/copilot-setup" element={<DocsPage docKey="copilot-setup" />} />
+          <Route element={<Layout />}>
+            <Route path="*" element={<PageResolver />} />
           </Route>
         </Routes>
       </Router>

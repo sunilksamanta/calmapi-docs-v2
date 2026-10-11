@@ -1,0 +1,32 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "rate-limit-mongo",
+  "type": "registry:item",
+  "title": "Shared rate limits (MongoDB)",
+  "description": "Store rate limit counters in MongoDB so limits hold across every instance of your API.",
+  "version": "1.0.0",
+  "author": "CalmAPI",
+  "categories": [
+    "security",
+    "scaling"
+  ],
+  "dependencies": [],
+  "devDependencies": [],
+  "registryDependencies": [],
+  "envVars": {},
+  "docs": "Nothing to configure: once added, config.rateLimit uses MongoDB (collection calm_rate_limits, cleaned up by a TTL index).",
+  "meta": {
+    "calmapi": {
+      "minVersion": "2.0.0-alpha.0",
+      "conflicts": []
+    }
+  },
+  "files": [
+    {
+      "path": "registry/blocks/rate-limit-mongo/files/app/blocks/rate-limit-mongo/index.js",
+      "type": "registry:file",
+      "target": "app/blocks/rate-limit-mongo/index.js",
+      "content": "import { definePlugin } from '#calm';\n\n// Fixed-window counters in MongoDB: one document per key and window, removed by a TTL\n// index once the window is over. Replaces the in-memory store used by calm/http.\nexport default definePlugin({\n  name: 'rate-limit-mongo',\n  setup(calm) {\n    const schema = new calm.mongoose.Schema(\n      { _id: String, count: { type: Number, default: 0 }, expiresAt: Date },\n      { collection: 'calm_rate_limits', versionKey: false },\n    );\n    schema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });\n    const Counter = calm.mongoose.model('calmRateLimit', schema);\n\n    calm.app.rateStore = {\n      async hit(key, windowMs) {\n        const windowStart = Math.floor(Date.now() / windowMs) * windowMs;\n        const resetAt = windowStart + windowMs;\n        const doc = await Counter.findOneAndUpdate(\n          { _id: `${key}:${windowStart}` },\n          { $inc: { count: 1 }, $setOnInsert: { expiresAt: new Date(resetAt) } },\n          { upsert: true, returnDocument: 'after' },\n        ).lean();\n        return { count: doc.count, resetAt };\n      },\n    };\n  },\n});\n"
+    }
+  ]
+}

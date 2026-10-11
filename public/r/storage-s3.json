@@ -1,0 +1,69 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "storage-s3",
+  "type": "registry:item",
+  "title": "S3 file storage",
+  "description": "Direct-to-S3 uploads with presigned URLs (AWS S3, Cloudflare R2, MinIO): a 'file' resource, type and size allowlists, verified completion and private downloads.",
+  "version": "1.0.0",
+  "author": "CalmAPI",
+  "categories": [
+    "storage",
+    "uploads"
+  ],
+  "dependencies": [
+    "@aws-sdk/client-s3@^3.1141.0",
+    "@aws-sdk/s3-request-presigner@^3.1141.0"
+  ],
+  "devDependencies": [],
+  "registryDependencies": [],
+  "envVars": {
+    "S3_BUCKET": "",
+    "S3_REGION": "us-east-1",
+    "S3_ACCESS_KEY_ID": "",
+    "S3_SECRET_ACCESS_KEY": "",
+    "S3_ENDPOINT": "",
+    "UPLOAD_MAX_MB": "10",
+    "UPLOAD_ALLOWED_TYPES": "image/png,image/jpeg,image/gif,image/webp,application/pdf"
+  },
+  "docs": "1. POST /api/files/presign { fileName, contentType, size }  -> { data: { file, upload: { url, method, headers } } }\n2. PUT the bytes to upload.url with upload.headers (straight from the browser)\n3. POST /api/files/:id/complete  -> verifies the object in S3 and marks the file ready\nDownload: GET /api/files/:id/download (302 to a short-lived signed URL)\nFor R2/MinIO set S3_ENDPOINT. Configure CORS on the bucket to allow PUT from your frontend.",
+  "meta": {
+    "calmapi": {
+      "minVersion": "2.0.0-alpha.0",
+      "conflicts": [
+        "storage-local"
+      ]
+    }
+  },
+  "files": [
+    {
+      "path": "registry/blocks/storage-s3/files/app/blocks/storage-s3/index.js",
+      "type": "registry:file",
+      "target": "app/blocks/storage-s3/index.js",
+      "content": "import { definePlugin } from '#calm';\nimport { settings } from './s3.js';\n\nexport default definePlugin({\n  name: 'storage-s3',\n  setup(calm) {\n    calm.doctor(() => {\n      const s = settings();\n      const findings = [];\n      if (!s.bucket) findings.push({ level: 'error', id: 's3-bucket', title: 'S3_BUCKET is not set', detail: 'Uploads cannot work without a bucket. Set S3_BUCKET (and S3_ENDPOINT for R2/MinIO).' });\n      if (!process.env.S3_ACCESS_KEY_ID && calm.config.mode !== 'production') {\n        findings.push({ level: 'info', id: 's3-credentials', title: 'No S3_ACCESS_KEY_ID set', detail: 'The AWS default credential chain will be used (IAM role, profile or AWS_* env vars).' });\n      }\n      return findings;\n    });\n    calm.devtools.panel('storage', () => {\n      const s = settings();\n      return { driver: 's3', bucket: s.bucket ?? '(not set)', region: s.region, endpoint: s.endpoint ?? 'AWS', maxMb: s.maxBytes / 1048576, allowedTypes: s.allowed };\n    });\n  },\n});\n"
+    },
+    {
+      "path": "registry/blocks/storage-s3/files/app/blocks/storage-s3/s3.js",
+      "type": "registry:file",
+      "target": "app/blocks/storage-s3/s3.js",
+      "content": "import { randomUUID } from 'node:crypto';\nimport { S3Client, PutObjectCommand, GetObjectCommand, HeadObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';\nimport { getSignedUrl } from '@aws-sdk/s3-request-presigner';\n\n// S3 (or any S3-compatible store) with presigned URLs: file bytes never pass\n// through your API servers. Objects are private; downloads use short-lived URLs.\n\nexport const settings = () => ({\n  bucket: process.env.S3_BUCKET,\n  region: process.env.S3_REGION || 'us-east-1',\n  endpoint: process.env.S3_ENDPOINT || undefined,\n  maxBytes: Number(process.env.UPLOAD_MAX_MB || 10) * 1024 * 1024,\n  allowed: (process.env.UPLOAD_ALLOWED_TYPES || 'image/png,image/jpeg,image/gif,image/webp,application/pdf').split(',').map((s) => s.trim()),\n  uploadTtl: 600,\n  downloadTtl: 300,\n});\n\nlet client;\nexport function s3() {\n  const s = settings();\n  client ??= new S3Client({\n    region: s.region,\n    endpoint: s.endpoint,\n    forcePathStyle: Boolean(s.endpoint),\n    credentials: process.env.S3_ACCESS_KEY_ID\n      ? { accessKeyId: process.env.S3_ACCESS_KEY_ID, secretAccessKey: process.env.S3_SECRET_ACCESS_KEY }\n      : undefined, // fall back to the default AWS credential chain (IAM roles, env, profiles)\n  });\n  return client;\n}\n\nconst EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'application/pdf': 'pdf' };\n\nexport const newKey = (ownerId, contentType) => {\n  const d = new Date();\n  return `uploads/${ownerId}/${d.getUTCFullYear()}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${randomUUID()}.${EXT[contentType] ?? 'bin'}`;\n};\n\nexport async function presignUpload(key, contentType, size) {\n  const s = settings();\n  const command = new PutObjectCommand({ Bucket: s.bucket, Key: key, ContentType: contentType, ContentLength: size });\n  const url = await getSignedUrl(s3(), command, { expiresIn: s.uploadTtl, signableHeaders: new Set(['content-type', 'content-length']) });\n  return { url, method: 'PUT', headers: { 'Content-Type': contentType }, expiresIn: s.uploadTtl };\n}\n\nexport async function head(key) {\n  try {\n    return await s3().send(new HeadObjectCommand({ Bucket: settings().bucket, Key: key }));\n  } catch (err) {\n    if (err?.$metadata?.httpStatusCode === 404 || err?.name === 'NotFound') return null;\n    throw err;\n  }\n}\n\nexport async function presignDownload(key, fileName, inline) {\n  const s = settings();\n  const command = new GetObjectCommand({\n    Bucket: s.bucket,\n    Key: key,\n    ResponseContentDisposition: `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(fileName)}`,\n  });\n  return getSignedUrl(s3(), command, { expiresIn: s.downloadTtl });\n}\n\nexport const remove = (key) => s3().send(new DeleteObjectCommand({ Bucket: settings().bucket, Key: key }));\n"
+    },
+    {
+      "path": "registry/blocks/storage-s3/files/app/resources/file/file.resource.js",
+      "type": "registry:file",
+      "target": "app/resources/file/file.resource.js",
+      "content": "import { resource, f } from '#calm';\n\n// Uploaded files (metadata). Created through POST /api/files/presign, confirmed with\n// POST /api/files/:id/complete once the browser has PUT the bytes to S3.\nexport default resource('file', {\n  crud: ['list', 'read', 'delete'],\n  fields: {\n    originalName: f.string().readOnly().searchable().sortable(),\n    mimeType: f.string().readOnly().filterable(),\n    size: f.integer().readOnly().sortable(),\n    status: f.enum(['pending', 'ready']).default('pending').readOnly().filterable(),\n    key: f.string().hidden(),\n    owner: f.ref('user').owner().filterable(),\n  },\n  policy: {\n    list: 'owner | admin',\n    read: 'owner | admin',\n    create: 'authenticated',\n    update: 'none',\n    delete: 'owner | admin',\n  },\n});\n"
+    },
+    {
+      "path": "registry/blocks/storage-s3/files/app/resources/file/file.routes.js",
+      "type": "registry:file",
+      "target": "app/resources/file/file.routes.js",
+      "content": "import { f, badRequest } from '#calm';\nimport { settings, newKey, presignUpload, presignDownload, head } from '#app/blocks/storage-s3/s3.js';\n\nconst INLINE = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp']);\n\nexport default (r) => {\n  r.post(\n    '/presign',\n    {\n      policy: 'authenticated',\n      status: 201,\n      summary: 'Start an upload: returns a presigned PUT URL',\n      input: { fileName: f.string().required().max(255), contentType: f.string().required().max(100), size: f.integer().required().min(1) },\n    },\n    async (ctx) => {\n      const s = settings();\n      const { fileName, contentType, size } = ctx.body;\n      if (!s.allowed.includes(contentType)) throw badRequest(`File type ${contentType} is not allowed. Allowed: ${s.allowed.join(', ')}`);\n      if (size > s.maxBytes) throw badRequest(`File is larger than ${Math.round(s.maxBytes / 1048576)} MB`);\n      const key = newKey(ctx.user.id, contentType);\n      const file = await ctx.service.create({ originalName: fileName, mimeType: contentType, size, key, status: 'pending' }, ctx);\n      return { file: await ctx.serialize(file), upload: await presignUpload(key, contentType, size) };\n    },\n  );\n\n  r.post('/:id/complete', { policy: 'owner', summary: 'Confirm an upload once the bytes are in S3' }, async (ctx) => {\n    const doc = await ctx.service.model.findById(ctx.doc._id).select('+key').lean();\n    if (doc.status === 'ready') return doc;\n    const object = await head(doc.key);\n    if (!object) throw badRequest('The file has not been uploaded yet');\n    if (object.ContentLength !== doc.size || object.ContentType !== doc.mimeType) {\n      throw badRequest('Uploaded object does not match the declared size or type');\n    }\n    return ctx.service.update(doc._id, { status: 'ready' }, ctx);\n  });\n\n  r.get('/:id/download', { policy: 'owner | admin', summary: 'Redirect to a short-lived download URL' }, async (ctx) => {\n    const doc = await ctx.service.model.findById(ctx.doc._id).select('+key').lean();\n    if (doc.status !== 'ready') throw badRequest('This file is not uploaded yet');\n    ctx.res.redirect(302, await presignDownload(doc.key, doc.originalName, INLINE.has(doc.mimeType)));\n  });\n};\n"
+    },
+    {
+      "path": "registry/blocks/storage-s3/files/app/resources/file/file.service.js",
+      "type": "registry:file",
+      "target": "app/resources/file/file.service.js",
+      "content": "import { ResourceService } from '#calm';\nimport { remove } from '#app/blocks/storage-s3/s3.js';\n\nexport default class FileService extends ResourceService {\n  async afterDelete(doc) {\n    if (doc.key) await remove(doc.key).catch((err) => this.log.warn('Could not delete S3 object', { key: doc.key, err }));\n  }\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "mail-smtp",
+  "type": "registry:item",
+  "title": "Email via SMTP",
+  "description": "Deliver emails through any SMTP server (SES, Postmark, Mailgun, your own) with Nodemailer.",
+  "version": "1.0.0",
+  "author": "CalmAPI",
+  "categories": [
+    "mail"
+  ],
+  "dependencies": [
+    "nodemailer@^10.0.11"
+  ],
+  "devDependencies": [],
+  "registryDependencies": [],
+  "envVars": {
+    "SMTP_URL": "smtps://user:password@smtp.example.com:465",
+    "MAIL_FROM": "My App <no-reply@example.com>"
+  },
+  "docs": "Set SMTP_URL (smtp:// or smtps://) and MAIL_FROM.",
+  "meta": {
+    "calmapi": {
+      "minVersion": "2.0.0-alpha.0",
+      "conflicts": []
+    }
+  },
+  "files": [
+    {
+      "path": "registry/blocks/mail-smtp/files/app/blocks/mail-smtp/index.js",
+      "type": "registry:file",
+      "target": "app/blocks/mail-smtp/index.js",
+      "content": "import nodemailer from 'nodemailer';\nimport { definePlugin } from '#calm';\n\nexport default definePlugin({\n  name: 'mail-smtp',\n  setup(calm) {\n    const url = process.env.SMTP_URL;\n    if (!url || url.includes('smtp.example.com')) {\n      calm.doctor(() =>\n        calm.config.mode === 'production' ? [{ level: 'error', id: 'smtp-url', title: 'SMTP_URL is not configured', detail: 'Emails cannot be delivered in production.' }] : [],\n      );\n      return;\n    }\n    const transport = nodemailer.createTransport(url);\n    calm.mailer.use({\n      name: 'smtp',\n      send: ({ to, from, subject, text, html }) => transport.sendMail({ from: process.env.MAIL_FROM || from, to, subject, text, html }),\n    });\n    calm.onShutdown(() => transport.close());\n  },\n});\n"
+    }
+  ]
+}

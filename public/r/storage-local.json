@@ -1,0 +1,64 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "storage-local",
+  "type": "registry:item",
+  "title": "Local file storage",
+  "description": "File uploads to local disk: a 'file' resource, type and size allowlists, magic-byte checks and safe downloads.",
+  "version": "1.0.0",
+  "author": "CalmAPI",
+  "categories": [
+    "storage",
+    "uploads"
+  ],
+  "dependencies": [
+    "multer@^2.4.0"
+  ],
+  "devDependencies": [],
+  "registryDependencies": [],
+  "envVars": {
+    "UPLOAD_DIR": "./uploads",
+    "UPLOAD_MAX_MB": "10",
+    "UPLOAD_ALLOWED_TYPES": "image/png,image/jpeg,image/gif,image/webp,application/pdf"
+  },
+  "docs": "Upload:   curl -H 'Authorization: Bearer <token>' -F file=@photo.png http://localhost:5001/api/files/upload\nDownload: GET /api/files/:id/download   List: GET /api/files   Delete: DELETE /api/files/:id\nAdd uploads/ to .gitignore. Files are private to their owner; change policies in app/resources/file/file.resource.js.",
+  "meta": {
+    "calmapi": {
+      "minVersion": "2.0.0-alpha.0",
+      "conflicts": [
+        "storage-s3"
+      ]
+    }
+  },
+  "files": [
+    {
+      "path": "registry/blocks/storage-local/files/app/blocks/storage-local/index.js",
+      "type": "registry:file",
+      "target": "app/blocks/storage-local/index.js",
+      "content": "import { definePlugin } from '#calm';\nimport { settings } from './storage.js';\n\n// Local file storage. The 'file' resource (app/resources/file) holds the metadata;\n// this plugin only reports its configuration to doctor and devtools.\nexport default definePlugin({\n  name: 'storage-local',\n  setup(calm) {\n    calm.doctor(() => {\n      const findings = [];\n      if (calm.config.mode === 'production') {\n        findings.push({\n          level: 'info',\n          id: 'storage-local-production',\n          title: 'Uploads are stored on local disk',\n          detail: `Files live in ${settings().dir}. With several instances or ephemeral disks use @calmapi/storage-s3.`,\n        });\n      }\n      return findings;\n    });\n    calm.devtools.panel('storage', () => {\n      const s = settings();\n      return { driver: 'local disk', directory: s.dir, maxMb: s.maxBytes / 1048576, allowedTypes: s.allowed };\n    });\n  },\n});\n"
+    },
+    {
+      "path": "registry/blocks/storage-local/files/app/blocks/storage-local/storage.js",
+      "type": "registry:file",
+      "target": "app/blocks/storage-local/storage.js",
+      "content": "import { mkdirSync, openSync, readSync, closeSync, unlinkSync, existsSync } from 'node:fs';\nimport { join, resolve } from 'node:path';\nimport { randomUUID } from 'node:crypto';\nimport multer from 'multer';\nimport { badRequest } from '#calm';\n\n// Local disk storage. Files get random names (never the uploaded name), the declared\n// type must be on the allowlist, and the first bytes must match that type.\n\nexport const settings = () => ({\n  dir: resolve(process.env.UPLOAD_DIR || './uploads'),\n  maxBytes: Number(process.env.UPLOAD_MAX_MB || 10) * 1024 * 1024,\n  allowed: (process.env.UPLOAD_ALLOWED_TYPES || 'image/png,image/jpeg,image/gif,image/webp,application/pdf').split(',').map((s) => s.trim()),\n});\n\nconst EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'application/pdf': 'pdf', 'text/plain': 'txt', 'text/csv': 'csv' };\n\n// Magic numbers for types we can verify. Others are accepted on the declared type alone.\nconst SIGNATURES = {\n  'image/png': (b) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),\n  'image/jpeg': (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,\n  'image/gif': (b) => b.subarray(0, 4).toString('latin1') === 'GIF8',\n  'image/webp': (b) => b.subarray(0, 4).toString('latin1') === 'RIFF' && b.subarray(8, 12).toString('latin1') === 'WEBP',\n  'application/pdf': (b) => b.subarray(0, 5).toString('latin1') === '%PDF-',\n};\n\n/** Types safe to display inline in a browser. Everything else downloads as an attachment. */\nexport const INLINE = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp']);\n\nexport function uploadMiddleware(field = 'file') {\n  const { dir, maxBytes, allowed } = settings();\n  mkdirSync(dir, { recursive: true });\n  const upload = multer({\n    storage: multer.diskStorage({\n      destination: dir,\n      filename: (_req, file, cb) => cb(null, `${randomUUID()}.${EXT[file.mimetype] ?? 'bin'}`),\n    }),\n    limits: { fileSize: maxBytes, files: 1, fields: 10 },\n    fileFilter: (_req, file, cb) => {\n      if (!allowed.includes(file.mimetype)) return cb(badRequest(`File type ${file.mimetype} is not allowed. Allowed: ${allowed.join(', ')}`));\n      cb(null, true);\n    },\n  }).single(field);\n\n  return (req, res, next) =>\n    upload(req, res, (err) => {\n      if (!err) return next();\n      if (err.code === 'LIMIT_FILE_SIZE') return next(badRequest(`File is larger than ${Math.round(maxBytes / 1048576)} MB`));\n      if (err.name === 'MulterError') return next(badRequest(err.message));\n      next(err);\n    });\n}\n\n/** Verify the stored bytes match the declared type; deletes the file when they do not. */\nexport function verifySignature(file) {\n  const check = SIGNATURES[file.mimetype];\n  if (!check) return;\n  const fd = openSync(file.path, 'r');\n  const head = Buffer.alloc(16);\n  readSync(fd, head, 0, 16, 0);\n  closeSync(fd);\n  if (!check(head)) {\n    remove(file.filename);\n    throw badRequest(`File content does not match ${file.mimetype}`);\n  }\n}\n\nexport const pathOf = (key) => join(settings().dir, key.replace(/[^\\w.-]/g, ''));\n\nexport function remove(key) {\n  const path = pathOf(key);\n  if (existsSync(path)) unlinkSync(path);\n}\n"
+    },
+    {
+      "path": "registry/blocks/storage-local/files/app/resources/file/file.resource.js",
+      "type": "registry:file",
+      "target": "app/resources/file/file.resource.js",
+      "content": "import { resource, f } from '#calm';\n\n// Uploaded files (metadata). Upload with POST /api/files/upload (multipart, field \"file\").\nexport default resource('file', {\n  crud: ['list', 'read', 'delete'], // created only through the upload route\n  fields: {\n    originalName: f.string().readOnly().searchable().sortable(),\n    mimeType: f.string().readOnly().filterable(),\n    size: f.integer().readOnly().sortable(),\n    key: f.string().hidden(), // storage location, never exposed\n    owner: f.ref('user').owner().filterable(),\n  },\n  policy: {\n    list: 'owner | admin',\n    read: 'owner | admin',\n    create: 'authenticated',\n    update: 'none',\n    delete: 'owner | admin',\n  },\n});\n"
+    },
+    {
+      "path": "registry/blocks/storage-local/files/app/resources/file/file.routes.js",
+      "type": "registry:file",
+      "target": "app/resources/file/file.routes.js",
+      "content": "import { badRequest } from '#calm';\nimport { uploadMiddleware, verifySignature, pathOf, INLINE } from '#app/blocks/storage-local/storage.js';\n\nexport default (r) => {\n  r.post(\n    '/upload',\n    { policy: 'authenticated', status: 201, summary: 'Upload a file (multipart/form-data, field \"file\")', middleware: [uploadMiddleware('file')] },\n    async (ctx) => {\n      const file = ctx.req.file;\n      if (!file) throw badRequest('Send the file as multipart/form-data in a field named \"file\"');\n      verifySignature(file);\n      return ctx.service.create(\n        { originalName: file.originalname.slice(0, 255), mimeType: file.mimetype, size: file.size, key: file.filename },\n        ctx,\n      );\n    },\n  );\n\n  r.get('/:id/download', { policy: 'owner | admin', summary: 'Download a file' }, async (ctx) => {\n    const doc = await ctx.service.model.findById(ctx.doc._id).select('+key').lean();\n    const inline = INLINE.has(doc.mimeType);\n    const headers = {\n      'Content-Type': inline ? doc.mimeType : 'application/octet-stream',\n      'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(doc.originalName)}`,\n      'X-Content-Type-Options': 'nosniff',\n      'Content-Security-Policy': \"default-src 'none'; sandbox\",\n      'Cache-Control': 'private, max-age=0',\n    };\n    await new Promise((resolve, reject) => ctx.res.sendFile(pathOf(doc.key), { headers }, (err) => (err ? reject(err) : resolve())));\n  });\n};\n"
+    },
+    {
+      "path": "registry/blocks/storage-local/files/app/resources/file/file.service.js",
+      "type": "registry:file",
+      "target": "app/resources/file/file.service.js",
+      "content": "import { ResourceService } from '#calm';\nimport { remove } from '#app/blocks/storage-local/storage.js';\n\nexport default class FileService extends ResourceService {\n  async afterDelete(doc) {\n    remove(doc.key);\n  }\n}\n"
+    }
+  ]
+}

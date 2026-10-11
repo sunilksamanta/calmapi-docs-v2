@@ -1,119 +1,98 @@
-import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { Home, Rocket, Layers, Package, Database, Gamepad2, Settings, FileText, Route, Puzzle, Zap, BookOpen, Lightbulb, FileCode, Bot, Shield, Cloud, Menu, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import {
+  Home, Rocket, FolderTree, Database, ShieldCheck, Settings, Route, Filter, KeyRound, TriangleAlert, SlidersHorizontal,
+  Gauge, FlaskConical, Terminal, Bot, RefreshCw, Blocks, BookOpen, ClipboardList, Clock, Send, Mail, Plug, Timer, Radio,
+  ArchiveRestore, HardDrive, CloudUpload, PackagePlus, Cloud, Shield, ShieldAlert, ArrowRightLeft, Zap, Layers, Package,
+  Gamepad2, FileText, Puzzle, Lightbulb, ChevronRight, Menu, X, History,
+} from 'lucide-react';
+import { sections } from '../lib/docs.js';
 import './Sidebar.css';
 
-const navigationItems = [
-  { path: '/', label: 'Introduction', icon: Home },
-  { 
-    label: 'Guide',
-    items: [
-      { path: '/getting-started', label: 'Getting Started', icon: Rocket },
-      { path: '/architecture', label: 'Architecture', icon: Layers },
-      { path: '/creating-modules', label: 'Creating Modules', icon: Package },
-      { path: '/models', label: 'Models', icon: Database },
-      { path: '/controllers', label: 'Controllers', icon: Gamepad2 },
-      { path: '/services', label: 'Services', icon: Settings },
-      { path: '/dtos', label: 'DTOs', icon: FileText },
-      { path: '/routing', label: 'Routing', icon: Route },
-      { path: '/built-in-modules', label: 'Built-in Modules', icon: Puzzle },
-      { path: '/advanced', label: 'Advanced', icon: Zap },
-      { path: '/security', label: 'Security', icon: Shield },
-      { path: '/deployment', label: 'Deployment', icon: Cloud },
-    ]
-  },
-  {
-    label: 'Resources',
-    items: [
-      { path: '/quick-reference', label: 'Quick Reference', icon: BookOpen },
-      { path: '/example-project', label: 'Example Project', icon: Lightbulb },
-    ]
-  },
-  {
-    label: 'Copilot Setup',
-    items: [
-      { path: '/copilot-instructions.md', label: 'copilot-instructions.md', icon: FileCode, isExternal: true },
-      { path: '/copilot-setup', label: 'Copilot Setup Guide', icon: Bot },
-    ]
-  }
-];
+const ICONS = {
+  Home, Rocket, FolderTree, Database, ShieldCheck, Settings, Route, Filter, KeyRound, TriangleAlert, SlidersHorizontal,
+  Gauge, FlaskConical, Terminal, Bot, RefreshCw, Blocks, BookOpen, ClipboardList, Clock, Send, Mail, Plug, Timer, Radio,
+  ArchiveRestore, HardDrive, CloudUpload, PackagePlus, Cloud, Shield, ShieldAlert, ArrowRightLeft, Zap, Layers, Package,
+  Gamepad2, FileText, Puzzle, Lightbulb,
+};
+
+function PageLink({ page, onNavigate }) {
+  const Icon = ICONS[page.icon] ?? FileText;
+  return (
+    <li>
+      <NavLink to={page.path} end className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')} onClick={onNavigate}>
+        <Icon size={16} className="nav-icon" aria-hidden="true" />
+        <span>{page.nav}</span>
+      </NavLink>
+    </li>
+  );
+}
 
 function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const { pathname } = useLocation();
+  const onLegacyPage = pathname === '/v1' || pathname.startsWith('/v1/');
+  const [legacyOpen, setLegacyOpen] = useState(onLegacyPage);
 
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
+  useEffect(() => {
+    if (onLegacyPage) setLegacyOpen(true);
+  }, [onLegacyPage]);
 
-  const closeSidebar = () => {
-    setIsOpen(false);
-  };
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const onKey = (e) => e.key === 'Escape' && setIsOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen]);
+
+  const closeSidebar = () => setIsOpen(false);
 
   return (
     <>
-      <button className="sidebar-toggle" onClick={toggleSidebar} aria-label="Toggle menu">
+      <button className="sidebar-toggle" onClick={() => setIsOpen(!isOpen)} aria-label={isOpen ? 'Close menu' : 'Open menu'} aria-expanded={isOpen}>
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
       {isOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
       <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
-      <nav className="sidebar-nav">
-        {navigationItems.map((item, index) => {
-          if (item.items) {
+        <nav className="sidebar-nav" aria-label="Documentation">
+          {sections.map((section) => {
+            if (section.legacy) {
+              return (
+                <div key={section.title} className="nav-section nav-section-legacy">
+                  <button
+                    type="button"
+                    className="section-toggle"
+                    aria-expanded={legacyOpen}
+                    aria-controls="legacy-nav"
+                    onClick={() => setLegacyOpen((open) => !open)}
+                  >
+                    <History size={14} aria-hidden="true" />
+                    <span>{section.title}</span>
+                    <ChevronRight size={14} className="section-chevron" aria-hidden="true" />
+                  </button>
+                  {legacyOpen ? (
+                    <ul className="nav-list" id="legacy-nav">
+                      {section.pages.map((page) => (
+                        <PageLink key={page.path} page={page} onNavigate={closeSidebar} />
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              );
+            }
             return (
-              <div key={index} className="nav-section">
-                <h3 className="section-title">{item.label}</h3>
+              <div key={section.title} className="nav-section">
+                <h3 className="section-title">{section.title}</h3>
                 <ul className="nav-list">
-                  {item.items.map((subItem) => {
-                    const Icon = subItem.icon;
-                    return (
-                      <li key={subItem.path}>
-                        {subItem.isExternal ? (
-                          <a
-                            href={subItem.path}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="nav-link"
-                          >
-                            <Icon size={16} className="nav-icon" />
-                            <span>{subItem.label}</span>
-                          </a>
-                        ) : (
-                          <NavLink
-                            to={subItem.path}
-                            className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
-                            onClick={closeSidebar}
-                          >
-                            <Icon size={16} className="nav-icon" />
-                            <span>{subItem.label}</span>
-                          </NavLink>
-                        )}
-                      </li>
-                    );
-                  })}
+                  {section.pages.map((page) => (
+                    <PageLink key={page.path} page={page} onNavigate={closeSidebar} />
+                  ))}
                 </ul>
               </div>
             );
-          }
-          const Icon = item.icon;
-          return (
-            <div key={index} className="nav-section">
-              <ul className="nav-list">
-                <li>
-                  <NavLink
-                    to={item.path}
-                    className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
-                    onClick={closeSidebar}
-                  >
-                    <Icon size={16} className="nav-icon" />
-                    <span>{item.label}</span>
-                  </NavLink>
-                </li>
-              </ul>
-            </div>
-          );
-        })}
-      </nav>
-    </aside>
+          })}
+        </nav>
+      </aside>
     </>
   );
 }

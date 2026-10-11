@@ -29,10 +29,36 @@ body {
 :root.dark {
   color: #e4e6eb;
   background-color: #1a1d23;
+  color-scheme: dark;
 }
 
+:root.light {
+  color-scheme: light;
+}
 
+body {
+  background-color: #f7f9fb;
+}
 
+:root.dark body {
+  background-color: #1a1d23;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: 3000;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  background: #5f7c8a;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 0.75rem;
+}
 
 .floating-like-button {
   position: fixed;
@@ -56,6 +82,31 @@ body {
   animation: float 3s ease-in-out infinite;
 }
 
+:root.dark .floating-like-button {
+  background: #24272e;
+  border: 1px solid #2f3640;
+  color: #e4e6eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+:root.dark .floating-like-button:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
+}
+
+@media (max-width: 768px) {
+  .floating-like-button {
+    bottom: 16px;
+    right: 16px;
+    padding: 6px 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-like-button {
+    animation: none;
+  }
+}
+
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);
@@ -63,4 +114,8 @@ body {
   50% {
     transform: translateY(-5px);
   }
+}
+/* Hide the empty pill until the Lyket widget has rendered (or if it cannot load). */
+.floating-like-button:has(> [data-lyket-type]:empty) {
+  display: none;
 }

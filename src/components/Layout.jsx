@@ -6,10 +6,13 @@ import './Layout.css';
 function Layout() {
   return (
     <div className="layout">
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
       <Header />
       <div className="layout-container">
         <Sidebar />
-        <main className="main-content">
+        <main className="main-content" id="main" tabIndex={-1}>
           <Outlet />
         </main>
       </div>

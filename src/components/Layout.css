@@ -15,9 +15,8 @@
 
 .main-content {
   flex: 1;
+  min-width: 0;
   padding: 3rem;
-  overflow-y: auto;
-  max-width: 900px;
 }
 
 :root.dark .layout {
@@ -28,7 +27,7 @@
   .layout-container {
     flex-direction: column;
   }
-  
+
   .main-content {
     padding: 1.5rem 1rem;
   }
