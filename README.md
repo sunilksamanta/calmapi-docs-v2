@@ -2,20 +2,39 @@
 
 The source of [docs.calmapi.dev](https://docs.calmapi.dev): documentation for CalmAPI 2 (default) and CalmAPI 1.x (legacy), plus the official block registry served at `https://docs.calmapi.dev/r/<name>.json`. The CalmAPI website at [calmapi.dev](https://calmapi.dev) is a separate project.
 
-React 18, React Router 7 and Vite 7. Pages are markdown files rendered with react-markdown, highlighted with highlight.js, and deployed on Vercel.
+Next.js 16 (App Router) and React 19, deployed on Vercel. Pages are markdown files rendered on the server with react-markdown and highlighted with highlight.js. Every page is prerendered to static HTML at build time, so search engines and AI crawlers that do not run JavaScript get the full text of each page.
 
 ## Run it
 
-Needs Node.js 20.19+ or 22.12+.
+Needs Node.js 22.
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm run build      # production build in dist/
-npm run preview    # serve dist/ at http://localhost:4173
+npm run dev        # http://localhost:3000
+npm run build      # production build in .next/
+npm start          # serve that build at http://localhost:3000
 ```
 
-`npm run dev` and `npm run build` first run `scripts/generate-docs-assets.mjs` (see below). The build fails if a page links to a page, heading or file that does not exist.
+`npm run dev` and `npm run build` first run `scripts/generate-docs-assets.mjs` (see below). The build fails if a page links to a page, heading or file that does not exist, and if a page could not be prerendered.
+
+## How the app is organized
+
+```text
+app/
+├── layout.jsx             <html>, header, sidebar, the theme script and the Lyket widget
+├── [[...slug]]/page.jsx   every page of the manifest, prerendered (generateStaticParams, dynamicParams = false)
+├── not-found.jsx          the 404 page
+├── sitemap.js             /sitemap.xml
+└── robots.js              /robots.txt
+src/
+├── components/            server components; the interactive parts are small client components ('use client'):
+│                          theme toggle, search, sidebar drawer and active link, table of contents, copy buttons
+├── lib/                   docs.js (pages, read at build time), redirects.js, seo.js (metadata and JSON-LD), highlighting
+└── docs/                  the pages (below)
+next.config.mjs            redirects and response headers
+```
+
+The article, sidebar and table of contents are in the prerendered HTML; react-markdown and highlight.js never reach the browser. Each page has its title, description, canonical URL, Open Graph and Twitter tags, a `<link rel="alternate" type="text/markdown">` to its markdown copy (CalmAPI 2 pages), and JSON-LD: a `TechArticle` (with `dateModified` from git when the build has the history) and a `BreadcrumbList`, plus a `WebSite` on the home page.
 
 ## How pages are organized
 
@@ -34,11 +53,11 @@ To add a page:
 1. Create `src/docs/<slug>.md` starting with a `# Title`.
 2. Add an entry to the right section of `src/docs/manifest.js`: `{ slug, title, description, icon }`. `icon` is a [lucide](https://lucide.dev/icons) icon name that must also be listed in `src/components/Sidebar.jsx`.
 
-Everything else is derived from the manifest: routes, sidebar, previous and next links, page titles and meta descriptions, canonical URLs, search, `llms.txt`. Write internal links as absolute paths (`/policies#owner-scoping-on-lists`, `/blocks/jobs`); anchors are the GitHub-style slugs of headings.
+Everything else is derived from the manifest: routes, sidebar, previous and next links, page titles and meta descriptions, canonical URLs, structured data, the sitemap, redirects, search, `llms.txt`. Write internal links as absolute paths (`/policies#owner-scoping-on-lists`, `/blocks/jobs`); anchors are the GitHub-style slugs of headings.
 
-A CalmAPI 2 slug must not start with a path that is already taken: `v1`, `r`, `docs`, `advisories`, `assets` (`RESERVED_SEGMENTS` in the manifest) or the name of anything in `public/`. The build fails if a page clashes with one of them, with another page or with a redirect.
+A CalmAPI 2 slug must not start with a path that is already taken: `v1`, `r`, `docs`, `advisories`, `_next` (`RESERVED_SEGMENTS` in the manifest) or the name of anything committed in `public/`. The build fails if a page clashes with one of them, with another page or with a redirect.
 
-Old URLs and aliases are redirected in `REDIRECTS` in the manifest (the 1.x site served its pages at the root, for example `/models` now goes to `/v1/models`; the root paths that CalmAPI 2 pages now use, like `/getting-started`, are those pages). CalmAPI 2 pages used to live under `/docs/`: `/docs/<slug>` and `/docs/blocks/<name>` redirect to `/<slug>` and `/blocks/<name>` (permanent redirects in `vercel.json`, and in the app for local runs), and the build rejects links that still use `/docs/`. `/advisories/<id>`, the link printed by `calm doctor`, goes to the advisories page.
+Old URLs and aliases are redirected in `REDIRECTS` in the manifest (the 1.x site served its pages at the root, for example `/models` now goes to `/v1/models`; the root paths that CalmAPI 2 pages now use, like `/getting-started`, are those pages). CalmAPI 2 pages used to live under `/docs/`: `/docs/<slug>` and `/docs/blocks/<name>` redirect to `/<slug>` and `/blocks/<name>`, and the build rejects links that still use `/docs/`. `/advisories/<id>`, the link printed by `calm doctor`, goes to the advisories page. All of these are permanent (308) HTTP redirects that `next.config.mjs` builds from the manifest (`src/lib/redirects.js`), so they work the same in `npm run dev`, `npm start` and on Vercel. Links in the pages to an old URL point straight at where it redirects. Any other unknown URL gets the 404 page with a real 404 status.
 
 ### Holding a page back
 
@@ -52,8 +71,12 @@ A manifest entry whose markdown file does not exist is left out everywhere: side
 |---|---|
 | `public/llms.txt` | [llmstxt.org](https://llmstxt.org) index: every CalmAPI 2 page with its description and a link to its markdown |
 | `public/llms-full.txt` | Every CalmAPI 2 page in one file |
-| `src/generated/md/**/*.md` | The raw markdown of each CalmAPI 2 page, served at the page URL plus `.md` (`/policies.md`, `/blocks/jobs.md`, `/introduction.md` for the introduction). `vite.config.js` serves these in `npm run dev` and copies them into `dist/` on build |
+| `public/<slug>.md`, `public/blocks/<name>.md` | The raw markdown of each CalmAPI 2 page, served at the page URL plus `.md` (`/policies.md`, `/blocks/jobs.md`, `/introduction.md` for the introduction) |
 | `src/generated/search-index.json` | Titles, headings and text for the search dialog (loaded on first use) |
+| `src/generated/last-modified.json` | Date of the last commit that changed each markdown file, for `dateModified` and the sitemap (empty without git history) |
+| `src/generated/public-files.json` | What the last run wrote to `public/`, so the next run can remove it first |
+
+Next.js serves `public/` as it is, so the generated files are written there at their final URL and listed in `.gitignore` (`/public/*.md` and `/public/blocks/`). A markdown file you do want to commit in `public/` needs a `!` exception there, like `copilot-instructions.md`; the generator warns about generated files that `.gitignore` does not cover.
 
 Run it alone with `npm run generate`.
 
@@ -76,14 +99,16 @@ Commit the updated `public/r/` files. The script validates each item and refuses
 
 ## Deployment
 
-Vercel runs `npm run build` and serves `dist/` at `https://docs.calmapi.dev` (see `vercel.json`):
+Vercel builds the site with its Next.js preset (`vercel.json` only sets `"framework": "nextjs"`) and serves it at `https://docs.calmapi.dev`. Leave Build Command, Output Directory and Install Command on their defaults: the build command must stay `npm run build`, so the generator runs first. Node.js comes from `engines` in `package.json` (22.x).
 
-- The SPA fallback to `index.html` only applies to paths **without a file extension**, so `/r/*.json`, `/llms.txt`, `/llms-full.txt`, the `*.md` copies of the pages and `/copilot-instructions.md` are served as files (or a real 404).
-- `/r/*` is served as `application/json` with `Access-Control-Allow-Origin: *`; the text files as UTF-8, `*.md` as `text/markdown`.
+- Every page is static HTML; there is no server rendering at request time.
+- `next.config.mjs` sets the headers: `/r/*` is served as `application/json` with `Access-Control-Allow-Origin: *` and a five minute cache; `/llms.txt` and `/llms-full.txt` as UTF-8 text with `Access-Control-Allow-Origin: *`; `*.md` as `text/markdown`.
 - `/docs`, `/docs/<slug>` and `/docs/<slug>.md` (the URLs from before the move to this domain) redirect permanently to `/`, `/<slug>` and `/<slug>.md`.
+- `/sitemap.xml` lists every page; `/robots.txt` allows all crawlers, AI crawlers included.
 
 ## Notes
 
-- The floating "clap" button is the [Lyket](https://lyket.dev) widget, loaded from unpkg with a pinned version in `index.html`.
+- The floating "clap" button is the [Lyket](https://lyket.dev) widget, loaded from unpkg with a pinned version (`next/script`, after the page has loaded) in `app/layout.jsx`.
+- The theme script in `app/layout.jsx` applies the saved light or dark theme before the first paint.
 - Dependencies are pinned to exact versions. Keep it that way, and prefer versions that have been out for at least two weeks.
 - No em dashes in content or UI copy, please: use colons, commas, parentheses or periods.
