@@ -1,15 +1,14 @@
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { Globe, Github } from 'lucide-react';
 import { SITE } from '../docs/manifest.js';
-import ThemeToggle from './ThemeToggle';
-import Search from './Search';
-import './Header.css';
+import ThemeToggle from './ThemeToggle.jsx';
+import Search from './Search.jsx';
 
 function Header() {
   return (
     <header className="header">
       <div className="header-content">
-        <Link to="/" className="logo" aria-label="CalmAPI docs home">
+        <Link href="/" className="logo" aria-label="CalmAPI docs home">
           <img src="/calm-icon.svg" alt="" width="26" height="26" className="logo-mark" />
           <h1>CalmAPI</h1>
           <span className="tagline">Keep Calm and REST</span>

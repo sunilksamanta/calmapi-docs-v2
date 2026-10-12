@@ -1,19 +1,20 @@
-import { useEffect, useState } from 'react';
-import './Toc.css';
+'use client';
 
-/** "On this page": h2 and h3 of the rendered article, with the current section highlighted. */
-function Toc({ articleRef, renderKey }) {
-  const [items, setItems] = useState([]);
-  const [active, setActive] = useState(null);
+import { useEffect, useRef, useState } from 'react';
+
+/**
+ * "On this page": the h2 and h3 headings of the article (rendered on the server), with the
+ * section being read highlighted as the page scrolls.
+ */
+function Toc({ items }) {
+  const ref = useRef(null);
+  const [active, setActive] = useState(items[0]?.id ?? null);
 
   useEffect(() => {
-    const root = articleRef.current;
-    if (!root || !renderKey) {
-      setItems([]);
-      return undefined;
-    }
-    const headings = [...root.querySelectorAll('h2[id], h3[id]')];
-    setItems(headings.map((h) => ({ id: h.id, text: h.dataset.title || h.textContent, level: Number(h.tagName[1]) })));
+    const article = ref.current?.closest('.doc-shell')?.querySelector('.doc-article');
+    if (!article) return undefined;
+    const byId = new Map([...article.querySelectorAll('h2[id], h3[id]')].map((h) => [h.id, h]));
+    const headings = items.map((item) => byId.get(item.id)).filter(Boolean);
 
     let frame = 0;
     const update = () => {
@@ -34,11 +35,11 @@ function Toc({ articleRef, renderKey }) {
       window.removeEventListener('scroll', onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [articleRef, renderKey]);
+  }, [items]);
 
   if (items.length < 2) return <aside className="toc toc-empty" aria-hidden="true" />;
   return (
-    <aside className="toc" aria-label="On this page">
+    <aside className="toc" aria-label="On this page" ref={ref}>
       <p className="toc-title">On this page</p>
       <ul>
         {items.map((item) => (

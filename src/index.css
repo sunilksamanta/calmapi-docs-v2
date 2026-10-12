@@ -22,10 +22,6 @@ body {
   min-height: 100vh;
 }
 
-#root {
-  min-height: 100vh;
-}
-
 :root.dark {
   color: #e4e6eb;
   background-color: #1a1d23;

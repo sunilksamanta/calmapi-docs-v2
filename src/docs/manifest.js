@@ -1,5 +1,6 @@
-// Every page of the site, in sidebar order. This file is plain data so that both the
-// React app and scripts/generate-docs-assets.mjs (llms.txt, search index) can import it.
+// Every page of the site, in sidebar order. This file is plain data so that the Next.js app,
+// next.config.mjs (redirects) and scripts/generate-docs-assets.mjs (llms.txt, search index)
+// can all import it.
 //
 // A page: { slug, title, description, icon?, nav?, path?, file? }
 //   path defaults to /<slug> (CalmAPI 2 pages at /getting-started, blocks at /blocks/<name>,
@@ -289,7 +290,7 @@ export const REDIRECTS = {
 
 /**
  * CalmAPI 2 pages used to be served under /docs/ (/docs/policies, /docs/blocks/jobs):
- * /docs/<slug> now redirects to /<slug>. vercel.json does the same with permanent redirects.
+ * /docs/<slug> now redirects permanently to /<slug> (next.config.mjs, from src/lib/redirects.js).
  */
 export const OLD_DOCS_PREFIX = '/docs/';
 export const movedDocsPath = (path) => (path.startsWith(OLD_DOCS_PREFIX) ? path.slice(OLD_DOCS_PREFIX.length - 1) : null);
@@ -297,9 +298,9 @@ export const movedDocsPath = (path) => (path.startsWith(OLD_DOCS_PREFIX) ? path.
 /**
  * First path segments a CalmAPI 2 page must not use, because something else is served there:
  * the 1.x docs, the block registry (/r/<name>.json), old /docs/ URLs, advisory links and the
- * build output (/assets). scripts/generate-docs-assets.mjs also rejects names used in public/.
+ * Next.js build output (/_next). scripts/generate-docs-assets.mjs also rejects names used in public/.
  */
-export const RESERVED_SEGMENTS = ['v1', 'r', 'docs', 'advisories', 'assets'];
+export const RESERVED_SEGMENTS = ['v1', 'r', 'docs', 'advisories', '_next'];
 
 /** Advisory links printed by `calm doctor` look like /advisories/<advisory id>. */
 export const ADVISORY_PREFIX = '/advisories/';

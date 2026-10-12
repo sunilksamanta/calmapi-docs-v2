@@ -1,11 +1,11 @@
-import { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHeadingIds from '../lib/rehype-heading-ids.js';
 import CodeBlock from './CodeBlock.jsx';
 import MarkdownLink from './MarkdownLink.jsx';
 
-// Loaded lazily (React.lazy) so react-markdown and highlight.js stay out of the main bundle.
+// Rendered on the server at build time, so the article is in the prerendered HTML and
+// react-markdown and highlight.js never reach the browser.
 
 const textOf = (node) => (!node ? '' : node.type === 'text' ? node.value : (node.children ?? []).map(textOf).join(''));
 
@@ -45,18 +45,34 @@ const components = {
 };
 
 const remarkPlugins = [remarkGfm];
-const rehypePlugins = [rehypeHeadingIds];
 
-function Markdown({ content, onRendered }) {
-  useEffect(() => {
-    onRendered?.();
-  }, [content, onRendered]);
+/** Collects the h2 and h3 headings (after rehype-heading-ids) for "On this page". */
+const collectHeadings = (headings) => () => (tree) => {
+  const walk = (node) => {
+    const level = node.type === 'element' ? /^h([23])$/.exec(node.tagName)?.[1] : null;
+    if (level) {
+      const { id, dataTitle } = node.properties ?? {};
+      // A heading without text (an image followed by a --- line) is left out.
+      if (id && dataTitle) headings.push({ id, text: dataTitle, level: Number(level) });
+      return;
+    }
+    for (const child of node.children ?? []) walk(child);
+  };
+  walk(tree);
+};
 
-  return (
-    <ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={rehypePlugins} components={components}>
-      {content}
-    </ReactMarkdown>
-  );
+/**
+ * Renders a page's markdown and returns it with its h2 and h3 headings, taken from the same
+ * tree, so the table of contents always matches the ids in the article.
+ * react-markdown's Markdown is a plain function without hooks, so it can be called directly.
+ */
+export function renderMarkdown(content) {
+  const headings = [];
+  const element = ReactMarkdown({
+    children: content,
+    remarkPlugins,
+    rehypePlugins: [rehypeHeadingIds, collectHeadings(headings)],
+    components,
+  });
+  return { element, headings };
 }
-
-export default Markdown;

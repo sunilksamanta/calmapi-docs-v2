@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Search as SearchIcon, CornerDownLeft, FileText, Hash } from 'lucide-react';
-import './Search.css';
 
 // Client-side search over page titles, headings and text. The index is generated at build
 // time (scripts/generate-docs-assets.mjs) and only downloaded when search is first opened.
@@ -14,7 +15,11 @@ let indexPromise = null;
 const loadIndex = () => (indexPromise ??= import('../generated/search-index.json').then((m) => m.default));
 
 const isTyping = (el) => el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
-export const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+
+// The shortcut hint says ⌘ K on Apple devices. The prerendered HTML says Ctrl K until the page hydrates.
+const noSubscription = () => () => {};
+const useIsMac = () =>
+  useSyncExternalStore(noSubscription, () => /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent), () => false);
 
 function runSearch(index, query) {
   const q = query.trim().toLowerCase();
@@ -68,7 +73,7 @@ function snippet(text, words) {
 }
 
 function SearchDialog({ onClose }) {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [index, setIndex] = useState(null);
   const [failed, setFailed] = useState(false);
   const [query, setQuery] = useState('');
@@ -91,7 +96,7 @@ function SearchDialog({ onClose }) {
   const go = (result) => {
     if (!result) return;
     onClose();
-    navigate(result.section.id ? `${result.page.path}#${result.section.id}` : result.page.path);
+    router.push(result.section.id ? `${result.page.path}#${result.section.id}` : result.page.path);
   };
 
   const onKeyDown = (e) => {
@@ -191,7 +196,17 @@ function SearchDialog({ onClose }) {
   );
 }
 
+/** A button that opens the search dialog (for server-rendered pages such as the 404 page). */
+export function OpenSearchButton({ className, children }) {
+  return (
+    <button type="button" className={className} onClick={() => openSearch()}>
+      {children}
+    </button>
+  );
+}
+
 function Search() {
+  const isMac = useIsMac();
   const [open, setOpen] = useState(false);
   const returnFocus = useRef(null);
 
