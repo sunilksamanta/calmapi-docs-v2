@@ -3,16 +3,21 @@
 //
 //   public/llms.txt              llmstxt.org index of the CalmAPI 2 docs
 //   public/llms-full.txt         every CalmAPI 2 page in one file
-//   src/generated/md/<slug>.md   raw markdown of each page (linked from llms.txt), served at
-//                                /<slug>.md: vite.config.js serves it in dev and copies it into dist/
-//   src/generated/search-index.json   titles, headings and text for the search dialog
+//   public/<slug>.md             raw markdown of each CalmAPI 2 page (linked from llms.txt and from
+//                                each page's <link rel="alternate">), served at /<slug>.md
+//   src/generated/search-index.json    titles, headings and text for the search dialog
+//
+// Files in public/ are served as they are, so the generated ones are written there directly
+// (and git-ignored, see .gitignore). src/generated/public-files.json lists them, so the
+// next run removes them before checking for clashes and a removed page's copy does not linger.
 //
 // It also checks internal links and #anchors, and that no page URL collides with another
 // page, a redirect or a file in public/. Runs before `npm run dev` and `npm run build`
 // (with --strict, the build fails on any problem).
 
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   SITE,
@@ -32,7 +37,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DOCS = join(ROOT, 'src', 'docs');
 const PUBLIC = join(ROOT, 'public');
 const GENERATED = join(ROOT, 'src', 'generated');
-const RAW = join(GENERATED, 'md');
+const RECORD = join(GENERATED, 'public-files.json');
 const strict = process.argv.includes('--strict');
 
 const sections = resolveSections((file) => existsSync(join(DOCS, file)));
@@ -48,6 +53,24 @@ const byPath = new Map(pages.map((p) => [p.path, p]));
 const current = pages.filter((p) => !p.legacy);
 const problems = [];
 
+// ---- remove the files the previous run wrote to public/ -------------------------------------
+let previous = [];
+try {
+  previous = JSON.parse(readFileSync(RECORD, 'utf8'));
+} catch {
+  // First run, or src/generated was deleted.
+}
+for (const rel of previous) {
+  const file = resolve(PUBLIC, rel);
+  if (!file.startsWith(PUBLIC + sep)) continue;
+  rmSync(file, { force: true });
+  // Drop folders that only held generated files (public/blocks/), never public/ itself.
+  for (let dir = dirname(file); dir.startsWith(PUBLIC + sep) && existsSync(dir) && !readdirSync(dir).length; dir = dirname(dir)) rmSync(dir, { recursive: true });
+}
+rmSync(RECORD, { force: true });
+rmSync(join(GENERATED, 'md'), { recursive: true, force: true }); // older versions wrote the copies to src/generated/md/
+rmSync(join(PUBLIC, 'docs'), { recursive: true, force: true }); // and before that to public/docs/
+
 // ---- URL collisions --------------------------------------------------------------------------
 // Every page, including held back ones, so a page cannot be published onto a taken URL.
 const publicNames = new Set(readdirSync(PUBLIC));
@@ -62,16 +85,24 @@ for (const page of resolveSections(() => true).flatMap((s) => s.pages)) {
   if (first && (RESERVED_SEGMENTS.includes(first) || publicNames.has(first))) {
     problems.push(`${where}: ${page.path} starts with /${first}, which is reserved (RESERVED_SEGMENTS or a file in public/)`);
   }
-  if (existsSync(join(PUBLIC, markdownPath(page)))) problems.push(`${where}: its markdown copy ${markdownPath(page)} would clash with public${markdownPath(page)}`);
+  if (existsSync(join(PUBLIC, markdownPath(page)))) {
+    problems.push(`${where}: its markdown copy ${markdownPath(page)} would clash with public${markdownPath(page)} (delete that file if it is a stale generated copy)`);
+  }
 }
 
-// ---- raw markdown copies ---------------------------------------------------------------------
-rmSync(RAW, { recursive: true, force: true });
-rmSync(join(PUBLIC, 'docs'), { recursive: true, force: true }); // older versions wrote the copies to public/docs/
-for (const page of current) {
-  const file = join(RAW, markdownPath(page));
+// ---- files written to public/ ----------------------------------------------------------------
+const written = [];
+const writePublic = (path, content) => {
+  const file = join(PUBLIC, path);
   mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(file, page.markdown);
+  writeFileSync(file, content);
+  written.push(path.replace(/^\//, ''));
+};
+
+// ---- raw markdown copies ---------------------------------------------------------------------
+for (const page of current) {
+  // Never overwrite a committed file (reported as a clash above).
+  if (!existsSync(join(PUBLIC, markdownPath(page)))) writePublic(markdownPath(page), page.markdown);
 }
 
 // ---- llms.txt --------------------------------------------------------------------------
@@ -96,14 +127,35 @@ llms.push(
   `- [CalmAPI 1.x docs (legacy)](${SITE.url}/v1): documentation for the previous major version, no longer developed`,
   '',
 );
-writeFileSync(join(PUBLIC, 'llms.txt'), llms.join('\n'));
+writePublic('/llms.txt', llms.join('\n'));
 
 // ---- llms-full.txt -----------------------------------------------------------------------
 const full = [`# ${SITE.name} documentation`, '', `> ${SITE.description}`, ''];
 for (const page of current) {
   full.push('---', '', `Source: ${SITE.url}${page.path}`, '', page.markdown.trim(), '');
 }
-writeFileSync(join(PUBLIC, 'llms-full.txt'), full.join('\n'));
+writePublic('/llms-full.txt', full.join('\n'));
+mkdirSync(GENERATED, { recursive: true });
+writeFileSync(RECORD, `${JSON.stringify(written, null, 2)}\n`);
+
+// Generated files must not be committed: warn when .gitignore misses one (a page in a new folder).
+const git = (args, input) =>
+  execFileSync('git', args, { cwd: ROOT, input, encoding: 'utf8', stdio: [input == null ? 'ignore' : 'pipe', 'pipe', 'ignore'] });
+try {
+  const paths = written.map((rel) => `public/${rel}`);
+  let out;
+  try {
+    out = git(['check-ignore', '--no-index', '--stdin'], paths.join('\n'));
+  } catch (error) {
+    if (error.status !== 1) throw error; // 1: none of them is ignored
+    out = '';
+  }
+  const ignored = new Set(out.split('\n').filter(Boolean));
+  const missing = paths.filter((path) => !ignored.has(path));
+  if (missing.length) console.warn(`docs: add these generated files to .gitignore:\n  ${missing.join('\n  ')}`);
+} catch {
+  // Not a git checkout (some CI builds).
+}
 
 // ---- search index --------------------------------------------------------------------------
 const index = pages.map((page) => ({
@@ -114,7 +166,6 @@ const index = pages.map((page) => ({
     .map((s) => ({ id: s.id, heading: s.heading, text: linesToText(s.lines).slice(0, page.legacy ? 400 : 1200) }))
     .filter((s) => s.id || s.text),
 }));
-mkdirSync(GENERATED, { recursive: true });
 writeFileSync(join(GENERATED, 'search-index.json'), JSON.stringify(index));
 
 // ---- link check ------------------------------------------------------------------------------
