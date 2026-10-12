@@ -19,7 +19,7 @@
   "docs": "In the Firebase console: Project settings, Service accounts, Generate new private key. Put the path of that JSON file (or the JSON itself) in FCM_SERVICE_ACCOUNT, and keep it out of git. GOOGLE_APPLICATION_CREDENTIALS works too.\nYour app gets a token from the Firebase SDK (getToken) and registers it: POST /api/auth/devices { token, platform }. iOS delivery goes through FCM too: upload your APNs key in Project settings, Cloud Messaging.\nThen send from anywhere: await ctx.push.send({ to: userId, title, body }).",
   "meta": {
     "calmapi": {
-      "minVersion": "2.0.0-alpha.0",
+      "minVersion": "2.0.0-alpha.1",
       "conflicts": [
         "push-expo"
       ]
