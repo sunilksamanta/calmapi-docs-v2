@@ -15,7 +15,7 @@ export const SITE = {
   // Where the docs are served. The block registry is at <url>/r/<name>.json.
   url: 'https://docs.calmapi.dev',
   // The CalmAPI website (a separate project).
-  website: 'https://calmapi.dev',
+  website: 'https://www.calmapi.dev',
   tagline: 'The backend framework you own',
   description:
     'CalmAPI 2 is a backend framework for Node.js and MongoDB where every line of framework code lives in your repo: resources, policies, auth, devtools, blocks and an upgrade path.',
