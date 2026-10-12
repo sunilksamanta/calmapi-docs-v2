@@ -297,10 +297,11 @@ export const movedDocsPath = (path) => (path.startsWith(OLD_DOCS_PREFIX) ? path.
 
 /**
  * First path segments a CalmAPI 2 page must not use, because something else is served there:
- * the 1.x docs, the block registry (/r/<name>.json), old /docs/ URLs, advisory links and the
+ * the 1.x docs, the block registry (/r/<name>.json), old /docs/ URLs, advisory links, the logo
+ * files (/brand/) and the
  * Next.js build output (/_next). scripts/generate-docs-assets.mjs also rejects names used in public/.
  */
-export const RESERVED_SEGMENTS = ['v1', 'r', 'docs', 'advisories', '_next'];
+export const RESERVED_SEGMENTS = ['v1', 'r', 'docs', 'advisories', 'brand', '_next'];
 
 /** Advisory links printed by `calm doctor` look like /advisories/<advisory id>. */
 export const ADVISORY_PREFIX = '/advisories/';

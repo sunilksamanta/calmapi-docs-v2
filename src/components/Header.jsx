@@ -2,16 +2,17 @@ import Link from 'next/link';
 import { Globe, Github } from 'lucide-react';
 import { SITE } from '../docs/manifest.js';
 import ThemeToggle from './ThemeToggle.jsx';
+import { Logo, Lotus } from './Logo.jsx';
 import Search from './Search.jsx';
 
 function Header() {
   return (
     <header className="header">
       <div className="header-content">
-        <Link href="/" className="logo" aria-label="CalmAPI docs home">
-          <img src="/calm-icon.svg" alt="" width="26" height="26" className="logo-mark" />
-          <span className="logo-name">CalmAPI</span>
-          <span className="tagline">Keep Calm and REST</span>
+        <Link href="/" className="logo" aria-label="Calm API docs home">
+          <Logo className="logo-svg" />
+          <Lotus className="logo-svg logo-lotus" />
+          <span className="tagline">Keep Calm &amp; REST</span>
         </Link>
         <div className="header-actions">
           <Search />

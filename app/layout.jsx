@@ -16,7 +16,13 @@ export const metadata = {
   metadataBase: new URL(SITE.url),
   title: `${SITE.name}: ${SITE.tagline.toLowerCase()}`,
   description: SITE.description,
-  icons: { icon: { url: '/calm-icon.svg', type: 'image/svg+xml' } },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '48x48' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export const viewport = {

@@ -31,17 +31,17 @@
   opacity: 0.8;
 }
 
-.logo-mark {
+.logo .logo-svg {
   display: block;
   flex-shrink: 0;
+  height: 32px;
+  width: auto;
+  color: #002f80;
 }
 
-.logo .logo-name {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #2c3e50;
-  letter-spacing: -0.025em;
+/* Phones: the lotus alone, the header has no room for the wordmark. */
+.logo .logo-lotus {
+  display: none;
 }
 
 .tagline {
@@ -85,8 +85,8 @@
   border-bottom-color: #2f3640;
 }
 
-:root.dark .logo .logo-name {
-  color: #e4e6eb;
+:root.dark .logo .logo-svg {
+  color: #dce5f5;
 }
 
 :root.dark .tagline {
@@ -107,8 +107,8 @@
     padding: 1rem 1rem 1rem 4rem;
   }
   
-  .logo .logo-name {
-    font-size: 1.125rem;
+  .logo .logo-svg {
+    height: 28px;
   }
   
   .tagline {
@@ -137,7 +137,15 @@
     padding-right: 0.75rem;
   }
 
-  .logo-mark,
+  .logo .logo-svg {
+    display: none;
+  }
+
+  .logo .logo-svg.logo-lotus {
+    display: block;
+    height: 34px;
+  }
+
   .header-link-website {
     display: none !important;
   }
