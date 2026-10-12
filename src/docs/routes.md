@@ -29,6 +29,8 @@ This adds `GET /api/posts/featured` and `POST /api/posts/:id/publish`.
 | `middleware` | `[]` | Express middleware run before the handler (after a quick sign-in check), for example an upload parser |
 | `rateLimit` | none | `'auth'` for the auth limiter, or `{ windowMs, max }` for a limit on this route only |
 | `hidden` | `false` | Leave the route out of OpenAPI and `calm routes` |
+| `scope` | none | A permission name for credentials that carry scopes, such as `'reports:export'` for [API keys](/blocks/api-keys#custom-route-scopes) |
+| `meta` | `{}` | Anything [blocks](/building-blocks#routes) read from the route in their guards: `{ audit: true }` |
 
 ## The handler context
 
@@ -48,6 +50,10 @@ Handlers receive `ctx`:
 | `ctx.req`, `ctx.res` | The Express request and response |
 | `ctx.app`, `ctx.config`, `ctx.log`, `ctx.events` | The app, its config, the logger (every line is tagged with the request id) and the event bus |
 | `ctx.session`, `ctx.requestId` | The current session `{ id, expiresAt }` and the request id |
+| `ctx.auth` | How the request signed in: `{ via: 'session', scopes: ['*'], id }`, `{ via: 'api-key', scopes, id }` with the [api-keys](/blocks/api-keys) block, or `null` |
+| `ctx.push` | [Push notifications](/push-notifications): `ctx.push.send({ to, title, body })` |
+
+Blocks can add more: `ctx.notify()` with [notifications](/blocks/notifications), `ctx.flags` with [feature-flags](/blocks/feature-flags).
 
 ## Return values
 
@@ -158,7 +164,7 @@ If two routes have the same method and path, the first one wins and the app logs
 
 ## Middleware
 
-Express middleware in `middleware` runs after a cheap check that rejects signed-out users when the policy needs a user, so an upload parser never runs for anonymous requests. This is how the [storage-local](/blocks/storage-local) block handles uploads:
+Express middleware in `middleware` runs after a cheap check that rejects signed-out users when the policy needs a user, and after the [guards](/building-blocks#guards) of your blocks, so an upload parser never runs for anonymous requests or requests a guard refuses. This is how the [storage-local](/blocks/storage-local) block handles uploads:
 
 ```js
 r.post('/upload', {

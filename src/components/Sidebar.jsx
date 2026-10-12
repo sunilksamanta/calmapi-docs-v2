@@ -4,7 +4,8 @@ import {
   Home, Rocket, FolderTree, Database, ShieldCheck, Settings, Route, Filter, KeyRound, TriangleAlert, SlidersHorizontal,
   Gauge, FlaskConical, Terminal, Bot, RefreshCw, Blocks, BookOpen, ClipboardList, Clock, Send, Mail, Plug, Timer, Radio,
   ArchiveRestore, HardDrive, CloudUpload, PackagePlus, Cloud, Shield, ShieldAlert, ArrowRightLeft, Zap, Layers, Package,
-  Gamepad2, FileText, Puzzle, Lightbulb, ScanSearch, Smartphone, Bell, BellRing, ChevronRight, Menu, X, History,
+  Gamepad2, FileText, Puzzle, Lightbulb, ScanSearch, Smartphone, Bell, BellRing, Key, ToggleRight, Repeat, WandSparkles, Inbox,
+  UserX, Webhook, Hammer, ChevronRight, Menu, X, History,
 } from 'lucide-react';
 import { sections } from '../lib/docs.js';
 import './Sidebar.css';
@@ -13,7 +14,8 @@ const ICONS = {
   Home, Rocket, FolderTree, Database, ShieldCheck, Settings, Route, Filter, KeyRound, TriangleAlert, SlidersHorizontal,
   Gauge, FlaskConical, Terminal, Bot, RefreshCw, Blocks, BookOpen, ClipboardList, Clock, Send, Mail, Plug, Timer, Radio,
   ArchiveRestore, HardDrive, CloudUpload, PackagePlus, Cloud, Shield, ShieldAlert, ArrowRightLeft, Zap, Layers, Package,
-  Gamepad2, FileText, Puzzle, Lightbulb, ScanSearch, Smartphone, Bell, BellRing,
+  Gamepad2, FileText, Puzzle, Lightbulb, ScanSearch, Smartphone, Bell, BellRing, Key, ToggleRight, Repeat, WandSparkles, Inbox,
+  UserX, Webhook, Hammer,
 };
 
 function PageLink({ page, onNavigate }) {

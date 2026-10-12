@@ -30,24 +30,39 @@ npx calm add jobs
 
 | Block | What you get |
 |---|---|
-| [jobs](/blocks/jobs) | MongoDB job queue and cron (no Redis): retries, schedules, event triggers, admin API |
+| **Users and access** | |
+| [api-keys](/blocks/api-keys) | Personal and service API keys with scopes, hashed at rest, expiry and revoke |
+| [magic-link](/blocks/magic-link) | Passwordless sign-in by email, bound to the browser that asked |
+| [totp](/blocks/totp) | Two-factor authentication with authenticator apps, recovery codes and replay protection |
+| [privacy](/blocks/privacy) | Users export their data and delete their account (delete, anonymize or keep per resource) |
+| **Messaging** | |
+| [notifications](/blocks/notifications) | `ctx.notify()`: in-app inbox, push and email in one call, with preferences and quiet hours |
+| [push-expo](/blocks/push-expo) / [push-fcm](/blocks/push-fcm) | [Push notification](/push-notifications) delivery through Expo or Firebase Cloud Messaging, alone or together |
+| [mail-resend](/blocks/mail-resend) / [mail-smtp](/blocks/mail-smtp) | Email delivery |
+| [webhooks](/blocks/webhooks) | Outgoing webhooks for resource events: signed, retried, logged, SSRF safe |
+| [realtime-sse](/blocks/realtime-sse) | Live resource events, filtered per subscriber by the same policies |
+| **Data and files** | |
 | [storage-local](/blocks/storage-local) | Uploads to disk with type and size allowlists, magic-byte checks and safe downloads |
 | [storage-s3](/blocks/storage-s3) | Direct-to-S3 uploads with presigned URLs (AWS S3, Cloudflare R2, MinIO) |
-| [realtime-sse](/blocks/realtime-sse) | Live resource events, filtered per subscriber by the same policies |
-| [mcp-server](/blocks/mcp-server) | Your resources as MCP tools for AI agents, enforced by your API's rules |
 | [audit-log](/blocks/audit-log) | Who changed what, with field diffs (private values never logged) |
 | [soft-delete](/blocks/soft-delete) | `softDelete: true` per resource, with trash and restore |
-| [totp](/blocks/totp) | Two-factor authentication with authenticator apps, recovery codes and replay protection |
-| [api-docs](/blocks/api-docs) | Interactive API reference at `/docs` |
-| [mail-resend](/blocks/mail-resend) / [mail-smtp](/blocks/mail-smtp) | Email delivery |
-| [push-expo](/blocks/push-expo) / [push-fcm](/blocks/push-fcm) | [Push notification](/push-notifications) delivery through Expo or Firebase Cloud Messaging |
+| **Running in production** | |
+| [jobs](/blocks/jobs) | MongoDB job queue and cron (no Redis): retries, schedules, event triggers, admin API |
+| [feature-flags](/blocks/feature-flags) | Kill switches, gradual rollouts, targeting, variants and route gates |
+| [idempotency](/blocks/idempotency) | The `Idempotency-Key` header: safe retries for payments and other writes |
 | [rate-limit-mongo](/blocks/rate-limit-mongo) | Rate limits shared across instances |
+| **APIs and agents** | |
+| [api-docs](/blocks/api-docs) | Interactive API reference at `/docs` |
+| [mcp-server](/blocks/mcp-server) | Your resources as MCP tools for AI agents, enforced by your API's rules |
 
 ```bash
 npx calm add --list                 # official blocks
 npx calm add jobs audit-log         # several at once
 npx calm add jobs --dry-run         # show the plan, write nothing
+npx calm block list                 # blocks in this project, and the files you changed
 ```
+
+The devtools **Blocks** panel shows every installed block: where it came from, the files you changed since, what it hooks into, its environment variables (set or missing) and its routes.
 
 ## Where blocks come from
 
@@ -56,6 +71,7 @@ An address is resolved like this:
 | Address | Source |
 |---|---|
 | `jobs` or `@calmapi/jobs` | The official registry. The CLI carries a copy of it, so this works offline. `--remote` fetches `https://docs.calmapi.dev/r/jobs.json` instead. |
+| `gh:acme/blocks/billing` | `r/billing.json` in a GitHub repository, what `calm block pack` writes. Add `@v1.2.0` (or a branch or commit) to pin it. |
 | `@acme/billing` | The `@acme` registry declared in your `package.json` |
 | `https://example.com/r/thing.json` | Any URL |
 | `./blocks/thing.json` | A local file |
@@ -70,7 +86,7 @@ Registries are declared in `package.json`:
 }
 ```
 
-The official registry is served as JSON at [https://docs.calmapi.dev/r/index.json](/r/index.json), one file per block (for example [/r/jobs.json](/r/jobs.json)), in the [shadcn registry-item format](https://ui.shadcn.com/docs/registry). See [Publishing your own block](/publishing-blocks).
+The official registry is served as JSON at [https://docs.calmapi.dev/r/index.json](/r/index.json), one file per block (for example [/r/jobs.json](/r/jobs.json)), in the [shadcn registry-item format](https://ui.shadcn.com/docs/registry). To write and share your own, see [Building your own block](/building-blocks) and [Publishing your own block](/publishing-blocks).
 
 ## Safety rules
 
@@ -78,7 +94,8 @@ The official registry is served as JSON at [https://docs.calmapi.dev/r/index.jso
 - Existing files with different content are kept and reported as **conflicts**; pass `--overwrite` to replace them.
 - Blocks that provide the same resource refuse to be installed together (`storage-local` and `storage-s3` both provide `file`).
 - `registryDependencies` are installed first; dependencies already in `package.json` are left as they are.
-- Review third-party blocks before adding them: they run in your app with full access, like any code you paste.
+- Blocks can declare the oldest CalmAPI they work with (`minVersion`); older projects are asked to run `calm upgrade` first.
+- Blocks that are not official are reviewed before anything is written: `calm add` lists in plain language what their code does (network requests, file writes, child processes, `eval`, request hooks, the environment variables it reads, the hosts it mentions). Risky findings must be confirmed, and with `--yes` they also need `--trust`. A block runs in your app with full access, like any code you paste, so read it. See [What people see before installing](/building-blocks#what-people-see-before-installing).
 
 ## After adding a block
 

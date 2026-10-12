@@ -143,7 +143,7 @@ The block emits [security events](/security#security-events) that show up in the
 
 ## How it hooks into login
 
-The block uses the `loginChallenge` [plugin hook](/publishing-blocks#the-plugin-api). It runs after a correct password, before a session is created. A hook that returns an object answers the login with that object instead of a session. Once the second factor checks out, the block calls `calm.app.auth.service.finishLogin(user, req)`, which creates the session and returns the usual login response:
+The block uses the `loginChallenge` [plugin hook](/building-blocks#the-auth-service). It runs after a correct password, before a session is created. Other sign-in blocks such as [magic-link](/blocks/magic-link) go through the same hook (they call `completeLogin()`), so a user with 2FA on is asked for a code there too. A hook that returns an object answers the login with that object instead of a session. Once the second factor checks out, the block calls `calm.app.auth.service.finishLogin(user, req)`, which creates the session and returns the usual login response:
 
 ```js
 // app/blocks/totp/index.js (simplified)

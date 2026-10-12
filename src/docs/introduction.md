@@ -22,7 +22,7 @@ npm run dev
 
 ### Owned code, nothing hidden in node_modules
 
-`npm create calmapi` copies the framework into your project as `calm/`: around 4,000 lines of plain, commented JavaScript on Express 5 and Mongoose. Read it, step through it in a debugger, change it. When something behaves unexpectedly, the answer is in your editor, not in a minified dependency.
+`npm create calmapi` copies the framework into your project as `calm/`: around 5,500 lines of plain, commented JavaScript on Express 5 and Mongoose. Read it, step through it in a debugger, change it. When something behaves unexpectedly, the answer is in your editor, not in a minified dependency.
 
 A new project has **two runtime dependencies**: `express` and `mongoose`. The CLI (`calmapi`) and the devtools UI (`@calmapi/devtools`) are dev dependencies and never ship to production.
 

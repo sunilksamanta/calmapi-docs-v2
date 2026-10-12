@@ -22,6 +22,7 @@ Auth turns on when `config.auth.enabled` is `true` (the default) **and** the pro
 | `POST /api/auth/devices` | authenticated | `{ token, platform, name?, appVersion?, locale? }` | `201 { data: device }`, registers a device for [push notifications](/push-notifications#registering-devices) |
 | `GET /api/auth/devices` | authenticated | | `200 { data: [device...] }` |
 | `DELETE /api/auth/devices/:deviceId` | authenticated | | `204` |
+| `POST /api/auth/devices/unregister` | authenticated | `{ token }` | `204`, stops push notifications to the device holding that token |
 
 ### Register
 
@@ -49,7 +50,7 @@ curl -X POST http://localhost:5001/api/auth/login -H 'Content-Type: application/
   -d '{"email":"ada@example.com","password":"correct-horse-battery"}'
 ```
 
-Same response shape as register. A wrong email and a wrong password both answer `401` with `Invalid email or password`, after the same amount of work, so the response does not reveal whether an account exists. A user whose `status` is `disabled` gets `403`. After 5 failed attempts for the same email, sign-ins for it answer `429` for 15 minutes (see [Account lockout](#account-lockout)).
+Same response shape as register. A wrong email and a wrong password both answer `401` with `Invalid email or password`, after the same amount of work, so the response does not reveal whether an account exists. A user whose `status` is `disabled` (or `deleting`, while the [privacy](/blocks/privacy) block erases the account) gets `403`. After 5 failed attempts for the same email, sign-ins for it answer `429` for 15 minutes (see [Account lockout](#account-lockout)).
 
 With the [totp](/blocks/totp) block, users who turned on two-factor authentication get `{ mfaRequired: true, mfaToken, methods, expiresAt }` instead of a session, and finish with `POST /api/auth/2fa/verify`.
 
@@ -96,7 +97,7 @@ curl http://localhost:5001/api/auth/sessions -H "Authorization: Bearer $TOKEN"
 }
 ```
 
-`DELETE /api/auth/sessions/:sessionId` revokes one of your sessions (for a "sign out other devices" screen), `POST /api/auth/logout-all` revokes all of them.
+`DELETE /api/auth/sessions/:sessionId` revokes one of your sessions (for a "sign out other devices" screen), `POST /api/auth/logout-all` revokes all of them. Ending a session also stops [push notifications](/push-notifications#devices-follow-sessions) to the devices it registered.
 
 ## Password reset
 
@@ -192,4 +193,4 @@ export default defineConfig({
 
 `ctx.user` is the signed-in user (the stored record with `id` as a string, without the password hash), `ctx.session` is `{ id, expiresAt }`. The auth service is available as `app.auth.service` (for example `app.auth.service.createSession(user)` in a script). Events: `auth.registered`, `auth.login`, `auth.password_changed`, `auth.password_reset_requested`, `auth.password_reset`, plus the [`security.*` events](/security#security-events) for failed sign-ins, lockouts and bad tokens.
 
-Two-factor authentication is available as the [totp](/blocks/totp) block. It plugs into login with the `loginChallenge` [plugin hook](/publishing-blocks#the-plugin-api), which you can use for other second factors too. There are no social logins or magic links built in. Since `calm/auth/` is your code, you can add them, and the session model stays the same.
+Two-factor authentication is available as the [totp](/blocks/totp) block, passwordless sign-in by email as the [magic-link](/blocks/magic-link) block, and API keys for scripts as the [api-keys](/blocks/api-keys) block. They plug into login with the `loginChallenge` hook, the shared [auth service helpers](/building-blocks#the-auth-service) (lockout, disabled accounts, `completeLogin`) and `calm.authenticate` for other credentials, which you can use for your own sign-in methods too. There are no social logins built in. Since `calm/auth/` is your code, you can add them, and the session model stays the same.

@@ -80,6 +80,7 @@ fields: {
 | `.schema(standardSchema)` | Validate with Zod, Valibot, ArkType or any [Standard Schema](https://standardschema.dev) library |
 | `.describe(text)`, `.example(value)` | Description and example in the OpenAPI document |
 | `.encrypted()` | Stored as AES-256-GCM ciphertext, decrypted on read (see [Encrypted fields](#encrypted-fields)) |
+| `.pii()` | Marks personal data for `calm doctor`, the exposure matrix and the privacy block (see [Personal data](#personal-data)) |
 
 ```js
 fields: {
@@ -134,6 +135,26 @@ fields: {
 
 It needs `CALM_ENCRYPTION_KEYS` (create it with `npx calm keygen --write`). Encryption is about storage, not about who reads the field, so combine it with `.visibleTo()` or `.hidden()`. Ciphertext cannot be queried: an encrypted field cannot also be `.filterable()`, `.sortable()`, `.searchable()`, `.unique()`, `.index()` or `.owner()`, and `f.ref()` and `f.id()` fields cannot be encrypted. Keys and rotation are covered in [Security](/security#encryption-at-rest).
 
+## Personal data
+
+Mark fields that hold personal data with `.pii()`:
+
+```js
+fields: {
+  nickname: f.string().max(50).pii(),
+  licensePlate: f.string().pii().visibleTo('owner | admin'),
+  shippingNotes: f.text().pii(),
+}
+```
+
+`.pii()` does not change what the API accepts or returns. It tells the tools that look at your data:
+
+- The [exposure matrix](/security#exposure-matrix), which [`calm audit`](/audit) tests your API against, flags the field as personal data. The devtools **Security** panel marks it `pii` and highlights it when anyone can read it.
+- `calm doctor` warns when anyone can read it (`pii-public`), and notes when every signed-in user can read it on a resource with an owner (`pii-users`). Fix it with `.visibleTo('owner | admin')` or `.hidden()`.
+- The [privacy](/blocks/privacy) block removes it when an account is deleted and the records it owned are anonymized.
+
+Fields whose name already says personal data (`email`, `phone`, `address`, `iban`, `salary`, `dateOfBirth`...) are flagged without it. `.pii()` covers the names a pattern cannot guess.
+
 ## Query modifiers
 
 | Modifier | Lets clients |
@@ -175,7 +196,7 @@ resource('product-category', {
 
 Names are normalized: `resource('ProductCategory')` and `resource('product-category')` both become `product-category`, served at `/api/product-categories`, stored in `product_categories`, and reachable as `ctx.services.productCategory` or `ctx.services['product-category']`.
 
-Any other key (for example `softDelete: true` or `audit: false`) is kept in `def.options`, where [blocks](/blocks) can read it.
+Any other key is kept in `def.options`, where [blocks](/blocks) can read it: `softDelete: true` ([soft-delete](/blocks/soft-delete)), `audit: false` ([audit-log](/blocks/audit-log)), `webhooks: false` ([webhooks](/blocks/webhooks)), `onOwnerDelete` and `personalFields` ([privacy](/blocks/privacy)).
 
 ## The CRUD routes
 

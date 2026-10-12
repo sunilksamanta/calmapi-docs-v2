@@ -65,7 +65,7 @@ A folder without a `.resource.js` file is ignored. Create resources with `npx ca
 
 ## app/blocks
 
-Blocks added with `calm add` land here as `app/blocks/<name>/index.js` (some also add resources or `app/jobs/`). Every folder with an `index.js` that default-exports `definePlugin({ name, setup })` is loaded at boot, so this is also the place for your own plugins, for example an event listener. See [Publishing your own block](/publishing-blocks) for the plugin API.
+Blocks added with `calm add` land here as `app/blocks/<name>/index.js` (some also add resources, `app/jobs/` or `app/notifications/`). Every folder with an `index.js` that default-exports `definePlugin({ name, setup })` is loaded at boot, so this is also the place for your own blocks, for example an event listener. `npx calm make block <name>` starts one. See [Building your own block](/building-blocks) for the plugin API.
 
 ## app/routes.js
 
@@ -156,7 +156,7 @@ Written by `calm create` and updated by `calm add` and `calm upgrade`. Commit it
 ```js
 import { resource, f, ResourceService, notFound } from '#calm';     // the public API
 import { createTestApp } from '#calm/testing.js';                    // any framework file
-import { evaluatePolicy } from '#calm/resource/policy.js';
+import { seed } from '#calm/seed.js';
 import { defineJob } from '#app/blocks/jobs/index.js';               // your own code
 ```
 
@@ -171,18 +171,24 @@ Subpath imports need the `.js` extension. Inside services and routes, reach othe
 | `definePlugin` | Declare a plugin (what blocks export) |
 | `createApp`, `defineConfig` | Build the app, type-friendly config |
 | `CalmError`, `badRequest`, `unauthorized`, `forbidden`, `notFound`, `conflict`, `validationError`, `tooManyRequests` | Errors (see [Errors](/errors)) |
-| `hasRole`, `isOwner` | Policy helpers |
-| `serialize`, `validateInput`, `standardSchema` | Apply a resource's output and input rules yourself |
+| `hasRole`, `isOwner`, `evaluatePolicy`, `parsePolicy` | Policy helpers |
+| `matchesFilter` | Whether a record matches a MongoDB filter, in memory |
+| `serialize`, `validateInput`, `standardSchema`, `resourceJSONSchema` | Apply a resource's output and input rules yourself, or describe it as JSON Schema |
 | `Reply` | What `ctx.reply()` returns |
+| `createToken`, `hashToken` | Random tokens with a prefix, and their SHA-256 for storage |
 | `hashPassword`, `verifyPassword` | scrypt helpers |
+| `isEncrypted` | Whether a stored value is `.encrypted()` ciphertext |
+| `maskToken`, `providerPayloads` | Push helpers: a masked device token, the payload each provider receives |
 | `currentRequest` | The current request's context from anywhere (AsyncLocalStorage) |
+
+Blocks import only from `#calm`: the other files in `calm/` are internals that can change between versions.
 
 ## How the app boots
 
 `createApp()` does the following, in order:
 
 1. Load `.env`, `calm.config.js` and the defaults; fail fast on invalid config.
-2. Load `app/resources/*` and `app/blocks/*`, then run each block's `setup()`.
+2. Load `app/resources/*` and `app/blocks/*`, then run each block's `setup()` with its settings (`blocks.<name>` in `calm.config.js` merged over the block's defaults).
 3. Compile every resource into a Mongoose model and create its service.
-4. Register routes: auth, block routes, `app/routes.js`, then for each resource its custom routes followed by its CRUD routes.
+4. Set up auth, then register routes: auth, block routes, `app/routes.js`, then for each resource its custom routes followed by its CRUD routes.
 5. Build the Express app. `listen()` then connects to MongoDB, builds indexes, runs start hooks and prints the banner.

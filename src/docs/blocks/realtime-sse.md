@@ -44,6 +44,8 @@ const events = new EventSource('/api/realtime/stream?resources=post');
 
 With the `api` template's posts, a visitor's stream only carries published posts, while the author's stream also carries their own drafts, and neither ever contains the author's email.
 
+Every event goes through [`app.canRead()`](/building-blocks#reading-records-outside-a-request), the rules of `GET /api/<resource>/:id` (read policy, owner scoping and the service `scope()`). That includes `deleted` events: a subscriber only learns that a record was deleted if they could read it.
+
 ## Errors
 
 | Status | When |

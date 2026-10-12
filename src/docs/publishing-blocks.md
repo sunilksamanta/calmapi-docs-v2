@@ -1,76 +1,20 @@
 # Publishing your own block
 
-A block is a set of files plus a little metadata, published as one JSON file in the [shadcn registry-item format](https://ui.shadcn.com/docs/registry). Anyone can host one, and `calm add` installs it like an official block. Most blocks contain a plugin: a module that hooks into the app at boot.
+A shared block is one JSON file in the [shadcn registry-item format](https://ui.shadcn.com/docs/registry): the block's files plus a little metadata. Anyone can host one, and `calm add` installs it like an official block. This page is the reference for that file and for hosting it. To write a block, start with [Building your own block](/building-blocks).
 
-## Write the plugin
+The short version:
 
-A plugin is a folder in `app/blocks/<name>/` whose `index.js` default-exports `definePlugin({ name, setup })`. Develop it inside a real project first.
-
-```js
-// app/blocks/slack-notify/index.js
-import { definePlugin } from '#calm';
-
-// Posts to Slack when a post is published.
-export default definePlugin({
-  name: 'slack-notify',
-  setup(calm) {
-    const webhook = process.env.SLACK_WEBHOOK_URL;
-
-    calm.doctor(() =>
-      !webhook && calm.config.mode === 'production'
-        ? [{ level: 'warn', id: 'slack-webhook', title: 'SLACK_WEBHOOK_URL is not set', detail: 'Publish notifications are disabled.' }]
-        : [],
-    );
-    if (!webhook) return;
-
-    calm.on('post.updated', async ({ doc, previous }) => {
-      if (doc.status !== 'published' || previous.status === 'published') return;
-      await fetch(webhook, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ text: `New post: ${doc.title}` }),
-      });
-    });
-  },
-});
+```bash
+npx calm make block slack-notify      # app/blocks/slack-notify/ with block.json
+npx calm block check slack-notify     # fix what it reports
+npx calm block pack                   # writes r/slack-notify.json and r/index.json
+git add r && git commit -m "Share slack-notify" && git push
+# anyone can now run: npx calm add gh:<you>/<repo>/slack-notify
 ```
 
-### The plugin API
+## The registry item
 
-`setup(calm)` runs once at boot, before resources are compiled. It may be async.
-
-| Member | Use |
-|---|---|
-| `calm.app`, `calm.config`, `calm.log`, `calm.events`, `calm.mongoose`, `calm.mailer` | The app and its parts |
-| `calm.on(pattern, fn)` | Listen to events (`'post.created'`, `'post.*'`, `'*'`); `fn(payload, name)` |
-| `calm.onResource((def) => def)` | Change resource definitions before they are compiled: add fields, read custom options |
-| `calm.onService(({ def, model, service }) => {})` | Runs for every resource once services exist: wrap or add methods |
-| `calm.loginChallenge(async (user, ctx) => answer)` | Runs after a correct password, before a session is created. Return an object (such as `{ mfaRequired: true, mfaToken }`) to answer the login with it instead of a session, or `null` to continue. Finish the sign-in later with `calm.app.auth.service.finishLogin(user, req)`. See [totp](/blocks/totp#how-it-hooks-into-login). |
-| `calm.routes((r) => {...}, { prefix: '/billing' })` | Add routes under `/api` with the [route builder](/routes) |
-| `calm.use(middleware)` | Express middleware in front of the whole app (for paths outside `/api`, like `/docs` or `/mcp`) |
-| `calm.onStart(fn)`, `calm.onShutdown(fn)` | Start and stop background work; shutdown hooks run in reverse order |
-| `calm.provide(key, value)` | Expose an API to the rest of the app as `app.ext[key]` |
-| `calm.doctor(() => findings)` | Add checks to `calm doctor` and the devtools Doctor panel: `[{ level, id, title, detail }]` |
-| `calm.devtools.panel(name, (app) => data)` | Add a devtools panel that renders the returned JSON |
-
-Routes added by plugins are not resource routes: there is no `ctx.service`, no `ctx.doc` and no automatic serialization. Use `ctx.services.<name>` and `ctx.serialize(doc, '<name>')`.
-
-Resource options are open: a block can read its own option from `def.options`, which is how `softDelete: true` and `audit: false` work:
-
-```js
-// import { definePlugin, f } from '#calm';
-calm.onResource((def) => {
-  if (!def.options.searchIndex) return def;
-  def.fields.searchText = f.text().hidden();
-  return def;
-});
-```
-
-You can also register plugins without a folder through `plugins: [myPlugin]` in `calm.config.js`.
-
-## Describe the block
-
-A registry item is a JSON file. `files[].content` holds each file's source, and `target` is where it goes in the project:
+`calm block pack` writes this file from your block folder and its `block.json`. You rarely write it by hand, but it is plain JSON, so you can:
 
 ```json
 {
@@ -81,15 +25,17 @@ A registry item is a JSON file. `files[].content` holds each file's source, and 
   "description": "Post to a Slack channel when a post is published.",
   "version": "1.0.0",
   "author": "Acme",
+  "license": "MIT",
+  "categories": ["notifications"],
   "dependencies": [],
   "devDependencies": [],
   "registryDependencies": [],
   "envVars": { "SLACK_WEBHOOK_URL": "" },
-  "docs": "Set SLACK_WEBHOOK_URL to an incoming webhook URL.",
-  "meta": { "calmapi": { "minVersion": "2.0.0-alpha.0", "conflicts": [] } },
+  "docs": "Set SLACK_WEBHOOK_URL to an incoming webhook URL (Slack, Apps, Incoming Webhooks).",
+  "meta": { "calmapi": { "minVersion": "2.0.0-alpha.1", "conflicts": [] } },
   "files": [
     {
-      "path": "blocks/slack-notify/index.js",
+      "path": "app/blocks/slack-notify/index.js",
       "type": "registry:file",
       "target": "app/blocks/slack-notify/index.js",
       "content": "import { definePlugin } from '#calm';\n..."
@@ -100,43 +46,39 @@ A registry item is a JSON file. `files[].content` holds each file's source, and 
 
 | Field | Used by `calm add` for |
 |---|---|
-| `name`, `files` | Required. Each file needs `content` and a `target` (or `path`). |
+| `name`, `files` | Required. Each file needs `content` and a `target` (or `path`): where it goes in the project. |
 | `version`, `description` | Shown in the plan and recorded in `calm.lock` |
-| `dependencies`, `devDependencies` | npm packages, as `"name@range"` (`"stripe@^18.0.0"`); added to `package.json` when missing |
-| `envVars` | Appended to `.env.example` and `.env` when missing |
-| `registryDependencies` | Other blocks installed first (`"jobs"`, `"@acme/base"`, a URL) |
-| `docs` | Printed after installation |
+| `dependencies`, `devDependencies` | npm packages as `"name@range"` (`"stripe@^18.0.0"`), added to `package.json` when missing, then installed |
+| `envVars` | Appended to `.env.example` and `.env` when missing; values already there are kept |
+| `registryDependencies` | Other blocks installed first (`"jobs"`, `"@acme/base"`, `"gh:acme/blocks/base"`, a URL) |
+| `docs` | Printed after installing |
+| `meta.calmapi.minVersion` | `calm add` refuses the block when the project's `calm/` is older (see [minVersion](/building-blocks#minversion)) |
 | `meta.calmapi.conflicts` | Names of blocks that cannot be installed together with this one |
 
-Targets must stay inside the project: absolute paths, `..` segments, `calm/` and `calm.lock` are refused.
+Targets must stay inside the project: absolute paths, `..` segments, `calm/` and `calm.lock` are refused at install time, and `calm block check` also refuses `.env`, `package.json` and `package-lock.json` (use `envVars` and `dependencies` instead).
 
-A short script can build the JSON from your files:
+`calm block pack` also writes `r/index.json`, which lists every item in the folder with its title, description, version and categories, in the shadcn registry format.
 
-```js
-// build.js: node build.js > public/r/slack-notify.json
-import { readFileSync } from 'node:fs';
+## Where blocks can live
 
-const files = ['app/blocks/slack-notify/index.js'];
-console.log(JSON.stringify({
-  $schema: 'https://ui.shadcn.com/schema/registry-item.json',
-  name: 'slack-notify',
-  type: 'registry:item',
-  title: 'Slack notifications',
-  description: 'Post to a Slack channel when a post is published.',
-  version: '1.0.0',
-  envVars: { SLACK_WEBHOOK_URL: '' },
-  files: files.map((target) => ({ path: target, type: 'registry:file', target, content: readFileSync(target, 'utf8') })),
-}, null, 2));
-```
+| Address | Reads |
+|---|---|
+| `gh:acme/blocks/slack-notify` | `r/slack-notify.json` on the default branch of `github.com/acme/blocks` |
+| `gh:acme/blocks/slack-notify@v1.2.0` | The same file at a tag, a branch or a commit |
+| `https://blocks.acme.dev/r/slack-notify.json` | Any URL |
+| `./blocks/slack-notify.json` | A local file |
+| `@acme/slack-notify` | A registry of your own (below) |
 
-## Host and install it
+Serve the JSON from any static host, one file per block: GitHub, a CDN, an S3 bucket, your docs site.
 
-Serve the JSON from any static host, one file per block. Users declare your registry once in their `package.json`, with `{name}` as a placeholder:
+## Your own registry
+
+A registry is a URL template. Users declare yours once in their `package.json`, with `{name}` as the placeholder:
 
 ```json
 {
   "calm": {
-    "registries": { "@acme": "https://acme.dev/r/{name}.json" }
+    "registries": { "@acme": "https://blocks.acme.dev/r/{name}.json" }
   }
 }
 ```
@@ -146,14 +88,12 @@ npx calm add @acme/slack-notify --dry-run
 npx calm add @acme/slack-notify
 ```
 
-Without a registry entry, a full URL or a local file works too: `npx calm add https://acme.dev/r/slack-notify.json`.
+This also works for private blocks inside a company: host `r/` behind your VPN, and every project that declares the registry can add blocks by name.
 
-The official blocks are built the same way from `registry/blocks/<name>/` in the [calmapi repository](https://github.com/sunilksamanta/calmapi) and served at `https://docs.calmapi.dev/r/<name>.json`.
+## What installers see
 
-## Good blocks
+Blocks that do not come from the official registry get a plain-language review before anything is written: network requests, file writes, child processes, `eval`, computed imports, request hooks, the environment variables the code reads and the hosts it mentions. Risky findings must be confirmed, and with `--yes` they need `--trust`. See [What people see before installing](/building-blocks#what-people-see-before-installing). Run `calm block check` on your own block to see the same review first.
 
-- Keep them small and readable: users will own and edit the code.
-- Read configuration from environment variables, and declare them in `envVars` with safe placeholder values.
-- Add `doctor` checks for missing configuration, especially in production.
-- Go through services (`ctx.services`, `calm.app.service(name)`) and `ctx.serialize`, so policies and visibility rules keep applying.
-- Pin versions of anything you load from a CDN.
+## The official registry
+
+The official blocks are built the same way, from `registry/blocks/<name>/` in the [calmapi repository](https://github.com/sunilksamanta/calmapi) (a `block.json`, a `files/` folder mirrored into the project, and a `docs.md`). They are bundled with the CLI, so `calm add jobs` works offline, and served at `https://docs.calmapi.dev/r/<name>.json` for `calm add --remote` and other tools. The list is at [/r/index.json](/r/index.json).

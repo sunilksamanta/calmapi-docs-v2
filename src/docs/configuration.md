@@ -78,6 +78,7 @@ Invalid configuration:
 | `cors.origins` | `CORS_ORIGINS` (comma separated), else `[]` in production and `'*'` otherwise | Allowed browser origins |
 | `cors.credentials` | `false` | Send `Access-Control-Allow-Credentials` (not needed for bearer tokens) |
 | `cors.maxAge` | `600` | Preflight cache, in seconds |
+| `cors.exposeHeaders` | `[]` | Response headers browsers may read, besides `X-Request-Id`, the rate limit headers, `Retry-After` and `Idempotent-Replayed` |
 | `pagination.defaultLimit` | `20` | Page size when `?limit` is absent |
 | `pagination.maxLimit` | `100` | Largest `?limit` allowed |
 | `unknownFields` | `'reject'` | Unknown body fields are a `422`. Any other value (`'strip'`) drops them silently. |
@@ -91,6 +92,7 @@ Invalid configuration:
 | `auth.resetUrl` | `<app.url>/reset-password` | The page of your frontend that receives `?token=` |
 | `auth.password` | `{ logN: 15, r: 8, p: 3 }` | scrypt cost; length rules live on `f.password()` (8 to 128 characters) |
 | `auth.lockout` | `{ maxAttempts: 5, windowMinutes: 15, lockMinutes: 15 }` | Per account [lockout](/authentication#account-lockout) after failed sign-ins; `maxAttempts: 0` turns it off |
+| `auth.devicesFollowSessions` | `true` | Remove push devices when the session that registered them ends (see [Devices follow sessions](/push-notifications#devices-follow-sessions)) |
 | `encryption.keys` | `CALM_ENCRYPTION_KEYS` | Keys for `.encrypted()` fields. Keep them in the environment, not in this file. |
 | `openapi.enabled` | `true` | Serve the OpenAPI document |
 | `openapi.path` | `'/openapi.json'` | Relative to `apiPrefix` |
@@ -99,6 +101,7 @@ Invalid configuration:
 | `log.format` | `json` in production, else `pretty` | |
 | `shutdownTimeoutMs` | `10000` | How long open connections may finish on shutdown |
 | `mail.from` | `<app.name> <no-reply@localhost>` | Sender for app emails |
+| `blocks` | `{}` | Settings per block, merged over the block's defaults: `blocks: { webhooks: { maxEndpointsPerUser: 5 } }`. See each block's page. |
 | `plugins` | none | Extra plugins (`definePlugin(...)` objects) besides `app/blocks` |
 
 Read the effective configuration anywhere through `ctx.config` or `app.config`.
@@ -121,7 +124,7 @@ Read the effective configuration anywhere through `ctx.config` or `app.config`.
 | `CALM_TEST_LOG` | Log level inside tests, for example `info` |
 | `CALM_DEBUG` | Print stack traces for CLI errors |
 
-Blocks add their own variables (for example `JOBS_WORKER`, `RESEND_API_KEY`); `calm add` appends them to `.env.example` and `.env`.
+Blocks add their own variables (for example `JOBS_WORKER`, `RESEND_API_KEY`); `calm add` appends them to `.env.example` and `.env`. Blocks declare the variables they read, so `calm doctor` reports required ones that are missing, and the devtools **Blocks** panel shows which are set (never the values of secret ones).
 
 ```ini
 # .env (never commit it)
