@@ -93,7 +93,7 @@ curl 'http://localhost:5001/api/notifications?readAt[exists]=false' -H "Authoriz
 
 With the [realtime-sse](/blocks/realtime-sse) block, new entries reach open browser tabs right away. With the `badge` setting on, the iPhone badge shows the unread count.
 
-When someone taps a push, your app gets `data.notificationId`. Call `POST /api/notifications/:id/read` with it, so the unread count stays right on every device. In devtools, tapping a notification on a simulated phone emits `push.opened`, and the block marks the entry read for you.
+When someone taps a push, your app gets `data.notificationId`. Report the tap with `POST /api/auth/devices/opened { pushId, data }` (or call `POST /api/notifications/:id/read`), so the unread count stays right on every device. Either way the block only marks entries of the signed-in user. In devtools, tapping a notification on a simulated phone emits the same `push.opened` event.
 
 ## Preferences
 

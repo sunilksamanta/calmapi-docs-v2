@@ -80,6 +80,7 @@ Apps register their push token after sign in, with the user's session:
 | `GET /api/auth/devices` | | `200 { data: [device...] }`, your devices |
 | `DELETE /api/auth/devices/:deviceId` | | `204` |
 | `POST /api/auth/devices/unregister` | `{ token }` | `204`, turns notifications off for the device holding that token |
+| `POST /api/auth/devices/opened` | `{ pushId?, data? }` | `204`, reports that the user tapped a notification (emits `push.opened`) |
 
 `platform` is `ios`, `android` or `web`. Tokens are never returned in full (`a3f9c2…b7d3f8`). Registering a token that is already known moves it to the current user and session, which is what you want when someone signs out and another person signs in on the same phone. Tokens starting with `sim_` are reserved for simulated devices (`422`).
 
@@ -249,7 +250,7 @@ test('an uninstalled app removes the device', async () => {
 | `push.sent` | A send finished with any status but `failed` | `{ id, status, devices }` |
 | `push.failed` | No device received it | `{ id, status, devices }` |
 | `push.receipt` | A provider reported later (Expo receipts, the simulator) | `{ id, device, ok, error, unregistered }` |
-| `push.opened` | A notification was tapped on a simulated phone | `{ id, device, url, data, simulated: true }` |
+| `push.opened` | The app reported a tap (`POST /api/auth/devices/opened`), or a notification was tapped on a simulated phone | `{ id, user, device, url, data, simulated }`. `data` comes from the client: only act on the user's own records |
 | `push.simulated` | A simulated device showed a notification, kept it waiting (offline) or hid it (notifications off) | `{ id, device, state }` |
 
 Use them for metrics or an audit trail:

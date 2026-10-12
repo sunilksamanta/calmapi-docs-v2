@@ -23,6 +23,7 @@ Auth turns on when `config.auth.enabled` is `true` (the default) **and** the pro
 | `GET /api/auth/devices` | authenticated | | `200 { data: [device...] }` |
 | `DELETE /api/auth/devices/:deviceId` | authenticated | | `204` |
 | `POST /api/auth/devices/unregister` | authenticated | `{ token }` | `204`, stops push notifications to the device holding that token |
+| `POST /api/auth/devices/opened` | authenticated | `{ pushId?, data? }` | `204`, reports a tapped notification (emits `push.opened`) |
 
 ### Register
 

@@ -276,16 +276,16 @@ export default definePlugin({
 
 The function receives `{ user, action, doc, req }` (`doc` on routes with `:id`) and returns `true` or `false`, or a promise of it. Names are letters, digits, `-` and `_`, and cannot replace a built-in (`public`, `authenticated`, `owner`, `none` and their aliases). `calm routes` and devtools show the name.
 
-Named policies resolve in route policies and in field rules (`visibleTo`, `writableBy`). Resource files are loaded before blocks run `setup()`, so in a `resource()` policy the name is not known yet and would be read as a role. There, use the function itself:
+Named policies work everywhere a policy does: routes, field rules (`visibleTo`, `writableBy`) and resource files. Resource files load before blocks run `setup()`, so calm resolves the names once every block is set up:
 
 ```js
-import { member } from '#app/blocks/orgs/index.js';
-
 export default resource('project', {
   fields: { ... },
-  policy: { list: [member, 'admin'], read: [member, 'admin'], create: [member, 'admin'], update: 'admin', delete: 'admin' },
+  policy: { list: 'member | admin', read: 'member | admin', create: 'member | admin', update: 'admin', delete: 'admin' },
 });
 ```
+
+Importing the function (`policy: { list: [member, 'admin'] }`) works too, and also on older cores.
 
 ### Sharing an API
 
@@ -312,7 +312,7 @@ calm.doctor((app) =>
 );
 ```
 
-Checks are synchronous: return an array, not a promise. `calm doctor` boots the app without connecting to MongoDB, so a check cannot query the database. For numbers from the database, refresh them in the background (in `onStart` and on a timer) and report the last value, as the [webhooks](/blocks/webhooks) and [api-keys](/blocks/api-keys) blocks do. A check that throws is reported as `doctor-hook` ("A block doctor check crashed").
+Checks return an array or a promise of one. `calm doctor` boots the app without connecting to MongoDB, so a check that queries the database should skip when `calm.mongoose.connection.readyState !== 1` (devtools runs checks against the connected app). Refreshing numbers in the background and reporting the last value also works, as the [webhooks](/blocks/webhooks) and [api-keys](/blocks/api-keys) blocks do. A check that throws is reported as `doctor-hook` ("A block doctor check crashed").
 
 Missing environment variables need no check of their own: [declare them](#environment-variables).
 
