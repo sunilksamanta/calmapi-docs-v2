@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import DocsPage from '../../src/components/DocsPage.jsx';
-import { pages, pageForSlug, slugForPage, canonicalUrl, pageTitle, pageDescription } from '../../src/lib/docs.js';
+import { pages, pageForSlug, slugForPage } from '../../src/lib/docs.js';
+import { pageMetadata, structuredData, jsonLd } from '../../src/lib/seo.js';
 
 // One prerendered page per manifest page (CalmAPI 2 and 1.x); the introduction is at /.
 // Any other URL is a 404 (or one of the redirects in next.config.mjs).
@@ -15,20 +16,17 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const page = pageForSlug(slug);
-  if (!page) return {};
-  const title = pageTitle(page);
-  const description = pageDescription(page);
-  return {
-    title: { absolute: title },
-    description,
-    alternates: { canonical: canonicalUrl(page) },
-    openGraph: { title, description, type: 'website' },
-  };
+  return page ? pageMetadata(page) : {};
 }
 
 export default async function Page({ params }) {
   const { slug } = await params;
   const page = pageForSlug(slug);
   if (!page) notFound();
-  return <DocsPage page={page} />;
+  return (
+    <>
+      <DocsPage page={page} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structuredData(page)) }} />
+    </>
+  );
 }

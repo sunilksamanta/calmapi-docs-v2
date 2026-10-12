@@ -6,6 +6,7 @@ import { resolveSections, normalizePath, markdownPath, SITE } from '../docs/mani
 import { redirectFor as resolveRedirect } from './redirects.js';
 
 const DOCS = join(process.cwd(), 'src', 'docs');
+const GENERATED = join(process.cwd(), 'src', 'generated');
 
 export const sections = resolveSections((file) => existsSync(join(DOCS, file)));
 export const pages = sections.flatMap((section) => section.pages);
@@ -45,3 +46,16 @@ export const pageTitle = (page) =>
 
 export const pageDescription = (page) =>
   page.description ?? (page.legacy ? `CalmAPI 1.x (legacy) documentation: ${page.nav}.` : SITE.description);
+
+let dates;
+/** Date of the last commit that changed the page's markdown, when the build has git history. */
+export function lastModified(page) {
+  if (!dates) {
+    try {
+      dates = JSON.parse(readFileSync(join(GENERATED, 'last-modified.json'), 'utf8'));
+    } catch {
+      dates = {};
+    }
+  }
+  return dates[page.file] ?? null;
+}

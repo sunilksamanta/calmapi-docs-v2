@@ -6,9 +6,10 @@
 //   public/<slug>.md             raw markdown of each CalmAPI 2 page (linked from llms.txt and from
 //                                each page's <link rel="alternate">), served at /<slug>.md
 //   src/generated/search-index.json    titles, headings and text for the search dialog
+//   src/generated/last-modified.json   date of the last commit that changed each markdown file
 //
-// Files in public/ are served as they are, so the generated ones are written there directly
-// (and git-ignored, see .gitignore). src/generated/public-files.json lists them, so the
+// Files in public/ are served as they are by Next.js, so the generated ones are written there
+// directly (and git-ignored, see .gitignore). src/generated/public-files.json lists them, so the
 // next run removes them before checking for clashes and a removed page's copy does not linger.
 //
 // It also checks internal links and #anchors, and that no page URL collides with another
@@ -167,6 +168,31 @@ const index = pages.map((page) => ({
     .filter((s) => s.id || s.text),
 }));
 writeFileSync(join(GENERATED, 'search-index.json'), JSON.stringify(index));
+
+// ---- last modified dates ---------------------------------------------------------------------
+// Date of the last commit that changed each markdown file (keyed by its path in src/docs), for
+// the pages' structured data and the sitemap. Left empty without git; in a shallow clone the
+// oldest commit stands in for all earlier history, so a date from it would be wrong and is skipped.
+const modified = {};
+try {
+  const shallow = resolve(ROOT, git(['rev-parse', '--git-path', 'shallow']).trim());
+  const boundary = new Set(existsSync(shallow) ? readFileSync(shallow, 'utf8').split('\n').filter(Boolean) : []);
+  const log = execFileSync('git', ['log', '--format=%x00%H %cI', '--name-only', '--no-renames', '--relative', '--', '.'], {
+    cwd: DOCS,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  for (const entry of log.split('\0').slice(1)) {
+    const [head, ...files] = entry.trim().split('\n');
+    const [hash, date] = head.split(' ');
+    if (boundary.has(hash)) continue;
+    for (const file of files) if (file && !(file in modified)) modified[file] = date;
+  }
+} catch {
+  // Not a git checkout.
+}
+writeFileSync(join(GENERATED, 'last-modified.json'), `${JSON.stringify(modified, null, 2)}\n`);
 
 // ---- link check ------------------------------------------------------------------------------
 const LINK = /!?\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
