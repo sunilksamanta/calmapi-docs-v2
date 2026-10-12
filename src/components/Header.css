@@ -36,7 +36,7 @@
   flex-shrink: 0;
 }
 
-.logo h1 {
+.logo .logo-name {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
@@ -85,7 +85,7 @@
   border-bottom-color: #2f3640;
 }
 
-:root.dark .logo h1 {
+:root.dark .logo .logo-name {
   color: #e4e6eb;
 }
 
@@ -107,7 +107,7 @@
     padding: 1rem 1rem 1rem 4rem;
   }
   
-  .logo h1 {
+  .logo .logo-name {
     font-size: 1.125rem;
   }
   

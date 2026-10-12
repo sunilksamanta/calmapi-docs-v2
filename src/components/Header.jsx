@@ -10,7 +10,7 @@ function Header() {
       <div className="header-content">
         <Link href="/" className="logo" aria-label="CalmAPI docs home">
           <img src="/calm-icon.svg" alt="" width="26" height="26" className="logo-mark" />
-          <h1>CalmAPI</h1>
+          <span className="logo-name">CalmAPI</span>
           <span className="tagline">Keep Calm and REST</span>
         </Link>
         <div className="header-actions">
