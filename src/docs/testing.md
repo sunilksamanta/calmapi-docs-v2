@@ -100,6 +100,51 @@ const token = t.mails.at(-1).meta.token;
 assert.equal((await t.post('/auth/password/reset', { token, password: 'new-password-1' })).status, 204);
 ```
 
+### Push notifications
+
+Nothing is delivered in tests, even with a transport block installed: every notification is recorded in `t.pushes`, with the message, the devices (tokens masked), the payload for each provider, the warnings devtools would show, the status and the delivery log.
+
+```js
+await t.post('/auth/devices', { token: 'test-token-1', platform: 'ios' }, alice);
+await t.post(`/orders/${order.id}/ship`, {}, admin);
+
+const push = t.pushes.at(-1);
+assert.equal(push.message.title, 'Your order shipped');
+assert.equal(push.status, 'captured');
+assert.equal(push.devices[0].platform, 'ios');
+```
+
+[Simulated devices](/push-notifications#testing) work in tests too, to check what happens when a phone was uninstalled or is offline.
+
+### Sample data
+
+`calm/seed.js` builds records that look real from your field definitions, the same code as [`calm seed`](/cli#calm-seed) and the devtools **Sample data** button. Use it when a test needs a full list, not one record:
+
+```js
+import { seed } from '#calm/seed.js';
+
+before(async () => {
+  t = await createTestApp({ root: join(import.meta.dirname, '..') });
+  await seed(t.app, { resource: 'product', count: 30, seed: 42 });
+});
+
+test('lists are paginated', async () => {
+  const alice = await t.signup();
+  const page = await t.get('/products?limit=10', alice);
+  assert.equal(page.body.data.length, 10);
+});
+```
+
+`seed(app, { resource, resources, count, users, seed })` creates `count` records (default 10) of each resource, plus a few records of the resources they reference when those are empty. Records are validated like API input and created through the services, so hooks run. When the database has no users yet, `users` demo users (default 3) are created to own the records. It resolves to `{ created: { product: 30, user: 3 }, users: [{ email, password }] }`, so a test can sign in as a demo user with `t.post('/auth/login', users[0])`. `seed: 42` makes names, numbers and choices repeat between runs.
+
+### Block settings
+
+Blocks read their settings from `calm.config.js` `blocks`, so a test app can use other ones:
+
+```js
+const t = await createTestApp({ root, config: { blocks: { webhooks: { retrySchedule: [20, 20] } } } });
+```
+
 ### Events
 
 ```js

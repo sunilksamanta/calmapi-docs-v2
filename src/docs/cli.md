@@ -6,7 +6,10 @@ The `calmapi` package installs a `calm` command (also available as `calmapi`). I
 calm create [dir]                       new project (npm create calmapi@latest)
 calm dev                                watch mode + devtools
 calm make resource <name> [fields...]   scaffold a resource
-calm add <block...>                     copy blocks into your project (calm add --list)
+calm make block <name>                  start your own block
+calm add <block...>                     copy blocks into your project (calm add --list, gh:user/repo/name)
+calm block list|check|pack              your blocks: what changed, a safety review, a file to share
+calm seed [resource...]                 sample records that look real
 calm routes                             every route with its policy and source file
 calm openapi                            write openapi.json
 calm doctor [--prod] [--audit] [--ci]   security and correctness checks
@@ -17,7 +20,7 @@ calm upgrade                            merge framework updates into calm/
 calm mcp                                MCP server for coding agents
 ```
 
-`calm <command> --help` prints the options of a command, `calm --version` the version. Aliases: `new` and `init` for `create`; `generate`, `g` and `m` for `make`. Running `calmapi` with no arguments outside a project starts the `create` wizard. Commands other than `create` must run inside a project (a folder with `calm.lock`, or below one). Set `CALM_DEBUG=1` to see stack traces.
+`calm <command> --help` prints the options of a command, `calm --version` the version. Aliases: `new` and `init` for `create`; `generate`, `g` and `m` for `make`; `blocks` for `block`. Running `calmapi` with no arguments outside a project starts the `create` wizard. Commands other than `create` must run inside a project (a folder with `calm.lock`, or below one). Set `CALM_DEBUG=1` to see stack traces.
 
 ## calm create
 
@@ -85,6 +88,21 @@ npx calm make resource invoice number:string!+unique amount:number! status:enum:
 
 Without a `user` resource (the `minimal` template), the generated policies are `public` with a comment reminding you to add auth before deploying anything writable.
 
+## calm make block
+
+```text
+calm make block <name>
+```
+
+Starts your own block: `app/blocks/<name>/index.js` (a working route, with every extension point listed in comments), `block.json` (what sharing it needs), `README.md`, and `test/blocks/<name>.test.js`. The block is live in your app right away. The name is turned into kebab case and must start with a letter.
+
+| Option | Meaning |
+|---|---|
+| `--no-test` | Do not create the test file |
+| `--force` | Overwrite existing files |
+
+See [Building your own block](/building-blocks).
+
 ## calm add
 
 ```text
@@ -96,6 +114,7 @@ Copies a block's files into your project, adds its dependencies to `package.json
 ```bash
 npx calm add jobs api-docs                # official blocks (same as @calmapi/jobs)
 npx calm add @acme/billing                # a registry from package.json "calm.registries"
+npx calm add gh:acme/blocks/billing       # r/billing.json in a GitHub repository (@ref to pin)
 npx calm add https://x.dev/r/y.json       # any URL
 npx calm add ./blocks/my-block.json       # a local file
 npx calm add --list                       # list official blocks
@@ -108,9 +127,71 @@ npx calm add --list                       # list official blocks
 | `--no-install` | Do not run the package manager |
 | `--remote` | Fetch official blocks from `https://docs.calmapi.dev/r` instead of the copy bundled with the CLI |
 | `-y`, `--yes` | Do not ask for confirmation |
+| `--trust` | With `--yes`: also add third-party blocks whose review found risky code |
 | `--list` | List official blocks |
 
-Existing files with different content are kept and reported as conflicts unless you pass `--overwrite`. Blocks that provide the same resource (`storage-local` and `storage-s3`) refuse to be installed together.
+Existing files with different content are kept and reported as conflicts unless you pass `--overwrite`. Blocks that provide the same resource (`storage-local` and `storage-s3`) refuse to be installed together. A block whose `minVersion` is newer than the CalmAPI version in `calm.lock` is refused until you run `calm upgrade`.
+
+Blocks that are not official are reviewed before anything is written: the plan lists what their code does, in plain language (network requests, file writes, child processes, `eval`, computed imports, native or minified code, request hooks, the environment variables it reads and the hosts it mentions). Risky findings are marked `!` and must be confirmed; with `--yes`, they need `--trust` too. `--dry-run` shows the review without writing anything. See [What people see before installing](/building-blocks#what-people-see-before-installing).
+
+## calm block
+
+```text
+calm block list
+calm block check [name|address]
+calm block pack [name...] [--out r]
+```
+
+Tools for the blocks in your project and the ones you share. See [Building your own block](/building-blocks#share-it).
+
+| Command | Does |
+|---|---|
+| `list` (or `ls`) | Every block in the project: version, where it came from (from `calm.lock`, or "written here"), and the files you changed since adding it |
+| `check` | Checks your blocks before you share them, or someone else's before you add it: name, versions, file targets (never `calm/`, `.env` or `package.json`), dependency ranges, env var declarations, committed secrets, imports of `calm/` internals, and the plain-language review of what the code does. Without a name it checks every block with a `block.json`. With an address (`gh:...`, a URL, `@scope/name` or a `.json` file) it fetches the block first. Exits with code 1 on errors. |
+| `pack` | Writes a registry item for each block to `r/<name>.json` and an `r/index.json`. Without names, every block with a `block.json`. Blocks with errors are not packed. `--out <dir>` writes elsewhere. |
+
+```text
+$ npx calm block pack
+✔ Packed slack-notify into r/
+
+  Share it
+  Commit r/ and push to GitHub, then anyone can run:
+    npx calm add gh:<you>/<repo>/slack-notify
+  Or host r/ anywhere: npx calm add https://<host>/r/<name>.json
+```
+
+## calm seed
+
+```text
+calm seed [resource...] [--count 10] [--users 3] [--seed 42]
+```
+
+Fills the database (`MONGODB_URI` from `.env`) with sample records that look real, built from your field definitions: names, emails, prices, ratings, phone numbers, cities, values from enums, dates in the past or the future depending on the field name, unique values kept unique, references to records that exist, and owners. Records are validated like API input and created through your services, so hooks run. Resources that the seeded ones reference get a few records first (up to 5), when they are empty.
+
+```bash
+npx calm seed                      # every resource, 10 records each
+npx calm seed product --count 50   # one resource
+npx calm seed --seed 42            # the same choices on every run
+```
+
+| Option | Meaning |
+|---|---|
+| `--count <n>` | Records per resource (default 10, at most 10,000) |
+| `--users <n>` | Demo users to create when there are none yet (default 3) |
+| `--seed <n>` | A fixed random seed, so names, numbers and choices repeat. Emails and unique values still differ between runs, so they never collide. |
+
+When the database has no users, demo users are created to own the records, and their emails and password are printed so you can sign in as them:
+
+```text
+✔ Seeded 3 user, 10 product
+
+  Demo users (sign in with these)
+  demo.grace.mgnx8k2a0@example.test  calm-demo-password-1
+  demo.alan.mgnx8k2b1@example.test  calm-demo-password-1
+  demo.radia.mgnx8k2b2@example.test  calm-demo-password-1
+```
+
+It refuses to run with `NODE_ENV=production`. In devtools, **Sample data** in the Data panel does the same for one resource.
 
 ## calm routes
 
@@ -245,4 +326,4 @@ Starts a Model Context Protocol server on stdio for AI coding agents. Register i
 claude mcp add calm -- npx calm mcp
 ```
 
-or add `{ "command": "npx", "args": ["calm", "mcp"] }` to your agent's MCP configuration. It offers 17 tools: inspect the project, scaffold, call the dev API as any user (`calm_http`), run tests, doctor and the audit, and read requests, logs, emails, security events and project activity. Every tool call is logged to `.calm/activity.jsonl` with the client's name, so you can follow it in devtools. See [AI agents](/ai-agents) for the list.
+or add `{ "command": "npx", "args": ["calm", "mcp"] }` to your agent's MCP configuration. It offers 18 tools: inspect the project, scaffold, call the dev API as any user (`calm_http`), run tests, doctor and the audit, and read requests, logs, emails, security events and project activity. Every tool call is logged to `.calm/activity.jsonl` with the client's name, so you can follow it in devtools. See [AI agents](/ai-agents) for the list.

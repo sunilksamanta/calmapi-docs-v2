@@ -9,6 +9,9 @@ npm create calmapi@latest my-api           # new project (templates: api, minima
 npm run dev                                 # watch mode + devtools at /_calm
 npx calm make resource product name:string!+searchable price:number! status:enum:draft,live=draft category:ref --service --routes
 npx calm add jobs storage-s3 api-docs       # blocks (calm add --list)
+npx calm add gh:acme/blocks/billing         # a block from GitHub, reviewed before it is written
+npx calm make block slack-notify            # your own block (calm block check | pack | list)
+npx calm seed product --count 50            # sample data that looks real
 npx calm routes                             # routes and policies
 npx calm doctor --prod --ci                 # checks, CI friendly (--audit adds npm audit)
 npx calm audit --ci                         # every route as every role, on a throwaway database
@@ -138,7 +141,7 @@ POST /api/auth/password/reset    { token, password }              -> 204
 GET  /api/auth/sessions   DELETE /api/auth/sessions/:sessionId
 ```
 
-Devices for push: `POST /api/auth/devices { token, platform }`, `GET /api/auth/devices`, `DELETE /api/auth/devices/:deviceId`.
+Devices for push: `POST /api/auth/devices { token, platform }`, `GET /api/auth/devices`, `DELETE /api/auth/devices/:deviceId`, `POST /api/auth/devices/unregister { token }`. Signing out removes the session's devices.
 
 Header: `Authorization: Bearer calm_...`. 5 failed sign-ins for an email lock it for 15 minutes (`429`). Two-factor: the [totp](/blocks/totp) block. [Authentication](/authentication)
 
@@ -149,7 +152,7 @@ await ctx.push.send({ to: userId, title: 'Your order shipped', body: 'Arrives Th
 // -> { id, status: 'captured' | 'sent' | 'partial' | 'failed' | 'no-devices', devices, results }
 ```
 
-Development: previews in devtools **Push**, nothing delivered. Deliver: `npx calm add push-expo` or `push-fcm`. Tests: `t.pushes`. [Push notifications](/push-notifications)
+Development: previews in devtools **Push**, simulated phones that are offline, muted or uninstalled, nothing delivered. Deliver: `npx calm add push-expo` and/or `push-fcm`. Inbox, push and email in one call: the [notifications](/blocks/notifications) block. Tests: `t.pushes`. [Push notifications](/push-notifications)
 
 ## Config and environment
 

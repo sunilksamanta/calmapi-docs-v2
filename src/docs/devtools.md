@@ -1,6 +1,6 @@
 # Devtools
 
-In development, every CalmAPI app serves a dashboard at **`http://localhost:5001/_calm`**. It shows what your API is doing right now: requests with their MongoDB queries, logs, emails, push notifications, routes, resources and data, plus a playground to call the API as any user. It also shows what an AI agent is changing in your project, and who can access what.
+In development, every CalmAPI app serves a dashboard at **`http://localhost:5001/_calm`**. It shows what your API is doing right now: requests with their MongoDB queries, logs, emails, push notifications on simulated phones, routes, resources, data and the blocks you installed, plus a playground to call the API as any user. It also shows what an AI agent is changing in your project, and who can access what.
 
 ```bash
 npm run dev
@@ -19,7 +19,7 @@ Open a request to see:
 
 - **Timeline**: the request and each query as a waterfall, with log lines placed in time.
 - **Queries**: every MongoDB command with its filter, duration and document count. Repeated query shapes are flagged. **Explain** runs the query planner and tells you whether an index was used or the collection was scanned (`COLLSCAN`).
-- **Request** and **Response**: headers and bodies. Passwords, tokens and other secret-looking keys are redacted, and the `Authorization` header is shortened.
+- **Request** and **Response**: headers and bodies. Passwords, tokens, keys and other secret-looking values are redacted in both (in responses the first characters of a long value stay, so you can tell them apart), and the `Authorization` header is shortened.
 - **Logs**: everything logged during the request, linked by request id.
 - **Error**: the original error and stack trace, with links that open the file in VS Code.
 
@@ -45,11 +45,18 @@ Every [push notification](/push-notifications) the app sent, live, as it would a
 
 - **Payloads**: the exact JSON for APNs, FCM, Expo and Web Push, with its size against the 4 KB limit.
 - **Warnings**: titles and bodies that will be cut off, data keys that look sensitive, non-string data for FCM, payloads a provider would reject.
-- **Delivery**: what happened on each device (captured, delivered with the provider's id, or failed and why), and the request that sent it.
+- **Delivery**: what happened on each device, step by step: the transport that took it (or the simulator), the provider's answer, receipts that came later, whether the phone showed it, and the request that sent it.
 
-**New notification** composes one with a live preview and sends it through `app.push.send()`; **Send again** reopens a sent one in the composer and **Copy as code** gives you the `ctx.push.send()` call. **Devices** lists every registered device and adds **simulated devices** (an iPhone, an Android phone or a browser) to any user, so you can see notifications before any phone is involved. Simulated devices are never sent to a real provider.
+**New notification** composes one with a live preview and sends it through `app.push.send()`; **Send again** reopens a sent one in the composer and **Copy as code** gives you the `ctx.push.send()` call.
 
-Without a transport block, notifications are only captured here. With [push-expo](/blocks/push-expo) or [push-fcm](/blocks/push-fcm) installed, real devices receive them in development too.
+**Devices** lists every registered device with its user, masked token, the transport it goes through and when it was last seen. **Add device** gives any user as many devices as you like:
+
+- **Simulated** iPhones, Android phones and browsers, each with a behavior: delivers, offline, notifications off, app uninstalled, invalid token or rate limited. They answer like real phones and never reach a real provider. See [Simulated devices](/push-notifications#simulated-devices).
+- **Real tokens** pasted from your phone (an Expo or FCM token), delivered through the installed transport.
+
+From a device's row you can change its behavior, send it a test, **Rotate** its token (the old one fails once and is removed, as in production) or **Remove** it. Click a simulated device to open it as a **phone**: its own lock screen with the notifications it received, the ones waiting while it is offline and the ones hidden because notifications are off. **Bring online**, **Uninstall app**, **Clear** and tapping a notification (which emits `push.opened`) are there too, and the lock screen updates live.
+
+Without a transport block, notifications to real devices are only captured here. With [push-expo](/blocks/push-expo) or [push-fcm](/blocks/push-fcm) installed (or both), real devices receive them in development too.
 
 ### Routes
 
@@ -62,6 +69,18 @@ A diagram of how resources reference each other, then each resource with its pol
 ### Data
 
 Browse the documents of each resource with the **privacy lens**: for each record, what MongoDB stores next to what the API returns, and why each missing field is missing (`hidden`, `password`, `visible to owner | admin`...). **View as** switches the viewer between anonymous and any user, so you can check exactly what Alice sees of Bob's records. Password hashes are masked.
+
+**Sample data** adds 10 records that look real to the resource you are looking at: names that look like names, prices like prices, values from enums, dates in the past or the future depending on the field name, and references to records that exist (referenced resources get a few records first). Records are created through the service, so validation and hooks run. When there are no users yet, demo users are created to own the records, and their email and password are shown. From a terminal: [`calm seed`](/cli#calm-seed).
+
+### Blocks
+
+Every block in the app, from [`calm add`](/blocks) or [written here](/building-blocks):
+
+- **Origin**: the address and version it was installed from (`calm.lock`), or "your own block", and the files you changed since installing it.
+- **Hooks**: the extension points it uses, such as a guard, an authenticator, named policies, the events it listens to, a push or mail transport, what it provides on `app.ext`, doctor checks and devtools panels.
+- **Environment**: each variable it declares, set or missing (missing required ones are flagged, and the panel's badge counts blocks with missing variables). The values of secret variables never leave the server.
+- **Options**: its settings after `calm.config.js` overrides, with secret-looking keys redacted.
+- **Routes**: every route it adds, with its policy.
 
 ### Playground
 
@@ -83,7 +102,19 @@ Who can access what, and what happened:
 
 ### Block panels
 
-Blocks can add panels: [jobs](/blocks/jobs) shows queue statistics and recent jobs, [realtime-sse](/blocks/realtime-sse) the connected subscribers, the storage blocks their configuration.
+Blocks can add panels, listed under **Blocks** in the sidebar:
+
+| Block | Panel |
+|---|---|
+| [webhooks](/blocks/webhooks) | Endpoints with their status, the latest deliveries with status codes, errors and next retries, and how many are pending |
+| [notifications](/blocks/notifications) | Every notification type with its channels, and the latest inbox entries |
+| [api-keys](/blocks/api-keys) | Keys with owner, prefix, scopes, status and last use |
+| [feature-flags](/blocks/feature-flags) | Every flag with its rollout, targeting, variants and last change |
+| [jobs](/blocks/jobs) | Queue statistics and recent jobs |
+| [realtime-sse](/blocks/realtime-sse) | Connected subscribers and pending tickets |
+| storage blocks | Their configuration |
+
+Your own block adds one with [`calm.devtools.panel()`](/building-blocks#extension-points).
 
 ### Keyboard shortcuts
 
@@ -106,8 +137,8 @@ Devtools can read your data and create sessions, so it is locked down:
 
 - **Development only.** It is on when the mode is `development` (`calm dev`). In production it is forced off, even if `calm.config.js` turns it on. MongoDB command monitoring is only enabled while devtools is on.
 - **This machine only.** Every `/_calm` request must arrive on a loopback socket (`127.0.0.1` or `::1`), with a `Host` header of `localhost`, `127.0.0.1` or `::1`, and without proxy headers (`X-Forwarded-For`, `Forwarded`). Anything else gets a plain `404`, which also defeats DNS rebinding.
-- **No cross-site writes.** Requests that change something (act as, explain, clear, run audit, send a test notification, add a simulated device) need an `X-Calm-Devtools: 1` header, which a page on another site cannot send. `/_calm` has no CORS headers, a strict Content-Security-Policy and refuses to be framed.
-- **Secrets stay out.** Request bodies are stored with secret-looking keys redacted, the `Cookie` header is redacted, and the `Authorization` header is shortened.
+- **No cross-site writes.** Requests that change something (act as, explain, clear, run audit, sample data, send a test notification, add or change a device) need an `X-Calm-Devtools: 1` header, which a page on another site cannot send. `/_calm` has no CORS headers, a strict Content-Security-Policy and refuses to be framed.
+- **Secrets stay out.** Request and response bodies are stored with secret-looking values redacted, the `Cookie` header is redacted, and the `Authorization` header is shortened. Block environment variables marked secret are never sent to the page.
 - **Bounded memory.** It keeps the last 300 requests, 1,000 log lines, 100 emails, 100 push notifications, 200 background queries, 500 activity events and 300 security events. Push records never hold a full device token.
 
 "Act as" is logged (`Devtools: acting as ada@example.com`) and creates an ordinary session that expires like any other.
@@ -118,14 +149,21 @@ The panels use a small JSON API under `/_calm/api` that you can call from script
 
 | Endpoint | Returns |
 |---|---|
-| `GET /_calm/api/overview` | App, runtime, database, resources, routes, blocks |
+| `GET /_calm/api/overview` | App, runtime, database, resources, routes, and blocks (origin, changed files, hooks, env vars without secret values, options, routes) |
 | `GET /_calm/api/requests`, `GET /_calm/api/requests/:id` | Recent requests, one request in full |
 | `GET /_calm/api/logs`, `GET /_calm/api/mails` | Recent logs and emails |
 | `GET /_calm/api/pushes` | Recent push notifications: message, devices, payloads, warnings and delivery log |
-| `GET /_calm/api/devices?user=<userId>` | Registered and simulated devices (tokens masked) |
-| `POST /_calm/api/devices/simulate` `{ userId, platform }` | Adds a simulated device |
-| `DELETE /_calm/api/devices/:id` | Removes a device |
+| `GET /_calm/api/devices?user=<userId>` | Registered and simulated devices (tokens masked), with the transport each goes through |
+| `POST /_calm/api/devices` `{ userId, platform, behavior?, name?, token? }` | Adds a simulated device, or a real one when `token` is given |
+| `GET /_calm/api/devices/behaviors` | The simulated behaviors and what each does |
+| `PATCH /_calm/api/devices/:id` `{ behavior?, name? }` | Changes a device (behavior: simulated devices only) |
+| `POST /_calm/api/devices/:id/rotate` | Rotates a simulated device's token: returns the new device, the old one fails on the next send |
+| `GET /_calm/api/devices/:id/inbox` | A simulated device's lock screen |
+| `POST /_calm/api/devices/:id/online` | Brings an offline device back and shows what was waiting |
+| `POST /_calm/api/devices/:id/inbox/:pushId/open` | Taps a notification on the lock screen (emits `push.opened`) |
+| `DELETE /_calm/api/devices/:id/inbox`, `DELETE /_calm/api/devices/:id` | Clears a lock screen, removes a device |
 | `POST /_calm/api/push/test` `{ userId \| deviceIds, ...message }` | Sends a notification through `app.push.send()` |
+| `POST /_calm/api/seed` `{ resource, count }` | Creates sample records (up to 200) through the services |
 | `GET /_calm/api/doctor` | Runtime doctor findings |
 | `GET /_calm/api/activity` | Project activity from `.calm/activity.jsonl`, newest first |
 | `GET /_calm/api/security` | Exposure matrix, security events and posture |

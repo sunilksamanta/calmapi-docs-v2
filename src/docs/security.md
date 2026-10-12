@@ -192,7 +192,7 @@ CalmAPI computes, from your resource definitions alone, who can do what. For eve
 | `off` | The CRUD route is turned off with the resource's `crud` option |
 | `custom` | A policy function decides, so the answer can depend on the data |
 
-Field cells are `yes`, `no`, or `never` for fields no client can ever read (hidden, write-only) or write (hidden, read-only). Fields whose name looks like personal data (`email`, `phone`, `address`, `iban`, `salary`...) are flagged.
+Field cells are `yes`, `no`, or `never` for fields no client can ever read (hidden, write-only) or write (hidden, read-only). Fields whose name looks like personal data (`email`, `phone`, `address`, `iban`, `salary`...) are flagged, and so are fields you mark with [`.pii()`](/resources#personal-data) (`nickname: f.string().pii()`).
 
 You can see it in the devtools **Security** panel, through the `calm_security` [MCP tool](/ai-agents#calm-mcp-tools-for-coding-agents), and in code with `await app.exposure()`. [`calm audit`](/audit) checks the running API against it, and `calm doctor` turns it into findings:
 
@@ -227,7 +227,9 @@ Static checks tell you what the rules say. [`calm audit`](/audit) tells you what
 | `roles-writable` | Users can set their own roles |
 | `route-policy` | A custom route without an explicit policy |
 | `pii-public`, `pii-users`, `sensitive-unencrypted` | Personal or sensitive data findings from the [exposure matrix](#exposure-matrix) |
-| (blocks) | Checks added by blocks, such as a missing `S3_BUCKET` or `RESEND_API_KEY`, or `totp-unencrypted` |
+| `env-<NAME>` | An environment variable a block [declares](/building-blocks#environment-variables) as required is not set: an error when it is needed now, an info in development for variables needed in production |
+| (blocks) | Checks added by blocks, such as `totp-unencrypted`, `webhooks-failing` or `privacy-plan` |
+| `doctor-hook` | A block's doctor check crashed |
 
 **Static checks** on your files:
 
