@@ -4,7 +4,7 @@
   "type": "registry:item",
   "title": "S3 file storage",
   "description": "Direct-to-S3 uploads with presigned URLs (AWS S3, Cloudflare R2, MinIO): a 'file' resource, type and size allowlists, verified completion and private downloads.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "CalmAPI",
   "categories": [
     "storage",
@@ -39,7 +39,7 @@
       "path": "registry/blocks/storage-s3/files/app/blocks/storage-s3/index.js",
       "type": "registry:file",
       "target": "app/blocks/storage-s3/index.js",
-      "content": "import { definePlugin } from '#calm';\nimport { settings } from './s3.js';\n\nexport default definePlugin({\n  name: 'storage-s3',\n  setup(calm) {\n    calm.doctor(() => {\n      const s = settings();\n      const findings = [];\n      if (!s.bucket) findings.push({ level: 'error', id: 's3-bucket', title: 'S3_BUCKET is not set', detail: 'Uploads cannot work without a bucket. Set S3_BUCKET (and S3_ENDPOINT for R2/MinIO).' });\n      if (!process.env.S3_ACCESS_KEY_ID && calm.config.mode !== 'production') {\n        findings.push({ level: 'info', id: 's3-credentials', title: 'No S3_ACCESS_KEY_ID set', detail: 'The AWS default credential chain will be used (IAM role, profile or AWS_* env vars).' });\n      }\n      return findings;\n    });\n    calm.devtools.panel('storage', () => {\n      const s = settings();\n      return { driver: 's3', bucket: s.bucket ?? '(not set)', region: s.region, endpoint: s.endpoint ?? 'AWS', maxMb: s.maxBytes / 1048576, allowedTypes: s.allowed };\n    });\n  },\n});\n"
+      "content": "import { definePlugin } from '#calm';\nimport { settings } from './s3.js';\n\nexport default definePlugin({\n  name: 'storage-s3',\n  env: {\n    S3_BUCKET: 'Bucket for uploads',\n    S3_REGION: 'Bucket region (default us-east-1)',\n    S3_ACCESS_KEY_ID: 'Access key id; without it the AWS default credential chain is used',\n    S3_SECRET_ACCESS_KEY: { secret: true, description: 'Secret access key' },\n    S3_ENDPOINT: 'Endpoint for S3 compatible storage (R2, MinIO...)',\n    UPLOAD_MAX_MB: 'Largest upload in MB (default 10)',\n    UPLOAD_ALLOWED_TYPES: 'Comma separated MIME types (default: images and PDF)',\n  },\n  setup(calm) {\n    calm.doctor(() => {\n      const s = settings();\n      const findings = [];\n      if (!s.bucket) findings.push({ level: 'error', id: 's3-bucket', title: 'S3_BUCKET is not set', detail: 'Uploads cannot work without a bucket. Set S3_BUCKET (and S3_ENDPOINT for R2/MinIO).' });\n      if (!process.env.S3_ACCESS_KEY_ID && calm.config.mode !== 'production') {\n        findings.push({ level: 'info', id: 's3-credentials', title: 'No S3_ACCESS_KEY_ID set', detail: 'The AWS default credential chain will be used (IAM role, profile or AWS_* env vars).' });\n      }\n      return findings;\n    });\n    calm.devtools.panel('storage', () => {\n      const s = settings();\n      return { driver: 's3', bucket: s.bucket ?? '(not set)', region: s.region, endpoint: s.endpoint ?? 'AWS', maxMb: s.maxBytes / 1048576, allowedTypes: s.allowed };\n    });\n  },\n});\n"
     },
     {
       "path": "registry/blocks/storage-s3/files/app/blocks/storage-s3/s3.js",

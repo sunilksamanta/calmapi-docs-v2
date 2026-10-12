@@ -7,26 +7,58 @@
       "name": "api-docs",
       "title": "API docs",
       "description": "Interactive API reference at /docs, generated from your OpenAPI document (Scalar).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "categories": [
         "docs"
+      ]
+    },
+    {
+      "name": "api-keys",
+      "title": "API keys",
+      "description": "Personal and service API keys with scopes for scripts and integrations: shown once, SHA-256 at rest, checksummed so secret scanners and typo checks work, expiry, last used, admin revoke, devtools panel. Zero dependencies.",
+      "version": "1.0.0",
+      "categories": [
+        "security",
+        "auth"
       ]
     },
     {
       "name": "audit-log",
       "title": "Audit log",
       "description": "Who changed what and when: every create, update and delete with a field-level diff (private fields never recorded). Admin API included.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "categories": [
         "security",
         "compliance"
       ]
     },
     {
+      "name": "feature-flags",
+      "title": "Feature flags",
+      "description": "Feature flags in MongoDB: kill switches, deterministic gradual rollouts, per user and per role targeting, weighted variants, ctx.flags in code, route gates, an admin API, a frontend endpoint and a devtools panel.",
+      "version": "1.0.0",
+      "categories": [
+        "flags",
+        "rollout",
+        "experiments"
+      ]
+    },
+    {
+      "name": "idempotency",
+      "title": "Idempotency keys",
+      "description": "Safe retries for POST, PATCH, PUT and DELETE: the Idempotency-Key header (IETF draft) replays the stored response instead of running an operation twice. Per user keys, 409 while running, 422 on reuse, 5xx never stored.",
+      "version": "1.0.0",
+      "categories": [
+        "http",
+        "reliability",
+        "payments"
+      ]
+    },
+    {
       "name": "jobs",
       "title": "Background jobs",
       "description": "Background jobs and cron on MongoDB (no Redis): retries with backoff, schedules, event triggers, admin API and a devtools panel.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "categories": [
         "jobs",
         "queue",
@@ -34,10 +66,20 @@
       ]
     },
     {
+      "name": "magic-link",
+      "title": "Magic link sign-in",
+      "description": "Passwordless sign-in by email: single use links stored hashed, 15 minute expiry, per email cooldown, redirect allowlist, links bound to the browser that asked. Lockout, disabled accounts and 2FA (totp) still apply.",
+      "version": "1.0.0",
+      "categories": [
+        "auth",
+        "security"
+      ]
+    },
+    {
       "name": "mail-resend",
       "title": "Email via Resend",
       "description": "Deliver emails (password resets, notifications) through the Resend HTTP API. No SDK, just fetch.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "categories": [
         "mail"
       ]
@@ -46,7 +88,7 @@
       "name": "mail-smtp",
       "title": "Email via SMTP",
       "description": "Deliver emails through any SMTP server (SES, Postmark, Mailgun, your own) with Nodemailer.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "categories": [
         "mail"
       ]
@@ -55,16 +97,38 @@
       "name": "mcp-server",
       "title": "MCP server",
       "description": "Expose your resources to AI agents as Model Context Protocol tools (Streamable HTTP at /mcp). Every call goes through the same policies, validation and serialization as the REST API.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "categories": [
         "ai",
         "mcp"
       ]
     },
     {
+      "name": "notifications",
+      "title": "Notifications (inbox, push, email)",
+      "description": "One call, every channel: ctx.notify(user, 'order-shipped', { order }) writes the in-app inbox, sends a push and an email, following each user's preferences and quiet hours. Types are small files in app/notifications/.",
+      "version": "1.0.0",
+      "categories": [
+        "notifications",
+        "push",
+        "email"
+      ]
+    },
+    {
+      "name": "privacy",
+      "title": "Privacy: export and delete",
+      "description": "Data portability and the right to be forgotten: users download everything they own as JSON and delete their account; per resource delete, anonymize or keep; admin routes for support requests; optional grace period.",
+      "version": "1.0.0",
+      "categories": [
+        "privacy",
+        "compliance",
+        "auth"
+      ]
+    },
+    {
       "name": "push-expo",
       "title": "Push notifications via Expo",
-      "description": "Deliver app.push notifications to Expo and React Native apps through the Expo push service. No SDK, just fetch. Tokens that stopped working are removed for you.",
+      "description": "Deliver app.push notifications to Expo push tokens (Expo and React Native apps) through the Expo push service, as Expo documents it: batching, throttling, retries and push receipts. Works next to push-fcm.",
       "version": "1.0.0",
       "categories": [
         "push",
@@ -74,7 +138,7 @@
     {
       "name": "push-fcm",
       "title": "Push notifications via Firebase Cloud Messaging",
-      "description": "Deliver app.push notifications to Android, iOS and web through the FCM HTTP v1 API, signed with your service account using node:crypto. No SDK. Tokens that stopped working are removed for you.",
+      "description": "Deliver app.push notifications to native Android, iOS and web tokens through the FCM HTTP v1 API, signed with your service account using node:crypto. No SDK. Works next to push-expo.",
       "version": "1.0.0",
       "categories": [
         "push",
@@ -95,7 +159,7 @@
       "name": "realtime-sse",
       "title": "Realtime (SSE)",
       "description": "Live resource changes over Server-Sent Events, filtered per subscriber with the same policies, scopes and field visibility as the REST API.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "categories": [
         "realtime"
       ]
@@ -113,7 +177,7 @@
       "name": "storage-local",
       "title": "Local file storage",
       "description": "File uploads to local disk: a 'file' resource, type and size allowlists, magic-byte checks and safe downloads.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "categories": [
         "storage",
         "uploads"
@@ -123,7 +187,7 @@
       "name": "storage-s3",
       "title": "S3 file storage",
       "description": "Direct-to-S3 uploads with presigned URLs (AWS S3, Cloudflare R2, MinIO): a 'file' resource, type and size allowlists, verified completion and private downloads.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "categories": [
         "storage",
         "uploads"
@@ -133,10 +197,21 @@
       "name": "totp",
       "title": "Two-factor authentication (TOTP)",
       "description": "Authenticator-app codes (RFC 6238) on login: setup with an otpauth URL, hashed single-use recovery codes, replay protection, attempt limits. Zero dependencies.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "categories": [
         "security",
         "auth"
+      ]
+    },
+    {
+      "name": "webhooks",
+      "title": "Webhooks",
+      "description": "Outgoing webhooks for resource events: Standard Webhooks signatures, a MongoDB delivery queue with retries and a delivery log, per-user visibility, SSRF protection and secret rotation. Zero dependencies.",
+      "version": "1.0.0",
+      "categories": [
+        "webhooks",
+        "integrations",
+        "events"
       ]
     }
   ]

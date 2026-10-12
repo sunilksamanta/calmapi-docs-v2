@@ -4,7 +4,7 @@
   "type": "registry:item",
   "title": "Email via Resend",
   "description": "Deliver emails (password resets, notifications) through the Resend HTTP API. No SDK, just fetch.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "CalmAPI",
   "categories": [
     "mail"
@@ -28,7 +28,7 @@
       "path": "registry/blocks/mail-resend/files/app/blocks/mail-resend/index.js",
       "type": "registry:file",
       "target": "app/blocks/mail-resend/index.js",
-      "content": "import { definePlugin } from '#calm';\n\n// Sends app.mailer messages through https://resend.com. Without RESEND_API_KEY in\n// development, the built-in dev transport (devtools Mail panel) keeps working.\nexport default definePlugin({\n  name: 'mail-resend',\n  setup(calm) {\n    const key = process.env.RESEND_API_KEY;\n    if (!key) {\n      calm.doctor(() =>\n        calm.config.mode === 'production'\n          ? [{ level: 'error', id: 'resend-key', title: 'RESEND_API_KEY is not set', detail: 'Emails cannot be delivered in production.' }]\n          : [],\n      );\n      return;\n    }\n    calm.mailer.use({\n      name: 'resend',\n      async send({ to, from, subject, text, html }) {\n        const res = await fetch('https://api.resend.com/emails', {\n          method: 'POST',\n          headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },\n          body: JSON.stringify({ from: process.env.MAIL_FROM || from, to: [to].flat(), subject, text, html }),\n        });\n        if (!res.ok) throw new Error(`Resend answered ${res.status}: ${(await res.text()).slice(0, 300)}`);\n        return res.json();\n      },\n    });\n  },\n});\n"
+      "content": "import { definePlugin } from '#calm';\n\n// Sends app.mailer messages through https://resend.com. Without RESEND_API_KEY in\n// development, the built-in dev transport (devtools Mail panel) keeps working.\nexport default definePlugin({\n  name: 'mail-resend',\n  env: {\n    RESEND_API_KEY: { secret: true, description: 'API key from resend.com: without it, mail stays in devtools' },\n    MAIL_FROM: 'Sender address, for example \"Acme <hello@acme.com>\"',\n  },\n  setup(calm) {\n    const key = process.env.RESEND_API_KEY;\n    if (!key) {\n      calm.doctor(() =>\n        calm.config.mode === 'production'\n          ? [{ level: 'error', id: 'resend-key', title: 'RESEND_API_KEY is not set', detail: 'Emails cannot be delivered in production.' }]\n          : [],\n      );\n      return;\n    }\n    calm.mailer.use({\n      name: 'resend',\n      async send({ to, from, subject, text, html }) {\n        const res = await fetch('https://api.resend.com/emails', {\n          method: 'POST',\n          headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },\n          body: JSON.stringify({ from: process.env.MAIL_FROM || from, to: [to].flat(), subject, text, html }),\n        });\n        if (!res.ok) throw new Error(`Resend answered ${res.status}: ${(await res.text()).slice(0, 300)}`);\n        return res.json();\n      },\n    });\n  },\n});\n"
     }
   ]
 }

@@ -4,7 +4,7 @@
   "type": "registry:item",
   "title": "Local file storage",
   "description": "File uploads to local disk: a 'file' resource, type and size allowlists, magic-byte checks and safe downloads.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "CalmAPI",
   "categories": [
     "storage",
@@ -34,7 +34,7 @@
       "path": "registry/blocks/storage-local/files/app/blocks/storage-local/index.js",
       "type": "registry:file",
       "target": "app/blocks/storage-local/index.js",
-      "content": "import { definePlugin } from '#calm';\nimport { settings } from './storage.js';\n\n// Local file storage. The 'file' resource (app/resources/file) holds the metadata;\n// this plugin only reports its configuration to doctor and devtools.\nexport default definePlugin({\n  name: 'storage-local',\n  setup(calm) {\n    calm.doctor(() => {\n      const findings = [];\n      if (calm.config.mode === 'production') {\n        findings.push({\n          level: 'info',\n          id: 'storage-local-production',\n          title: 'Uploads are stored on local disk',\n          detail: `Files live in ${settings().dir}. With several instances or ephemeral disks use @calmapi/storage-s3.`,\n        });\n      }\n      return findings;\n    });\n    calm.devtools.panel('storage', () => {\n      const s = settings();\n      return { driver: 'local disk', directory: s.dir, maxMb: s.maxBytes / 1048576, allowedTypes: s.allowed };\n    });\n  },\n});\n"
+      "content": "import { definePlugin } from '#calm';\nimport { settings } from './storage.js';\n\n// Local file storage. The 'file' resource (app/resources/file) holds the metadata;\n// this plugin only reports its configuration to doctor and devtools.\nexport default definePlugin({\n  name: 'storage-local',\n  env: {\n    UPLOAD_DIR: 'Folder for uploaded files (default ./uploads)',\n    UPLOAD_MAX_MB: 'Largest upload in MB (default 10)',\n    UPLOAD_ALLOWED_TYPES: 'Comma separated MIME types (default: images and PDF)',\n  },\n  setup(calm) {\n    calm.doctor(() => {\n      const findings = [];\n      if (calm.config.mode === 'production') {\n        findings.push({\n          level: 'info',\n          id: 'storage-local-production',\n          title: 'Uploads are stored on local disk',\n          detail: `Files live in ${settings().dir}. With several instances or ephemeral disks use @calmapi/storage-s3.`,\n        });\n      }\n      return findings;\n    });\n    calm.devtools.panel('storage', () => {\n      const s = settings();\n      return { driver: 'local disk', directory: s.dir, maxMb: s.maxBytes / 1048576, allowedTypes: s.allowed };\n    });\n  },\n});\n"
     },
     {
       "path": "registry/blocks/storage-local/files/app/blocks/storage-local/storage.js",
