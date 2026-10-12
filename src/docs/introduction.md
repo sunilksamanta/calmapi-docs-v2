@@ -16,7 +16,7 @@ npm run dev
   ➜  Devtools  http://localhost:5001/_calm
 ```
 
-> **Status: 2.0.0-alpha.** APIs may still change before 2.0. Coming from CalmAPI 1.x? Run `npx calmapi@next doctor` inside your 1.x project first, then read [Migrating from 1.x](/docs/migrate-v1).
+> **Status: 2.0.0-alpha.** APIs may still change before 2.0. Coming from CalmAPI 1.x? Run `npx calmapi@next doctor` inside your 1.x project first, then read [Migrating from 1.x](/migrate-v1).
 
 ## What makes it different
 
@@ -28,7 +28,7 @@ A new project has **two runtime dependencies**: `express` and `mongoose`. The CL
 
 ### Owned, but upgradeable
 
-Copied code usually means "no more updates". CalmAPI keeps a `calm.lock` with a hash of every framework file you started from. `calm upgrade` replaces files you never touched, three-way merges upstream fixes into files you edited, and marks real conflicts for you to resolve. See [Upgrading](/docs/upgrading).
+Copied code usually means "no more updates". CalmAPI keeps a `calm.lock` with a hash of every framework file you started from. `calm upgrade` replaces files you never touched, three-way merges upstream fixes into files you edited, and marks real conflicts for you to resolve. See [Upgrading](/upgrading).
 
 ### Declare a field once
 
@@ -45,19 +45,19 @@ One `f.*()` line drives the Mongoose schema, input validation, what the API retu
 - `.encrypted()` fields are stored as AES-256-GCM ciphertext, with key rotation.
 - Anything but `development` or `test` runs as production. Production refuses to boot without `APP_URL`, and devtools cannot be turned on there.
 
-You can check the result: `calm audit` calls every route as every kind of user on a throwaway database and reports where the API and your policies disagree. See [Security](/docs/security) and [Security audit](/docs/audit).
+You can check the result: `calm audit` calls every route as every kind of user on a throwaway database and reports where the API and your policies disagree. See [Security](/security) and [Security audit](/audit).
 
 ### Devtools
 
-A local dashboard at `/_calm` shows every request with its MongoDB queries and timings, explain plans, logs, a privacy lens that puts what is stored next to what the API returns, a mail catcher for password reset links, "act as" any user, doctor findings, and who can access what. See [Devtools](/docs/devtools).
+A local dashboard at `/_calm` shows every request with its MongoDB queries and timings, explain plans, logs, a privacy lens that puts what is stored next to what the API returns, a mail catcher for password reset links, "act as" any user, doctor findings, and who can access what. See [Devtools](/devtools).
 
 ### Agent native
 
-Every project ships with `AGENTS.md`. `calm mcp` is an MCP server that gives coding agents tools to inspect routes and resources, scaffold resources, call the API as any user, run tests, doctor and the security audit, and read live requests from the dev server. Everything an agent does (tool calls, file diffs, restarts, crashes, requests) shows up live in devtools, so you can watch it work. See [AI agents](/docs/ai-agents).
+Every project ships with `AGENTS.md`. `calm mcp` is an MCP server that gives coding agents tools to inspect routes and resources, scaffold resources, call the API as any user, run tests, doctor and the security audit, and read live requests from the dev server. Everything an agent does (tool calls, file diffs, restarts, crashes, requests) shows up live in devtools, so you can watch it work. See [AI agents](/ai-agents).
 
 ### Blocks, shadcn style
 
-`calm add jobs` copies production code into your project: a MongoDB job queue, file storage on disk or S3, realtime events, an audit log, soft delete, two-factor authentication, an MCP server for your API and more. You own that code too, and anyone can publish blocks in the shadcn registry format. See [Blocks](/docs/blocks).
+`calm add jobs` copies production code into your project: a MongoDB job queue, file storage on disk or S3, realtime events, an audit log, soft delete, two-factor authentication, an MCP server for your API and more. You own that code too, and anyone can publish blocks in the shadcn registry format. See [Blocks](/blocks).
 
 ## A resource
 
@@ -121,8 +121,8 @@ Handlers **return** values (`{ data }` responses, `undefined` becomes `204`) and
 
 ## Where to go next
 
-- [Getting started](/docs/getting-started): create a project and make your first requests.
-- [Resources and fields](/docs/resources): everything a resource can declare.
-- [Policies](/docs/policies): who may do what, and why some errors are 404 instead of 403.
-- [Blocks](/docs/blocks): jobs, uploads, realtime, MCP and more, one command each.
-- [Quick reference](/docs/quick-reference): the whole API on one page.
+- [Getting started](/getting-started): create a project and make your first requests.
+- [Resources and fields](/resources): everything a resource can declare.
+- [Policies](/policies): who may do what, and why some errors are 404 instead of 403.
+- [Blocks](/blocks): jobs, uploads, realtime, MCP and more, one command each.
+- [Quick reference](/quick-reference): the whole API on one page.

@@ -20,7 +20,7 @@ claude mcp add calm -- npx calm mcp         # MCP server for coding agents
 npm test                                    # node --test, needs MongoDB
 ```
 
-[CLI reference](/docs/cli)
+[CLI reference](/cli)
 
 ## Resource
 
@@ -43,7 +43,7 @@ export default resource('product', {
 });
 ```
 
-[Resources and fields](/docs/resources)
+[Resources and fields](/resources)
 
 ## Fields
 
@@ -63,7 +63,7 @@ export default resource('product', {
 
 Item routes: `401` signed out, `404` cannot read (or hidden by `scope()`), `403` can read but not act. `'owner'` on `list` filters to the user's records.
 
-[Policies](/docs/policies)
+[Policies](/policies)
 
 ## CRUD routes
 
@@ -82,7 +82,7 @@ Item routes: `401` signed out, `404` cannot read (or hidden by `scope()`), `403`
 ?q=saw  ?sort=-price,name  ?page=2&limit=20  ?include=category,owner  ?fields=name,price
 ```
 
-Operators: `eq ne gt gte lt lte in nin all exists`. Anything undeclared is a `400`. [Querying](/docs/querying)
+Operators: `eq ne gt gte lt lte in nin all exists`. Anything undeclared is a `400`. [Querying](/querying)
 
 ## Service
 
@@ -99,7 +99,7 @@ export default class ProductService extends ResourceService {
 }
 ```
 
-Methods: `list({ filter, sort, skip, limit, populate }, ctx)`, `get(id, { populate }, ctx)`, `find(filter, ctx)`, `findOne(filter, ctx)`, `create(data, ctx)`, `update(id, data, ctx)`, `remove(id, ctx)`, `filterFor(ctx, extra)`, `service(name)`. Events: `product.created|updated|deleted`. [Services and hooks](/docs/services)
+Methods: `list({ filter, sort, skip, limit, populate }, ctx)`, `get(id, { populate }, ctx)`, `find(filter, ctx)`, `findOne(filter, ctx)`, `create(data, ctx)`, `update(id, data, ctx)`, `remove(id, ctx)`, `filterFor(ctx, extra)`, `service(name)`. Events: `product.created|updated|deleted`. [Services and hooks](/services)
 
 ## Custom routes
 
@@ -117,13 +117,13 @@ export default (r) => {
 };
 ```
 
-Options: `policy input status summary description tags middleware rateLimit hidden`. Return a value (`200 { data }`), `undefined` (`204`) or `ctx.reply(data, { status, meta, headers })`. `ctx`: `user params query body doc service services serialize reply req res app config log events`. [Custom routes](/docs/routes)
+Options: `policy input status summary description tags middleware rateLimit hidden`. Return a value (`200 { data }`), `undefined` (`204`) or `ctx.reply(data, { status, meta, headers })`. `ctx`: `user params query body doc service services serialize reply req res app config log events`. [Custom routes](/routes)
 
 ## Errors
 
 `badRequest(msg, details)` 400 · `unauthorized(msg)` 401 · `forbidden(msg)` 403 · `notFound(msg)` 404 · `conflict(msg, details)` 409 · `validationError(details)` 422 · `tooManyRequests()` 429 · `new CalmError(status, code, message, details)`.
 
-Shape: `{ error: { code, message, requestId, details? } }`. [Errors](/docs/errors)
+Shape: `{ error: { code, message, requestId, details? } }`. [Errors](/errors)
 
 ## Auth
 
@@ -138,7 +138,18 @@ POST /api/auth/password/reset    { token, password }              -> 204
 GET  /api/auth/sessions   DELETE /api/auth/sessions/:sessionId
 ```
 
-Header: `Authorization: Bearer calm_...`. 5 failed sign-ins for an email lock it for 15 minutes (`429`). Two-factor: the [totp](/docs/blocks/totp) block. [Authentication](/docs/authentication)
+Devices for push: `POST /api/auth/devices { token, platform }`, `GET /api/auth/devices`, `DELETE /api/auth/devices/:deviceId`.
+
+Header: `Authorization: Bearer calm_...`. 5 failed sign-ins for an email lock it for 15 minutes (`429`). Two-factor: the [totp](/blocks/totp) block. [Authentication](/authentication)
+
+## Push notifications
+
+```js
+await ctx.push.send({ to: userId, title: 'Your order shipped', body: 'Arrives Thursday', url: '/orders/42', data: { orderId: '42' } });
+// -> { id, status: 'captured' | 'sent' | 'partial' | 'failed' | 'no-devices', devices, results }
+```
+
+Development: previews in devtools **Push**, nothing delivered. Deliver: `npx calm add push-expo` or `push-fcm`. Tests: `t.pushes`. [Push notifications](/push-notifications)
 
 ## Config and environment
 
@@ -148,7 +159,7 @@ import { defineConfig } from '#calm';
 export default defineConfig({ pagination: { maxLimit: 100 }, auth: { register: true }, mail: { from: 'App <no-reply@example.com>' } });
 ```
 
-`NODE_ENV` (default production) · `MONGODB_URI` · `APP_URL` (required in production) · `PORT` (5001) · `CORS_ORIGINS` · `TRUST_PROXY` · `LOG_LEVEL` · `CALM_ENCRYPTION_KEYS`. [Configuration](/docs/configuration)
+`NODE_ENV` (default production) · `MONGODB_URI` · `APP_URL` (required in production) · `PORT` (5001) · `CORS_ORIGINS` · `TRUST_PROXY` · `LOG_LEVEL` · `CALM_ENCRYPTION_KEYS`. [Configuration](/configuration)
 
 ## Testing
 
@@ -161,7 +172,7 @@ const res = await t.post('/products', { name: 'Saw', price: 12 }, alice);  // { 
 await t.idle(); await t.close();
 ```
 
-[Testing](/docs/testing)
+[Testing](/testing)
 
 ## Imports
 

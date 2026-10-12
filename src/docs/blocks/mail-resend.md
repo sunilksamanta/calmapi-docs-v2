@@ -28,7 +28,7 @@ await ctx.app.mailer.send({
 });
 ```
 
-`to` can be one address or an array. A failed delivery throws with Resend's status and message. For retries, send from a [job](/docs/blocks/jobs).
+`to` can be one address or an array. A failed delivery throws with Resend's status and message. For retries, send from a [job](/blocks/jobs).
 
 ## Without a mail block
 

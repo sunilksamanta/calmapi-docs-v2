@@ -30,17 +30,18 @@ npx calm add jobs
 
 | Block | What you get |
 |---|---|
-| [jobs](/docs/blocks/jobs) | MongoDB job queue and cron (no Redis): retries, schedules, event triggers, admin API |
-| [storage-local](/docs/blocks/storage-local) | Uploads to disk with type and size allowlists, magic-byte checks and safe downloads |
-| [storage-s3](/docs/blocks/storage-s3) | Direct-to-S3 uploads with presigned URLs (AWS S3, Cloudflare R2, MinIO) |
-| [realtime-sse](/docs/blocks/realtime-sse) | Live resource events, filtered per subscriber by the same policies |
-| [mcp-server](/docs/blocks/mcp-server) | Your resources as MCP tools for AI agents, enforced by your API's rules |
-| [audit-log](/docs/blocks/audit-log) | Who changed what, with field diffs (private values never logged) |
-| [soft-delete](/docs/blocks/soft-delete) | `softDelete: true` per resource, with trash and restore |
-| [totp](/docs/blocks/totp) | Two-factor authentication with authenticator apps, recovery codes and replay protection |
-| [api-docs](/docs/blocks/api-docs) | Interactive API reference at `/docs` |
-| [mail-resend](/docs/blocks/mail-resend) / [mail-smtp](/docs/blocks/mail-smtp) | Email delivery |
-| [rate-limit-mongo](/docs/blocks/rate-limit-mongo) | Rate limits shared across instances |
+| [jobs](/blocks/jobs) | MongoDB job queue and cron (no Redis): retries, schedules, event triggers, admin API |
+| [storage-local](/blocks/storage-local) | Uploads to disk with type and size allowlists, magic-byte checks and safe downloads |
+| [storage-s3](/blocks/storage-s3) | Direct-to-S3 uploads with presigned URLs (AWS S3, Cloudflare R2, MinIO) |
+| [realtime-sse](/blocks/realtime-sse) | Live resource events, filtered per subscriber by the same policies |
+| [mcp-server](/blocks/mcp-server) | Your resources as MCP tools for AI agents, enforced by your API's rules |
+| [audit-log](/blocks/audit-log) | Who changed what, with field diffs (private values never logged) |
+| [soft-delete](/blocks/soft-delete) | `softDelete: true` per resource, with trash and restore |
+| [totp](/blocks/totp) | Two-factor authentication with authenticator apps, recovery codes and replay protection |
+| [api-docs](/blocks/api-docs) | Interactive API reference at `/docs` |
+| [mail-resend](/blocks/mail-resend) / [mail-smtp](/blocks/mail-smtp) | Email delivery |
+| [push-expo](/blocks/push-expo) / [push-fcm](/blocks/push-fcm) | [Push notification](/push-notifications) delivery through Expo or Firebase Cloud Messaging |
+| [rate-limit-mongo](/blocks/rate-limit-mongo) | Rate limits shared across instances |
 
 ```bash
 npx calm add --list                 # official blocks
@@ -54,7 +55,7 @@ An address is resolved like this:
 
 | Address | Source |
 |---|---|
-| `jobs` or `@calmapi/jobs` | The official registry. The CLI carries a copy of it, so this works offline. `--remote` fetches `https://calmapi.dev/r/jobs.json` instead. |
+| `jobs` or `@calmapi/jobs` | The official registry. The CLI carries a copy of it, so this works offline. `--remote` fetches `https://docs.calmapi.dev/r/jobs.json` instead. |
 | `@acme/billing` | The `@acme` registry declared in your `package.json` |
 | `https://example.com/r/thing.json` | Any URL |
 | `./blocks/thing.json` | A local file |
@@ -69,7 +70,7 @@ Registries are declared in `package.json`:
 }
 ```
 
-The official registry is served as JSON at [https://calmapi.dev/r/index.json](/r/index.json), one file per block (for example [/r/jobs.json](/r/jobs.json)), in the [shadcn registry-item format](https://ui.shadcn.com/docs/registry). See [Publishing your own block](/docs/publishing-blocks).
+The official registry is served as JSON at [https://docs.calmapi.dev/r/index.json](/r/index.json), one file per block (for example [/r/jobs.json](/r/jobs.json)), in the [shadcn registry-item format](https://ui.shadcn.com/docs/registry). See [Publishing your own block](/publishing-blocks).
 
 ## Safety rules
 

@@ -48,4 +48,4 @@ const deleted = await this.model.find({ deletedAt: { $ne: null } }).lean();
 const everything = await this.model.find({}).setOptions({ withDeleted: true }).lean();
 ```
 
-Deleted records stay in the collection, including their unique values: a new record cannot reuse the email or slug of a soft-deleted one. Purge old ones with a scheduled [job](/docs/blocks/jobs) if you need to.
+Deleted records stay in the collection, including their unique values: a new record cannot reuse the email or slug of a soft-deleted one. Purge old ones with a scheduled [job](/blocks/jobs) if you need to.

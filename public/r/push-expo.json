@@ -1,0 +1,36 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "push-expo",
+  "type": "registry:item",
+  "title": "Push notifications via Expo",
+  "description": "Deliver app.push notifications to Expo and React Native apps through the Expo push service. No SDK, just fetch. Tokens that stopped working are removed for you.",
+  "version": "1.0.0",
+  "author": "CalmAPI",
+  "categories": [
+    "push",
+    "notifications"
+  ],
+  "dependencies": [],
+  "devDependencies": [],
+  "registryDependencies": [],
+  "envVars": {
+    "EXPO_ACCESS_TOKEN": ""
+  },
+  "docs": "Your app gets a token with getExpoPushTokenAsync() from expo-notifications and registers it: POST /api/auth/devices { token, platform }. Then send from anywhere: await ctx.push.send({ to: userId, title, body }).\nEXPO_ACCESS_TOKEN is optional but recommended: turn on enhanced push security in your Expo project so only your server can send to your users. In development without the block's transport, notifications land in the devtools Push panel.",
+  "meta": {
+    "calmapi": {
+      "minVersion": "2.0.0-alpha.0",
+      "conflicts": [
+        "push-fcm"
+      ]
+    }
+  },
+  "files": [
+    {
+      "path": "registry/blocks/push-expo/files/app/blocks/push-expo/index.js",
+      "type": "registry:file",
+      "target": "app/blocks/push-expo/index.js",
+      "content": "import { definePlugin } from '#calm';\nimport { providerPayloads } from '#calm/push.js';\n\n// Sends app.push notifications through the Expo push service\n// (https://docs.expo.dev/push-notifications/sending-notifications/). The payload is the\n// same one the devtools Push panel shows under \"Expo\".\nconst BATCH = 100; // Expo accepts up to 100 messages per request\nconst isExpoToken = (token) => /^Expo(nent)?PushToken\\[.+\\]$/.test(token);\n\nexport default definePlugin({\n  name: 'push-expo',\n  setup(calm) {\n    const accessToken = process.env.EXPO_ACCESS_TOKEN;\n    const endpoint = process.env.EXPO_PUSH_URL || 'https://exp.host/--/api/v2/push/send';\n    calm.doctor(() =>\n      !accessToken && calm.config.mode === 'production'\n        ? [{ level: 'warn', id: 'expo-access-token', title: 'EXPO_ACCESS_TOKEN is not set', detail: 'Anyone who learns a device token can send it notifications. Turn on enhanced push security in your Expo project and set EXPO_ACCESS_TOKEN.' }]\n        : [],\n    );\n\n    // Tests capture notifications in t.pushes instead of calling Expo (unless EXPO_PUSH_URL\n    // points at a fake). Development delivers to real Expo tokens, so you can test on a phone.\n    if (calm.config.mode === 'test' && !process.env.EXPO_PUSH_URL) return;\n\n    async function post(messages) {\n      const res = await fetch(endpoint, {\n        method: 'POST',\n        headers: { accept: 'application/json', 'content-type': 'application/json', ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}) },\n        body: JSON.stringify(messages),\n        signal: AbortSignal.timeout(15_000),\n      });\n      const body = await res.json().catch(() => null);\n      if (!res.ok || !Array.isArray(body?.data)) {\n        const reason = body?.errors?.map((e) => e.message ?? e.code).join('; ') || `HTTP ${res.status}`;\n        throw new Error(`Expo rejected the request: ${reason}`);\n      }\n      return body.data;\n    }\n\n    calm.push.use({\n      name: 'expo',\n      async send(message, devices) {\n        const results = devices.map((d) => (isExpoToken(d.token) ? null : { ok: false, error: 'Not an Expo push token (expected ExponentPushToken[...])' }));\n        const pending = devices.map((d, i) => [d, i]).filter(([, i]) => !results[i]);\n        for (let start = 0; start < pending.length; start += BATCH) {\n          const chunk = pending.slice(start, start + BATCH);\n          let tickets;\n          try {\n            tickets = await post(chunk.map(([d]) => providerPayloads(message, d.token).expo.payload));\n          } catch (err) {\n            for (const [, i] of chunk) results[i] = { ok: false, error: err.message };\n            continue;\n          }\n          chunk.forEach(([, i], n) => {\n            const ticket = tickets[n] ?? {};\n            if (ticket.status === 'ok') results[i] = { ok: true, id: ticket.id };\n            else {\n              const code = ticket.details?.error;\n              results[i] = { ok: false, error: [code, ticket.message].filter(Boolean).join(': ') || 'Expo returned no ticket', unregistered: code === 'DeviceNotRegistered' };\n            }\n          });\n        }\n        return results;\n      },\n    });\n  },\n});\n"
+    }
+  ]
+}

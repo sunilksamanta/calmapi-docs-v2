@@ -13,7 +13,7 @@ Policies and field rules say what should happen. The audit shows what actually h
 1. Boots your app (your own `calm/` and `app/` code) with `createTestApp` on a throwaway database on `MONGODB_TEST_URI` (default `mongodb://127.0.0.1:27017`). Rate limits and login lockout are off for the run, and the database is dropped at the end.
 2. Signs up one user per persona: the owner, another user, an admin, and one user for each custom role your policies use. Anonymous calls carry no token.
 3. Seeds a valid record for every resource from its field definitions, referenced resources first. Records the owner cannot create through the API are created through the service. A resource whose required fields it cannot fill (a `.pattern()`, a `.check()` or a Standard Schema without a default) gets fewer checks.
-4. Calls `list`, `read`, `create`, `update` and `delete` on every resource as every persona, and compares each answer with the [exposure matrix](/docs/security#exposure-matrix).
+4. Calls `list`, `read`, `create`, `update` and `delete` on every resource as every persona, and compares each answer with the [exposure matrix](/security#exposure-matrix).
 5. Runs probes against each resource and against the auth routes.
 
 Without a `user` resource (the `minimal` template), only anonymous calls are made.
@@ -139,7 +139,7 @@ The audit reports it under the resource, with one line per failed cell:
 
 For the whole project (the `api` template plus `note`), the summary line reads `3 failed · 74 passed · 2 skipped (custom scope or policy) · 79 checks`. Field leaks are listed under **Field leaks**, one line each (for example `✖ customer.phone returned to anonymous (read /customers)`), and failed probes get a `✖` under **Probes**.
 
-The fix is to keep the request context, so owner scoping still applies: call `super.list(query, ctx)`, or build the filter with `this.filterFor(ctx, filter)` (see [Services and hooks](/docs/services)).
+The fix is to keep the request context, so owner scoping still applies: call `super.list(query, ctx)`, or build the filter with `this.filterFor(ctx, filter)` (see [Services and hooks](/services)).
 
 ## Options
 
@@ -162,10 +162,10 @@ Each entry in `results` looks like this:
 
 ## In CI and devtools
 
-The audit needs a MongoDB server, like `npm test`. Add it to the pipeline next to your tests (see [Testing](/docs/testing#in-ci)):
+The audit needs a MongoDB server, like `npm test`. Add it to the pipeline next to your tests (see [Testing](/testing#in-ci)):
 
 ```bash
 MONGODB_TEST_URI=mongodb://127.0.0.1:27017 npx calm audit --ci
 ```
 
-The same audit runs from the devtools **Security** panel (**Run audit**, on a throwaway database on your dev server's MongoDB), and coding agents can run it with the `calm_audit` [MCP tool](/docs/ai-agents#calm-mcp-tools-for-coding-agents). Run it after changing policies, fields or services.
+The same audit runs from the devtools **Security** panel (**Run audit**, on a throwaway database on your dev server's MongoDB), and coding agents can run it with the `calm_audit` [MCP tool](/ai-agents#calm-mcp-tools-for-coding-agents). Run it after changing policies, fields or services.

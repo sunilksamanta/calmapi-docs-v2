@@ -1,6 +1,6 @@
 # Policies
 
-A policy says who may perform an action. Every CRUD action and every custom route has one, and the same rules drive field visibility, [realtime events](/docs/blocks/realtime-sse) and [MCP tool calls](/docs/blocks/mcp-server).
+A policy says who may perform an action. Every CRUD action and every custom route has one, and the same rules drive field visibility, [realtime events](/blocks/realtime-sse) and [MCP tool calls](/blocks/mcp-server).
 
 ```js
 export default resource('post', {
@@ -42,7 +42,7 @@ policy: {
 
 Functions receive `{ user, action, doc, req }`. `doc` is the stored record for routes with an `:id`, and `undefined` for collection routes (`list`, `create`, custom routes without `:id`). Name your functions: the name is what `calm routes` and devtools display.
 
-There is no "and". When you need one, write a function, or narrow what users can see with the service's [scope()](/docs/services#scope).
+There is no "and". When you need one, write a function, or narrow what users can see with the service's [scope()](/services#scope).
 
 ## Defaults
 
@@ -158,10 +158,10 @@ npx calm routes
 
 Defaulted policies are shown as `authenticated (default)`. The devtools **Routes** panel shows the same, with a filter for routes whose policy is not explicit.
 
-To see the result of all your rules at once, open the devtools **Security** panel: the [exposure matrix](/docs/security#exposure-matrix) lists, for each resource, what anonymous visitors, signed-in users, owners, each custom role and admins may do, and which fields each of them can read and write. Then check that the running API agrees:
+To see the result of all your rules at once, open the devtools **Security** panel: the [exposure matrix](/security#exposure-matrix) lists, for each resource, what anonymous visitors, signed-in users, owners, each custom role and admins may do, and which fields each of them can read and write. Then check that the running API agrees:
 
 ```bash
 npx calm audit
 ```
 
-[`calm audit`](/docs/audit) calls every route as every one of those personas on a throwaway database, and reports each answer that does not match the policy, owner-only lists that return other people's records, and fields that leak to someone who should not see them.
+[`calm audit`](/audit) calls every route as every one of those personas on a throwaway database, and reports each answer that does not match the policy, owner-only lists that return other people's records, and fields that leak to someone who should not see them.

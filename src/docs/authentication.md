@@ -1,6 +1,6 @@
 # Authentication
 
-Projects created from the `api` template have accounts, sessions and password flows under `/api/auth`. The code is in `calm/auth/`, so you can read and change every decision. For two-factor authentication, add the [totp](/docs/blocks/totp) block.
+Projects created from the `api` template have accounts, sessions and password flows under `/api/auth`. The code is in `calm/auth/`, so you can read and change every decision. For two-factor authentication, add the [totp](/blocks/totp) block.
 
 Auth turns on when `config.auth.enabled` is `true` (the default) **and** the project has a `user` resource with an `email` field and an `f.password()` field. The `minimal` template has no `user` resource and therefore no auth.
 
@@ -19,6 +19,9 @@ Auth turns on when `config.auth.enabled` is `true` (the default) **and** the pro
 | `POST /api/auth/password/reset` | public, rate limited | `{ token, password }` | `204`, every session ends |
 | `GET /api/auth/sessions` | authenticated | | `200 { data: [session...] }` |
 | `DELETE /api/auth/sessions/:sessionId` | authenticated | | `204` |
+| `POST /api/auth/devices` | authenticated | `{ token, platform, name?, appVersion?, locale? }` | `201 { data: device }`, registers a device for [push notifications](/push-notifications#registering-devices) |
+| `GET /api/auth/devices` | authenticated | | `200 { data: [device...] }` |
+| `DELETE /api/auth/devices/:deviceId` | authenticated | | `204` |
 
 ### Register
 
@@ -48,7 +51,7 @@ curl -X POST http://localhost:5001/api/auth/login -H 'Content-Type: application/
 
 Same response shape as register. A wrong email and a wrong password both answer `401` with `Invalid email or password`, after the same amount of work, so the response does not reveal whether an account exists. A user whose `status` is `disabled` gets `403`. After 5 failed attempts for the same email, sign-ins for it answer `429` for 15 minutes (see [Account lockout](#account-lockout)).
 
-With the [totp](/docs/blocks/totp) block, users who turned on two-factor authentication get `{ mfaRequired: true, mfaToken, methods, expiresAt }` instead of a session, and finish with `POST /api/auth/2fa/verify`.
+With the [totp](/blocks/totp) block, users who turned on two-factor authentication get `{ mfaRequired: true, mfaToken, methods, expiresAt }` instead of a session, and finish with `POST /api/auth/2fa/verify`.
 
 ### Use the token
 
@@ -109,7 +112,7 @@ curl http://localhost:5001/api/auth/sessions -H "Authorization: Bearer $TOKEN"
 
    The answer (`202`) is identical whether or not the email exists, and the work happens in the background so timing does not tell either.
 
-2. CalmAPI emails a link to `auth.resetUrl` (default `${APP_URL}/reset-password`) with a `token` query parameter. The link is valid for `auth.resetTokenTtlMinutes` (30). In development the email lands in the devtools **Mail** panel; in production you need a mail block ([Resend](/docs/blocks/mail-resend) or [SMTP](/docs/blocks/mail-smtp)).
+2. CalmAPI emails a link to `auth.resetUrl` (default `${APP_URL}/reset-password`) with a `token` query parameter. The link is valid for `auth.resetTokenTtlMinutes` (30). In development the email lands in the devtools **Mail** panel; in production you need a mail block ([Resend](/blocks/mail-resend) or [SMTP](/blocks/mail-smtp)).
 
 3. Your frontend's reset page reads the token and posts the new password:
 
@@ -128,7 +131,7 @@ curl http://localhost:5001/api/auth/sessions -H "Authorization: Bearer $TOKEN"
 
 Register, login, password change, forgot and reset share the **auth** limiter: 10 requests per 15 minutes per client IP and endpoint (`rateLimit.auth`). Every `/api` route also has a **global** limit of 300 requests per minute per IP (`rateLimit.global`). Responses carry `RateLimit-Limit`, `RateLimit-Remaining` and `RateLimit-Reset`; over the limit you get `429 RATE_LIMITED` with `Retry-After`.
 
-Limits are counted per process in memory. Behind a proxy set `TRUST_PROXY` so the real client IP is used, and with several instances add [rate-limit-mongo](/docs/blocks/rate-limit-mongo). Rate limiting is off in tests (`mode: 'test'`).
+Limits are counted per process in memory. Behind a proxy set `TRUST_PROXY` so the real client IP is used, and with several instances add [rate-limit-mongo](/blocks/rate-limit-mongo). Rate limiting is off in tests (`mode: 'test'`).
 
 ## Account lockout
 
@@ -141,7 +144,7 @@ Rate limits count requests per IP. Lockout counts failed sign-ins per account, s
 - Attempts are counted per email address whether or not an account exists, so a lock does not reveal which emails are registered.
 - A successful sign-in clears the count, and so does a password reset.
 - Attempts are stored in `calm_login_attempts`, keyed by a hash of the email, and expire on their own (TTL index).
-- A failed sign-in emits `security.login_failed`, a new lock `security.account_locked`, and a sign-in during a lock `security.locked_login_attempt` (see [Security events](/docs/security#security-events)).
+- A failed sign-in emits `security.login_failed`, a new lock `security.account_locked`, and a sign-in during a lock `security.locked_login_attempt` (see [Security events](/security#security-events)).
 
 Change the numbers with `auth.lockout` (see [Configuration](#configuration)); `maxAttempts: 0` turns lockout off.
 
@@ -187,6 +190,6 @@ export default defineConfig({
 
 ## In your code
 
-`ctx.user` is the signed-in user (the stored record with `id` as a string, without the password hash), `ctx.session` is `{ id, expiresAt }`. The auth service is available as `app.auth.service` (for example `app.auth.service.createSession(user)` in a script). Events: `auth.registered`, `auth.login`, `auth.password_changed`, `auth.password_reset_requested`, `auth.password_reset`, plus the [`security.*` events](/docs/security#security-events) for failed sign-ins, lockouts and bad tokens.
+`ctx.user` is the signed-in user (the stored record with `id` as a string, without the password hash), `ctx.session` is `{ id, expiresAt }`. The auth service is available as `app.auth.service` (for example `app.auth.service.createSession(user)` in a script). Events: `auth.registered`, `auth.login`, `auth.password_changed`, `auth.password_reset_requested`, `auth.password_reset`, plus the [`security.*` events](/security#security-events) for failed sign-ins, lockouts and bad tokens.
 
-Two-factor authentication is available as the [totp](/docs/blocks/totp) block. It plugs into login with the `loginChallenge` [plugin hook](/docs/publishing-blocks#the-plugin-api), which you can use for other second factors too. There are no social logins or magic links built in. Since `calm/auth/` is your code, you can add them, and the session model stays the same.
+Two-factor authentication is available as the [totp](/blocks/totp) block. It plugs into login with the `loginChallenge` [plugin hook](/publishing-blocks#the-plugin-api), which you can use for other second factors too. There are no social logins or magic links built in. Since `calm/auth/` is your code, you can add them, and the session model stays the same.

@@ -60,7 +60,7 @@ All methods take the request context `ctx` as their last argument. Pass it along
 | `update(id, data, ctx)` | the updated record (throws `notFound()` if it is not visible) |
 | `remove(id, ctx)` | the deleted record (throws `notFound()` if it is not visible) |
 
-Records are plain objects (Mongoose `lean()`) with `_id`. Every service method (`list`, `get`, `find`, `findOne`, `create`, `update`, `remove`) and every hook works with the whole record, `hidden()` and `writeOnly()` fields included. Password hashes are never included. Return records from a resource route and they are serialized for you (see [Custom routes](/docs/routes#auto-serialization)).
+Records are plain objects (Mongoose `lean()`) with `_id`. Every service method (`list`, `get`, `find`, `findOne`, `create`, `update`, `remove`) and every hook works with the whole record, `hidden()` and `writeOnly()` fields included. Password hashes are never included. Return records from a resource route and they are serialized for you (see [Custom routes](/routes#auto-serialization)).
 
 Services trust their input: they do not run field validation or policies. The CRUD routes validate the body before calling `create` and `update`. When you call a service from your own route, validate with the route's `input` option first.
 
@@ -93,7 +93,7 @@ export default class ProductService extends ResourceService {
 }
 ```
 
-(`conflict` is imported from `#calm`, like every [error helper](/docs/errors).)
+(`conflict` is imported from `#calm`, like every [error helper](/errors).)
 
 ## scope()
 
@@ -162,7 +162,7 @@ After each write, the service emits an event on the app's in-process bus:
 | `<resource>.deleted` | `{ doc, resource, user }` |
 | `auth.registered`, `auth.login`, `auth.password_changed`, `auth.password_reset_requested` | `{ user }` |
 | `auth.password_reset` | `{ userId }` |
-| `security.login_failed`, `security.account_locked`, `security.forbidden`... | Depends on the event: failed sign-ins, lockouts, bad tokens, rejected writes, `403`s, rate limits (see [Security events](/docs/security#security-events)) |
+| `security.login_failed`, `security.account_locked`, `security.forbidden`... | Depends on the event: failed sign-ins, lockouts, bad tokens, rejected writes, `403`s, rate limits (see [Security events](/security#security-events)) |
 
 `user` is the signed-in user who made the change, or `null`. Blocks add their own (`job.completed`, `job.failed`, `<resource>.restored`).
 
@@ -182,4 +182,4 @@ export default definePlugin({
 });
 ```
 
-`app.events.on()` returns a function that removes the listener, which is handy in tests. For work that must survive a restart or be retried, use the [jobs](/docs/blocks/jobs) block, whose jobs can be triggered by these events.
+`app.events.on()` returns a function that removes the listener, which is handy in tests. For work that must survive a restart or be retried, use the [jobs](/blocks/jobs) block, whose jobs can be triggered by these events.

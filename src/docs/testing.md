@@ -72,6 +72,8 @@ CALM_TEST_LOG=info npm test                           # see the app logs
 | `t.request(method, path, body?, auth?)` | Any method |
 | `t.signup({ name?, email?, password?, roles? })` | Registers a user through `/api/auth/register` and returns `{ token, user, id, email, password }`. `roles` are written straight to the database. |
 | `t.idle()` | Waits for background work: event listeners, emails, `app.background()` tasks |
+| `t.mails` | Emails the app sent (captured, never delivered), oldest first |
+| `t.pushes` | [Push notifications](/push-notifications#testing) the app sent: `{ message, devices, payloads, warnings, status, log }`, oldest first |
 | `t.app` | The app: `t.app.model('post')`, `t.app.service('post')`, `t.app.events`, `t.app.mailer`... |
 | `t.origin` | `http://127.0.0.1:<port>`, for raw `fetch` calls |
 | `t.close()` | Stops the server, drops the database and disconnects |
@@ -92,12 +94,9 @@ assert.equal((await t.get('/users', admin)).status, 200);
 ### Emails and password resets
 
 ```js
-const mails = [];
-t.app.mailer.observe((m) => mails.push(m));
-
 await t.post('/auth/password/forgot', { email: alice.email });
 await t.idle(); // the email is sent in the background
-const token = mails.at(-1).meta.token;
+const token = t.mails.at(-1).meta.token;
 assert.equal((await t.post('/auth/password/reset', { token, password: 'new-password-1' })).status, 204);
 ```
 
@@ -153,4 +152,4 @@ jobs:
         env: { MONGODB_TEST_URI: 'mongodb://127.0.0.1:27017' }
 ```
 
-`calm audit` uses the same throwaway database setup to call every route as every kind of user. See [Security audit](/docs/audit).
+`calm audit` uses the same throwaway database setup to call every route as every kind of user. See [Security audit](/audit).

@@ -44,7 +44,7 @@ calm dev
 
 Starts the app in development mode: `NODE_ENV=development`, file watching (`node --watch` on `app/`, `calm/`, `calm.config.js`, `server.js` and `.env`, so new resource folders restart the server too) and devtools at `http://localhost:<port>/_calm`. Extra arguments are passed to `node`, for example `calm dev --inspect`.
 
-It also records every file change (with a line diff, marked as made by an AI agent or by you), restart and crash in `.calm/activity.jsonl`. The contents of `.env` are never recorded. Devtools shows this log live in the **Activity** panel; see [Watching an agent work](/docs/ai-agents#watching-an-agent-work).
+It also records every file change (with a line diff, marked as made by an AI agent or by you), restart and crash in `.calm/activity.jsonl`. The contents of `.env` are never recorded. Devtools shows this log live in the **Activity** panel; see [Watching an agent work](/ai-agents#watching-an-agent-work).
 
 ## calm make resource
 
@@ -91,7 +91,7 @@ Without a `user` resource (the `minimal` template), the generated policies are `
 calm add <block...>
 ```
 
-Copies a block's files into your project, adds its dependencies to `package.json`, appends its environment variables to `.env.example` and `.env`, installs, and records it in `calm.lock`. The code is yours from then on. See [Blocks](/docs/blocks).
+Copies a block's files into your project, adds its dependencies to `package.json`, appends its environment variables to `.env.example` and `.env`, installs, and records it in `calm.lock`. The code is yours from then on. See [Blocks](/blocks).
 
 ```bash
 npx calm add jobs api-docs                # official blocks (same as @calmapi/jobs)
@@ -106,7 +106,7 @@ npx calm add --list                       # list official blocks
 | `--dry-run` | Show what would change, write nothing |
 | `--overwrite` | Replace files that already exist with different content |
 | `--no-install` | Do not run the package manager |
-| `--remote` | Fetch official blocks from `https://calmapi.dev/r` instead of the copy bundled with the CLI |
+| `--remote` | Fetch official blocks from `https://docs.calmapi.dev/r` instead of the copy bundled with the CLI |
 | `-y`, `--yes` | Do not ask for confirmation |
 | `--list` | List official blocks |
 
@@ -134,7 +134,7 @@ Writes the OpenAPI 3.1 document generated from your resources and routes (defaul
 calm doctor [--prod] [--audit] [--ci] [--strict] [--json]
 ```
 
-Security and correctness checks: config, policies, private fields, personal data exposure, hardcoded secrets, `.env` in git, risky code patterns, framework drift and published advisories. Also works inside CalmAPI 1.x projects (`npx calmapi@next doctor`), where it reports the advisories published for 1.x. See [Security](/docs/security#what-calm-doctor-checks) for every check.
+Security and correctness checks: config, policies, private fields, personal data exposure, hardcoded secrets, `.env` in git, risky code patterns, framework drift and published advisories. Also works inside CalmAPI 1.x projects (`npx calmapi@next doctor`), where it reports the advisories published for 1.x. See [Security](/security#what-calm-doctor-checks) for every check.
 
 | Option | Meaning |
 |---|---|
@@ -163,7 +163,7 @@ Doctor boots your app in a child process to inspect it, without connecting to Mo
 calm audit [--json] [--ci]
 ```
 
-Authorization testing for your API. Boots the app on a throwaway database (`MONGODB_TEST_URI`, default `mongodb://127.0.0.1:27017`), creates a user per persona (anonymous, owner, another user, admin, custom roles), seeds records and calls every CRUD route as every persona. It checks status codes against your policies, owner-only lists, field leaks, mass assignment, query injection, the page size cap, error hygiene and token handling. Your real database is never touched. See [Security audit](/docs/audit).
+Authorization testing for your API. Boots the app on a throwaway database (`MONGODB_TEST_URI`, default `mongodb://127.0.0.1:27017`), creates a user per persona (anonymous, owner, another user, admin, custom roles), seeds records and calls every CRUD route as every persona. It checks status codes against your policies, owner-only lists, field leaks, mass assignment, query injection, the page size cap, error hygiene and token handling. Your real database is never touched. See [Security audit](/audit).
 
 | Option | Meaning |
 |---|---|
@@ -207,7 +207,7 @@ npx calm admin ada@example.com
 calm keygen [--write]
 ```
 
-Generates a 32-byte key for [`.encrypted()` fields](/docs/security#encryption-at-rest) and prints it as a `CALM_ENCRYPTION_KEYS=k1:<key>` line. With `--write`, it adds the line to `.env`. If `CALM_ENCRYPTION_KEYS` already exists, the new key goes first (it encrypts from now on) and the old keys stay (they still decrypt existing data): that is key rotation.
+Generates a 32-byte key for [`.encrypted()` fields](/security#encryption-at-rest) and prints it as a `CALM_ENCRYPTION_KEYS=k1:<key>` line. With `--write`, it adds the line to `.env`. If `CALM_ENCRYPTION_KEYS` already exists, the new key goes first (it encrypts from now on) and the old keys stay (they still decrypt existing data): that is key rotation.
 
 ```text
 $ npx calm keygen --write
@@ -225,7 +225,7 @@ Put the same keys in your production secrets. Never commit them.
 calm upgrade [--dry-run] [--base <dir>] [-y]
 ```
 
-Brings framework fixes into `calm/` without losing your edits. See [Upgrading](/docs/upgrading).
+Brings framework fixes into `calm/` without losing your edits. See [Upgrading](/upgrading).
 
 | Option | Meaning |
 |---|---|
@@ -245,4 +245,4 @@ Starts a Model Context Protocol server on stdio for AI coding agents. Register i
 claude mcp add calm -- npx calm mcp
 ```
 
-or add `{ "command": "npx", "args": ["calm", "mcp"] }` to your agent's MCP configuration. It offers 17 tools: inspect the project, scaffold, call the dev API as any user (`calm_http`), run tests, doctor and the audit, and read requests, logs, emails, security events and project activity. Every tool call is logged to `.calm/activity.jsonl` with the client's name, so you can follow it in devtools. See [AI agents](/docs/ai-agents) for the list.
+or add `{ "command": "npx", "args": ["calm", "mcp"] }` to your agent's MCP configuration. It offers 17 tools: inspect the project, scaffold, call the dev API as any user (`calm_http`), run tests, doctor and the audit, and read requests, logs, emails, security events and project activity. Every tool call is logged to `.calm/activity.jsonl` with the client's name, so you can follow it in devtools. See [AI agents](/ai-agents) for the list.

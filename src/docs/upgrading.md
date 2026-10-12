@@ -86,4 +86,4 @@ Without the originals, edited files cannot be merged and get a `.calm-new` copy 
 - Commit before upgrading, so the result is one reviewable diff.
 - Prefer extending over editing: hooks in services, plugins in `app/blocks`, options in `calm.config.js`. The fewer edits in `calm/`, the fewer conflicts.
 - `calm doctor` lists the framework files you changed locally and tells you when `calm/` is older than the installed CLI.
-- `calm upgrade` only touches `calm/`. Your `app/` folder and files added by [blocks](/docs/blocks) are never changed. Blocks are versioned in `calm.lock`; re-add one with `calm add <block> --dry-run` to see what changed upstream.
+- `calm upgrade` only touches `calm/`. Your `app/` folder and files added by [blocks](/blocks) are never changed. Blocks are versioned in `calm.lock`; re-add one with `calm add <block> --dry-run` to see what changed upstream.

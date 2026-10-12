@@ -45,8 +45,8 @@ export default definePlugin({
 | `calm.on(pattern, fn)` | Listen to events (`'post.created'`, `'post.*'`, `'*'`); `fn(payload, name)` |
 | `calm.onResource((def) => def)` | Change resource definitions before they are compiled: add fields, read custom options |
 | `calm.onService(({ def, model, service }) => {})` | Runs for every resource once services exist: wrap or add methods |
-| `calm.loginChallenge(async (user, ctx) => answer)` | Runs after a correct password, before a session is created. Return an object (such as `{ mfaRequired: true, mfaToken }`) to answer the login with it instead of a session, or `null` to continue. Finish the sign-in later with `calm.app.auth.service.finishLogin(user, req)`. See [totp](/docs/blocks/totp#how-it-hooks-into-login). |
-| `calm.routes((r) => {...}, { prefix: '/billing' })` | Add routes under `/api` with the [route builder](/docs/routes) |
+| `calm.loginChallenge(async (user, ctx) => answer)` | Runs after a correct password, before a session is created. Return an object (such as `{ mfaRequired: true, mfaToken }`) to answer the login with it instead of a session, or `null` to continue. Finish the sign-in later with `calm.app.auth.service.finishLogin(user, req)`. See [totp](/blocks/totp#how-it-hooks-into-login). |
+| `calm.routes((r) => {...}, { prefix: '/billing' })` | Add routes under `/api` with the [route builder](/routes) |
 | `calm.use(middleware)` | Express middleware in front of the whole app (for paths outside `/api`, like `/docs` or `/mcp`) |
 | `calm.onStart(fn)`, `calm.onShutdown(fn)` | Start and stop background work; shutdown hooks run in reverse order |
 | `calm.provide(key, value)` | Expose an API to the rest of the app as `app.ext[key]` |
@@ -148,7 +148,7 @@ npx calm add @acme/slack-notify
 
 Without a registry entry, a full URL or a local file works too: `npx calm add https://acme.dev/r/slack-notify.json`.
 
-The official blocks are built the same way from `registry/blocks/<name>/` in the [calmapi repository](https://github.com/sunilksamanta/calmapi) and served at `https://calmapi.dev/r/<name>.json`.
+The official blocks are built the same way from `registry/blocks/<name>/` in the [calmapi repository](https://github.com/sunilksamanta/calmapi) and served at `https://docs.calmapi.dev/r/<name>.json`.
 
 ## Good blocks
 

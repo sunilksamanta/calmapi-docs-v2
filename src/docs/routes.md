@@ -22,7 +22,7 @@ This adds `GET /api/posts/featured` and `POST /api/posts/:id/publish`.
 
 | Option | Default | Meaning |
 |---|---|---|
-| `policy` | `'authenticated'` | Who may call it ([Policies](/docs/policies)). Always set it: `calm doctor` warns when it is missing. |
+| `policy` | `'authenticated'` | Who may call it ([Policies](/policies)). Always set it: `calm doctor` warns when it is missing. |
 | `input` | none | Validate the JSON body: an object of `f.*()` fields or a Standard Schema. The result is `ctx.body`. |
 | `status` | `200` | Status code for a returned value |
 | `summary`, `description`, `tags` | | OpenAPI documentation |
@@ -57,7 +57,7 @@ Handlers receive `ctx`:
 | `undefined` | `204 No Content` |
 | `ctx.reply(data, { status: 201, meta, headers })` | that status, `{ data, meta }` and headers |
 | `ctx.reply(undefined, { status: 202 })` | that status with an empty body |
-| throws `notFound()`, `forbidden()`, `badRequest()`... | the [error response](/docs/errors) |
+| throws `notFound()`, `forbidden()`, `badRequest()`... | the [error response](/errors) |
 
 ```js
 import { badRequest, notFound } from '#calm';
@@ -91,7 +91,7 @@ You can still write to `ctx.res` directly (file downloads, redirects, streams); 
 
 ## Routes with :id
 
-In a resource's routes file, a path parameter named exactly `id` gets the same treatment as the CRUD routes: the record is loaded through the service's `scope()`, the policy is checked with the record in hand (so `'owner'` means the owner of *this* record), and the answer is `401`, `403` or `404` [as for CRUD](/docs/policies#401-403-or-404). The record is in `ctx.doc`:
+In a resource's routes file, a path parameter named exactly `id` gets the same treatment as the CRUD routes: the record is loaded through the service's `scope()`, the policy is checked with the record in hand (so `'owner'` means the owner of *this* record), and the answer is `401`, `403` or `404` [as for CRUD](/policies#401-403-or-404). The record is in `ctx.doc`:
 
 ```js
 r.post('/:id/discount', { policy: 'owner' }, async (ctx) => {
@@ -158,7 +158,7 @@ If two routes have the same method and path, the first one wins and the app logs
 
 ## Middleware
 
-Express middleware in `middleware` runs after a cheap check that rejects signed-out users when the policy needs a user, so an upload parser never runs for anonymous requests. This is how the [storage-local](/docs/blocks/storage-local) block handles uploads:
+Express middleware in `middleware` runs after a cheap check that rejects signed-out users when the policy needs a user, so an upload parser never runs for anonymous requests. This is how the [storage-local](/blocks/storage-local) block handles uploads:
 
 ```js
 r.post('/upload', {

@@ -29,7 +29,7 @@ npx calm audit --ci
 - `Strict-Transport-Security` is sent, along with the other security headers;
 - `500` responses never contain error details.
 
-Staging and preview environments are production too: anything other than `development` or `test` gets production rules (see [Configuration](/docs/configuration#mode)).
+Staging and preview environments are production too: anything other than `development` or `test` gets production rules (see [Configuration](/configuration#mode)).
 
 ## Environment
 
@@ -43,7 +43,7 @@ Staging and preview environments are production too: anything other than `develo
 | `CORS_ORIGINS` | for browsers | Comma separated frontend origins |
 | `TRUST_PROXY` | behind a proxy | Usually `1`; see below |
 | `LOG_LEVEL` | | Default `info` |
-| `CALM_ENCRYPTION_KEYS` | with `.encrypted()` fields | The same keys as wherever else this database is read; see [Encryption at rest](/docs/security#encryption-at-rest) |
+| `CALM_ENCRYPTION_KEYS` | with `.encrypted()` fields | The same keys as wherever else this database is read; see [Encryption at rest](/security#encryption-at-rest) |
 
 Plus the variables of your blocks (`RESEND_API_KEY`, `S3_BUCKET`, `JOBS_WORKER`...). Install production dependencies only: the CLI and devtools are dev dependencies and are not needed to run the app.
 
@@ -112,7 +112,7 @@ docker run -p 5001:5001 \
   my-api
 ```
 
-The container runs as the unprivileged `node` user, so if you use [storage-local](/docs/blocks/storage-local), mount a volume for `UPLOAD_DIR` that this user can write to.
+The container runs as the unprivileged `node` user, so if you use [storage-local](/blocks/storage-local), mount a volume for `UPLOAD_DIR` that this user can write to.
 
 For local testing with a database next to it:
 
@@ -135,7 +135,7 @@ volumes:
 
 ## Email
 
-Password reset emails need a transport in production. Add [mail-resend](/docs/blocks/mail-resend) or [mail-smtp](/docs/blocks/mail-smtp). Without one, emails are not sent, an error is logged, and `calm doctor --prod` warns.
+Password reset emails need a transport in production. Add [mail-resend](/blocks/mail-resend) or [mail-smtp](/blocks/mail-smtp). Without one, emails are not sent, an error is logged, and `calm doctor --prod` warns.
 
 ## Running several instances
 
@@ -143,10 +143,10 @@ Sessions live in MongoDB, so any instance can serve any user. A few things are p
 
 | Concern | Default | With several instances |
 |---|---|---|
-| Rate limits | counted in memory | add [rate-limit-mongo](/docs/blocks/rate-limit-mongo) |
+| Rate limits | counted in memory | add [rate-limit-mongo](/blocks/rate-limit-mongo) |
 | Background jobs | every instance runs a worker | fine (jobs are claimed atomically); or set `JOBS_WORKER=off` on web instances and run dedicated workers |
-| Uploads | [storage-local](/docs/blocks/storage-local) writes to local disk | use [storage-s3](/docs/blocks/storage-s3) |
-| Realtime events | in-process | subscribers only see changes from their instance; see [realtime-sse](/docs/blocks/realtime-sse#several-instances) |
+| Uploads | [storage-local](/blocks/storage-local) writes to local disk | use [storage-s3](/blocks/storage-s3) |
+| Realtime events | in-process | subscribers only see changes from their instance; see [realtime-sse](/blocks/realtime-sse#several-instances) |
 | Event listeners | in-process | they run on the instance that made the change, which is usually what you want |
 
 ## Checklist

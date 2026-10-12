@@ -1,0 +1,36 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "push-fcm",
+  "type": "registry:item",
+  "title": "Push notifications via Firebase Cloud Messaging",
+  "description": "Deliver app.push notifications to Android, iOS and web through the FCM HTTP v1 API, signed with your service account using node:crypto. No SDK. Tokens that stopped working are removed for you.",
+  "version": "1.0.0",
+  "author": "CalmAPI",
+  "categories": [
+    "push",
+    "notifications"
+  ],
+  "dependencies": [],
+  "devDependencies": [],
+  "registryDependencies": [],
+  "envVars": {
+    "FCM_SERVICE_ACCOUNT": ""
+  },
+  "docs": "In the Firebase console: Project settings, Service accounts, Generate new private key. Put the path of that JSON file (or the JSON itself) in FCM_SERVICE_ACCOUNT, and keep it out of git. GOOGLE_APPLICATION_CREDENTIALS works too.\nYour app gets a token from the Firebase SDK (getToken) and registers it: POST /api/auth/devices { token, platform }. iOS delivery goes through FCM too: upload your APNs key in Project settings, Cloud Messaging.\nThen send from anywhere: await ctx.push.send({ to: userId, title, body }).",
+  "meta": {
+    "calmapi": {
+      "minVersion": "2.0.0-alpha.0",
+      "conflicts": [
+        "push-expo"
+      ]
+    }
+  },
+  "files": [
+    {
+      "path": "registry/blocks/push-fcm/files/app/blocks/push-fcm/index.js",
+      "type": "registry:file",
+      "target": "app/blocks/push-fcm/index.js",
+      "content": "import { createSign } from 'node:crypto';\nimport { readFileSync } from 'node:fs';\nimport { definePlugin } from '#calm';\nimport { providerPayloads } from '#calm/push.js';\n\n// Sends app.push notifications through Firebase Cloud Messaging HTTP v1\n// (https://firebase.google.com/docs/cloud-messaging/send-message). Authenticates with a\n// service account: a JWT signed with its private key is exchanged for an access token.\n// The payload is the same one the devtools Push panel shows under \"FCM\".\nconst SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';\nconst CONCURRENCY = 10;\n\n/** FCM_SERVICE_ACCOUNT (JSON or a path to the JSON file) or GOOGLE_APPLICATION_CREDENTIALS. */\nfunction loadServiceAccount() {\n  const raw = process.env.FCM_SERVICE_ACCOUNT || process.env.GOOGLE_APPLICATION_CREDENTIALS;\n  if (!raw) return { missing: true };\n  try {\n    const json = JSON.parse(raw.trim().startsWith('{') ? raw : readFileSync(raw, 'utf8'));\n    const problems = ['project_id', 'client_email', 'private_key'].filter((k) => typeof json[k] !== 'string' || !json[k]);\n    return problems.length ? { error: `The service account has no ${problems.join(', ')}` } : { account: json };\n  } catch (err) {\n    return { error: `Cannot read the service account: ${err.message}` };\n  }\n}\n\nconst base64url = (value) => Buffer.from(typeof value === 'string' ? value : JSON.stringify(value)).toString('base64url');\n\nexport default definePlugin({\n  name: 'push-fcm',\n  setup(calm) {\n    const { account, missing, error } = loadServiceAccount();\n    calm.doctor(() => {\n      if (error) return [{ level: 'error', id: 'fcm-service-account', title: 'FCM service account is invalid', detail: error }];\n      if (missing && calm.config.mode === 'production') return [{ level: 'error', id: 'fcm-service-account', title: 'FCM_SERVICE_ACCOUNT is not set', detail: 'Push notifications cannot be delivered in production.' }];\n      return [];\n    });\n    if (!account) return;\n    // Tests capture notifications in t.pushes instead of calling Google (unless FCM_API_URL\n    // points at a fake). Development delivers to real tokens, so you can test on a phone.\n    if (calm.config.mode === 'test' && !process.env.FCM_API_URL) return;\n\n    const api = (process.env.FCM_API_URL || 'https://fcm.googleapis.com').replace(/\\/$/, '');\n    const tokenUri = account.token_uri || 'https://oauth2.googleapis.com/token';\n    let cached = null; // { token, expiresAt }\n\n    async function accessToken() {\n      if (cached && cached.expiresAt > Date.now() + 60_000) return cached.token;\n      const now = Math.floor(Date.now() / 1000);\n      const unsigned = `${base64url({ alg: 'RS256', typ: 'JWT' })}.${base64url({ iss: account.client_email, scope: SCOPE, aud: tokenUri, iat: now, exp: now + 3600 })}`;\n      const signature = createSign('RSA-SHA256').update(unsigned).sign(account.private_key).toString('base64url');\n      const res = await fetch(tokenUri, {\n        method: 'POST',\n        headers: { 'content-type': 'application/x-www-form-urlencoded' },\n        body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: `${unsigned}.${signature}` }),\n        signal: AbortSignal.timeout(15_000),\n      });\n      const body = await res.json().catch(() => null);\n      if (!res.ok || !body?.access_token) throw new Error(`Google rejected the service account: ${body?.error_description ?? body?.error ?? `HTTP ${res.status}`}`);\n      cached = { token: body.access_token, expiresAt: Date.now() + (body.expires_in ?? 3600) * 1000 };\n      return cached.token;\n    }\n\n    async function sendOne(message, device, token) {\n      const res = await fetch(`${api}/v1/projects/${encodeURIComponent(account.project_id)}/messages:send`, {\n        method: 'POST',\n        headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },\n        body: JSON.stringify(providerPayloads(message, device.token).fcm.payload),\n        signal: AbortSignal.timeout(15_000),\n      });\n      const body = await res.json().catch(() => null);\n      if (res.ok) return { ok: true, id: body?.name };\n      if (res.status === 401) cached = null;\n      // UNREGISTERED: the app was uninstalled or the token expired. Remove the device.\n      const code = body?.error?.details?.find((d) => d.errorCode)?.errorCode ?? body?.error?.status;\n      return { ok: false, error: [code, body?.error?.message].filter(Boolean).join(': ') || `HTTP ${res.status}`, unregistered: code === 'UNREGISTERED' };\n    }\n\n    calm.push.use({\n      name: 'fcm',\n      async send(message, devices) {\n        const token = await accessToken();\n        const results = new Array(devices.length);\n        let next = 0;\n        const worker = async () => {\n          while (next < devices.length) {\n            const i = next++;\n            results[i] = await sendOne(message, devices[i], token).catch((err) => ({ ok: false, error: err.message }));\n          }\n        };\n        await Promise.all(Array.from({ length: Math.min(CONCURRENCY, devices.length) }, worker));\n        return results;\n      },\n    });\n  },\n});\n"
+    }
+  ]
+}

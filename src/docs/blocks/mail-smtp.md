@@ -21,4 +21,4 @@ MAIL_FROM=My App <no-reply@example.com>
 
 While `SMTP_URL` is empty or still the `smtp.example.com` placeholder, the block stays inactive: emails go to the devtools **Mail** panel in development, and `calm doctor` reports an error in production. The connection is closed on shutdown.
 
-Send email with `app.mailer.send({ to, subject, text, html })`, exactly as with [mail-resend](/docs/blocks/mail-resend).
+Send email with `app.mailer.send({ to, subject, text, html })`, exactly as with [mail-resend](/blocks/mail-resend).

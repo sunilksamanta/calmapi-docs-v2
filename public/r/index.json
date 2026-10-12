@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "calmapi",
-  "homepage": "https://calmapi.dev",
+  "homepage": "https://docs.calmapi.dev/blocks",
   "items": [
     {
       "name": "api-docs",
@@ -59,6 +59,26 @@
       "categories": [
         "ai",
         "mcp"
+      ]
+    },
+    {
+      "name": "push-expo",
+      "title": "Push notifications via Expo",
+      "description": "Deliver app.push notifications to Expo and React Native apps through the Expo push service. No SDK, just fetch. Tokens that stopped working are removed for you.",
+      "version": "1.0.0",
+      "categories": [
+        "push",
+        "notifications"
+      ]
+    },
+    {
+      "name": "push-fcm",
+      "title": "Push notifications via Firebase Cloud Messaging",
+      "description": "Deliver app.push notifications to Android, iOS and web through the FCM HTTP v1 API, signed with your service account using node:crypto. No SDK. Tokens that stopped working are removed for you.",
+      "version": "1.0.0",
+      "categories": [
+        "push",
+        "notifications"
       ]
     },
     {

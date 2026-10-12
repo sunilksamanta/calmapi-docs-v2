@@ -40,7 +40,7 @@ const events = new EventSource('/api/realtime/stream?resources=post');
 | `<resource>.created` | The record, serialized for this subscriber |
 | `<resource>.updated` | The record, serialized for this subscriber |
 | `<resource>.deleted` | `{ id }` |
-| `<resource>.restored` | The record (with the [soft-delete](/docs/blocks/soft-delete) block) |
+| `<resource>.restored` | The record (with the [soft-delete](/blocks/soft-delete) block) |
 
 With the `api` template's posts, a visitor's stream only carries published posts, while the author's stream also carries their own drafts, and neither ever contains the author's email.
 

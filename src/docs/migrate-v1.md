@@ -65,7 +65,7 @@ export default class PostService extends ResourceService {
 }
 ```
 
-`updatedBy` has no direct equivalent; set it in `beforeUpdate` from `ctx.user.id` if you need it, or add the [audit-log](/docs/blocks/audit-log) block for a full history. Keep the existing field names so the stored documents still match.
+`updatedBy` has no direct equivalent; set it in `beforeUpdate` from `ctx.user.id` if you need it, or add the [audit-log](/blocks/audit-log) block for a full history. Keep the existing field names so the stored documents still match.
 
 ## API changes your clients will see
 
@@ -83,7 +83,7 @@ export default class PostService extends ResourceService {
 | Login response | `{ token, user }` | `{ data: { token, expiresAt, user } }` |
 | Password reset | 6-digit code | Emailed single-use link (`/api/auth/password/forgot`, `/api/auth/password/reset`) |
 
-See [Errors](/docs/errors) and [Querying](/docs/querying) for the details.
+See [Errors](/errors) and [Querying](/querying) for the details.
 
 ## Authentication changes
 

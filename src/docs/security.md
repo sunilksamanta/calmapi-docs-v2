@@ -11,7 +11,7 @@ Include the CalmAPI version (`calm.lock`, or `npx calm --version`), what an atta
 | Version | Status |
 |---|---|
 | 2.x | Supported |
-| 1.x (0.x on npm) | Security advisories only. Please [migrate](/docs/migrate-v1). |
+| 1.x (0.x on npm) | Security advisories only. Please [migrate](/migrate-v1). |
 
 ## Advisories for code in your project
 
@@ -22,7 +22,7 @@ npx calm doctor            # inside a CalmAPI 2 project
 npx calmapi@next doctor    # inside a CalmAPI 1.x project
 ```
 
-Each finding names the advisory and the fix. Fixes for framework files reach your project through [`calm upgrade`](/docs/upgrading), which merges them into your copy without discarding your edits. Published advisories are listed on [Security advisories](/docs/security-advisories).
+Each finding names the advisory and the fix. Fixes for framework files reach your project through [`calm upgrade`](/upgrading), which merges them into your copy without discarding your edits. Published advisories are listed on [Security advisories](/security-advisories).
 
 ## Secure by default
 
@@ -37,7 +37,7 @@ Each finding names the advisory and the fix. Fixes for framework files reach you
 | Queries | Only declared filters, sorts and search fields; flat query parsing, so no operator injection; search input escaped |
 | Sessions | Random opaque tokens, stored as SHA-256 hashes, bearer header only, revocable, expire automatically |
 | Passwords | scrypt (`node:crypto`) with OWASP parameters, upgraded on login when you raise the cost; common passwords and passwords containing the user's email or name are refused |
-| Sign-in | Rate limited per IP, and locked per account after 5 failed attempts (see [Authentication](/docs/authentication#account-lockout)) |
+| Sign-in | Rate limited per IP, and locked per account after 5 failed attempts (see [Authentication](/authentication#account-lockout)) |
 | Password reset | Single-use hashed tokens, short expiry, same answer for unknown emails, all sessions revoked on use |
 | Rate limits | Every `/api` route, with stricter limits on auth routes |
 | Errors | Internal messages and stack traces never reach clients in production |
@@ -45,7 +45,7 @@ Each finding names the advisory and the fix. Fixes for framework files reach you
 | CORS | No browser origin allowed in production until you list them |
 | Data at rest | Fields marked `.encrypted()` are stored as AES-256-GCM ciphertext (see [Encryption at rest](#encryption-at-rest)) |
 | Uploads (blocks) | Type and size allowlists, content checks, random names, sandboxed downloads |
-| Devtools | Development only, loopback only, `Host` checked, writes need a custom header (see [Devtools](/docs/devtools#safety-model)) |
+| Devtools | Development only, loopback only, `Host` checked, writes need a custom header (see [Devtools](/devtools#safety-model)) |
 | Dependencies | Two runtime dependencies: `express` and `mongoose` |
 
 ## Encryption at rest
@@ -150,7 +150,7 @@ Suspicious activity is emitted on the app's event bus as `security.*` events. Th
 | Event | When | Payload |
 |---|---|---|
 | `security.login_failed` | Wrong email or password | `{ email, ip, reason }`, `reason` is `unknown_email` or `wrong_password` |
-| `security.account_locked` | An account reaches the [lockout](/docs/authentication#account-lockout) limit | `{ email, ip, until }` |
+| `security.account_locked` | An account reaches the [lockout](/authentication#account-lockout) limit | `{ email, ip, until }` |
 | `security.locked_login_attempt` | A sign-in on a locked account | `{ email, ip }` |
 | `security.invalid_token` | A bearer token that is unknown or expired | `{ ip, path }` |
 | `security.password_change_failed` | Wrong current password on `POST /api/auth/password` | `{ userId, ip }` |
@@ -159,7 +159,7 @@ Suspicious activity is emitted on the app's event bus as `security.*` events. Th
 | `security.forbidden` | A request fails with `403` | `{ userId, ip, method, path }` |
 | `security.write_rejected` | A body tried to set a hidden, read-only, owner or `writableBy` field | `{ userId, ip, method, path, resource, fields }` |
 
-Emails in these payloads are masked (`a***@example.com`). The [totp](/docs/blocks/totp#security-events) block adds `security.2fa_*` events.
+Emails in these payloads are masked (`a***@example.com`). The [totp](/blocks/totp#security-events) block adds `security.2fa_*` events.
 
 Listen with `calm.on()` in a plugin in `app/blocks/` (or with `app.events.on()` anywhere you hold the app):
 
@@ -194,7 +194,7 @@ CalmAPI computes, from your resource definitions alone, who can do what. For eve
 
 Field cells are `yes`, `no`, or `never` for fields no client can ever read (hidden, write-only) or write (hidden, read-only). Fields whose name looks like personal data (`email`, `phone`, `address`, `iban`, `salary`...) are flagged.
 
-You can see it in the devtools **Security** panel, through the `calm_security` [MCP tool](/docs/ai-agents#calm-mcp-tools-for-coding-agents), and in code with `await app.exposure()`. [`calm audit`](/docs/audit) checks the running API against it, and `calm doctor` turns it into findings:
+You can see it in the devtools **Security** panel, through the `calm_security` [MCP tool](/ai-agents#calm-mcp-tools-for-coding-agents), and in code with `await app.exposure()`. [`calm audit`](/audit) checks the running API against it, and `calm doctor` turns it into findings:
 
 | Id | Level | Finding |
 |---|---|---|
@@ -204,7 +204,7 @@ You can see it in the devtools **Security** panel, through the `calm_security` [
 
 ## Testing your policies
 
-Static checks tell you what the rules say. [`calm audit`](/docs/audit) tells you what the API does: it boots your app on a throwaway database, signs up a user per persona, seeds records and calls every route as every persona. It checks status codes, owner-only lists, field leaks, mass assignment, query injection and token handling. Run it after changing policies or fields, and in CI.
+Static checks tell you what the rules say. [`calm audit`](/audit) tells you what the API does: it boots your app on a throwaway database, signs up a user per persona, seeds records and calls every route as every persona. It checks status codes, owner-only lists, field leaks, mass assignment, query injection and token handling. Run it after changing policies or fields, and in CI.
 
 ## What calm doctor checks
 
@@ -283,4 +283,4 @@ CalmAPI's defaults cover the framework. These are up to you:
 - Keep `.env` out of git, and use separate database users and secrets per environment.
 - Set `CORS_ORIGINS`, `TRUST_PROXY` and a mail transport in production.
 - Keep dependencies up to date (`npx calm doctor --audit` runs `npm audit`) and run `calm upgrade` when CalmAPI releases fixes.
-- Forward `security.*` events to your monitoring, and consider the [totp](/docs/blocks/totp) block for two-factor authentication.
+- Forward `security.*` events to your monitoring, and consider the [totp](/blocks/totp) block for two-factor authentication.

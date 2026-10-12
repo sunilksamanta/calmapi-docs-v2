@@ -2,7 +2,7 @@
 
 Expose your API to AI agents as [Model Context Protocol](https://modelcontextprotocol.io) tools, served over Streamable HTTP at `POST /mcp`. Tools are generated from your resources, and every tool call is executed as a real request against your own API with the caller's session, so policies, validation, scoping, rate limits and field visibility are exactly those of the REST API.
 
-This block is for agents that *use* your API. For agents that *develop* your project, see [`calm mcp`](/docs/ai-agents).
+This block is for agents that *use* your API. For agents that *develop* your project, see [`calm mcp`](/ai-agents).
 
 ```bash
 npx calm add mcp-server

@@ -3,21 +3,36 @@
 //
 //   public/llms.txt              llmstxt.org index of the CalmAPI 2 docs
 //   public/llms-full.txt         every CalmAPI 2 page in one file
-//   public/docs/<slug>.md        raw markdown of each page (linked from llms.txt)
+//   src/generated/md/<slug>.md   raw markdown of each page (linked from llms.txt), served at
+//                                /<slug>.md: vite.config.js serves it in dev and copies it into dist/
 //   src/generated/search-index.json   titles, headings and text for the search dialog
 //
-// It also checks internal links and #anchors. Runs before `npm run dev` and `npm run build`
-// (with --strict, the build fails on a broken link).
+// It also checks internal links and #anchors, and that no page URL collides with another
+// page, a redirect or a file in public/. Runs before `npm run dev` and `npm run build`
+// (with --strict, the build fails on any problem).
 
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SITE, REDIRECTS, ADVISORY_PREFIX, ADVISORIES_PAGE, resolveSections, normalizePath } from '../src/docs/manifest.js';
+import {
+  SITE,
+  REDIRECTS,
+  RESERVED_SEGMENTS,
+  OLD_DOCS_PREFIX,
+  ADVISORY_PREFIX,
+  ADVISORIES_PAGE,
+  resolveSections,
+  normalizePath,
+  markdownPath,
+  movedDocsPath,
+} from '../src/docs/manifest.js';
 import { parseMarkdown, linesToText } from '../src/lib/markdown-text.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DOCS = join(ROOT, 'src', 'docs');
 const PUBLIC = join(ROOT, 'public');
+const GENERATED = join(ROOT, 'src', 'generated');
+const RAW = join(GENERATED, 'md');
 const strict = process.argv.includes('--strict');
 
 const sections = resolveSections((file) => existsSync(join(DOCS, file)));
@@ -31,12 +46,30 @@ const pages = sections.flatMap((s) => s.pages).map((page) => {
 });
 const byPath = new Map(pages.map((p) => [p.path, p]));
 const current = pages.filter((p) => !p.legacy);
-const mdPath = (page) => `/docs/${page.slug === 'introduction' ? 'introduction' : page.slug}.md`;
+const problems = [];
 
-// ---- raw markdown mirrors ------------------------------------------------------------
-rmSync(join(PUBLIC, 'docs'), { recursive: true, force: true });
+// ---- URL collisions --------------------------------------------------------------------------
+// Every page, including held back ones, so a page cannot be published onto a taken URL.
+const publicNames = new Set(readdirSync(PUBLIC));
+const seenPaths = new Set();
+for (const page of resolveSections(() => true).flatMap((s) => s.pages)) {
+  const where = `src/docs/manifest.js (${page.slug})`;
+  if (seenPaths.has(page.path)) problems.push(`${where}: ${page.path} is used by another page`);
+  seenPaths.add(page.path);
+  if (REDIRECTS[page.path]) problems.push(`${where}: ${page.path} is also a redirect in REDIRECTS, remove one of them`);
+  if (page.legacy) continue;
+  const first = page.path.split('/')[1];
+  if (first && (RESERVED_SEGMENTS.includes(first) || publicNames.has(first))) {
+    problems.push(`${where}: ${page.path} starts with /${first}, which is reserved (RESERVED_SEGMENTS or a file in public/)`);
+  }
+  if (existsSync(join(PUBLIC, markdownPath(page)))) problems.push(`${where}: its markdown copy ${markdownPath(page)} would clash with public${markdownPath(page)}`);
+}
+
+// ---- raw markdown copies ---------------------------------------------------------------------
+rmSync(RAW, { recursive: true, force: true });
+rmSync(join(PUBLIC, 'docs'), { recursive: true, force: true }); // older versions wrote the copies to public/docs/
 for (const page of current) {
-  const file = join(PUBLIC, mdPath(page));
+  const file = join(RAW, markdownPath(page));
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, page.markdown);
 }
@@ -52,7 +85,7 @@ const llms = [
 ];
 for (const section of sections.filter((s) => !s.legacy)) {
   llms.push(`## ${section.title}`, '');
-  for (const page of section.pages) llms.push(`- [${page.title}](${SITE.url}${mdPath(page)}): ${page.description}`);
+  for (const page of section.pages) llms.push(`- [${page.title}](${SITE.url}${markdownPath(page)}): ${page.description}`);
   llms.push('');
 }
 llms.push(
@@ -81,13 +114,12 @@ const index = pages.map((page) => ({
     .map((s) => ({ id: s.id, heading: s.heading, text: linesToText(s.lines).slice(0, page.legacy ? 400 : 1200) }))
     .filter((s) => s.id || s.text),
 }));
-mkdirSync(join(ROOT, 'src', 'generated'), { recursive: true });
-writeFileSync(join(ROOT, 'src', 'generated', 'search-index.json'), JSON.stringify(index));
+mkdirSync(GENERATED, { recursive: true });
+writeFileSync(join(GENERATED, 'search-index.json'), JSON.stringify(index));
 
 // ---- link check ------------------------------------------------------------------------------
-const problems = [];
 const LINK = /!?\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
-const GENERATED = new Set(['/llms.txt', '/llms-full.txt', ...current.map(mdPath)]);
+const GENERATED_FILES = new Set(['/llms.txt', '/llms-full.txt', ...current.map(markdownPath)]);
 const resolvePage = (path) => {
   const p = normalizePath(path);
   if (byPath.has(p)) return byPath.get(p);
@@ -111,11 +143,15 @@ for (const page of pages) {
         continue;
       }
       if (!pathPart.startsWith('/')) {
-        problems.push(`${where}: use an absolute link (/docs/...) instead of "${raw}"`);
+        problems.push(`${where}: use an absolute link (/policies, /blocks/jobs) instead of "${raw}"`);
+        continue;
+      }
+      if (pathPart === '/docs' || pathPart.startsWith(OLD_DOCS_PREFIX)) {
+        problems.push(`${where}: ${pathPart} is an old URL, link to ${movedDocsPath(pathPart) ?? '/'} instead`);
         continue;
       }
       if (/\.[a-z0-9]+$/i.test(pathPart)) {
-        if (!GENERATED.has(pathPart) && !existsSync(join(PUBLIC, pathPart))) problems.push(`${where}: file ${pathPart} does not exist in public/`);
+        if (!GENERATED_FILES.has(pathPart) && !existsSync(join(PUBLIC, pathPart))) problems.push(`${where}: file ${pathPart} does not exist in public/`);
         continue;
       }
       const target = resolvePage(pathPart);
@@ -136,6 +172,6 @@ const words = current.reduce((n, p) => n + p.markdown.split(/\s+/).length, 0);
 console.log(`docs: ${current.length} pages (${words} words) + ${pages.length - current.length} legacy pages -> llms.txt, llms-full.txt, search index`);
 if (notes.length) console.log(`docs: ${notes.length} link(s) to held back pages:\n  ${notes.join('\n  ')}`);
 if (problems.length) {
-  console.warn(`docs: ${problems.length} link problem(s):\n  ${problems.join('\n  ')}`);
+  console.warn(`docs: ${problems.length} problem(s):\n  ${problems.join('\n  ')}`);
   if (strict) process.exit(1);
 }

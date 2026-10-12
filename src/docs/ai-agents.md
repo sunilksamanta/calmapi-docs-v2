@@ -1,6 +1,6 @@
 # AI agents
 
-CalmAPI is designed to be worked on by coding agents as well as people: conventions are written down in the project, the CLI is scriptable, and an MCP server lets agents inspect and drive the project. While an agent works, `calm dev` records what it changes, so you can watch it in devtools. Separately, the [mcp-server block](/docs/blocks/mcp-server) lets agents *use* your API.
+CalmAPI is designed to be worked on by coding agents as well as people: conventions are written down in the project, the CLI is scriptable, and an MCP server lets agents inspect and drive the project. While an agent works, `calm dev` records what it changes, so you can watch it in devtools. Separately, the [mcp-server block](/blocks/mcp-server) lets agents *use* your API.
 
 ## AGENTS.md
 
@@ -39,7 +39,7 @@ For other agents, add it to their MCP configuration:
 
 It must run inside the project (the agent's working directory). Static tools run the CLI in a child process, so they always see the current code; runtime tools talk to the dev server, so start `npm run dev` for those.
 
-It offers 17 tools.
+It offers 18 tools.
 
 **Understand the project**
 
@@ -67,6 +67,7 @@ It offers 17 tools.
 | `calm_request` | One request in full: headers, bodies, every MongoDB query with timing, logs, the error with stack trace |
 | `calm_logs` | Recent log lines, optionally by level |
 | `calm_mails` | Emails the dev server would have sent, such as password reset links |
+| `calm_pushes` | [Push notifications](/push-notifications) the dev server sent: message, devices, status, warnings, delivery log and payload sizes |
 | `calm_activity` | Recent project activity: file changes with diffs and who made them, restarts and crashes with their error output |
 
 **Check it**
@@ -75,8 +76,8 @@ It offers 17 tools.
 |---|---|
 | `calm_test` | Run the project tests and get pass and fail counts, with each failing test and its error |
 | `calm_doctor` | Run the security and correctness checks (optionally with production rules) |
-| `calm_audit` | Run [`calm audit`](/docs/audit) and get the failed checks, field leaks and failed probes |
-| `calm_security` | The [exposure matrix](/docs/security#exposure-matrix), the security related doctor findings, and recent [security events](/docs/security#security-events) from the dev server |
+| `calm_audit` | Run [`calm audit`](/audit) and get the failed checks, field leaks and failed probes |
+| `calm_security` | The [exposure matrix](/security#exposure-matrix), the security related doctor findings, and recent [security events](/security#security-events) from the dev server |
 
 A typical loop: the agent edits a resource, calls `calm_activity` to see whether the dev server restarted or crashed, tries the endpoint with `calm_http` as different users, reads `calm_request` for the queries and errors it caused, then runs `calm_test`, `calm_doctor` and `calm_audit`. Nobody has to copy logs into the chat.
 
@@ -135,7 +136,7 @@ Requests sent with `calm_http` carry an `X-Calm-Agent` header with the client na
 
 ## The mcp-server block: your API as tools
 
-To let agents act on your **data** (list posts, create an order), add the [mcp-server](/docs/blocks/mcp-server) block. It serves MCP over Streamable HTTP at `/mcp` and turns each resource into tools (`post_list`, `post_get`, `post_create`, `post_update`, `post_delete`). Every tool call is executed as a real request against your API with the caller's session token, so policies, validation, scoping, rate limits and field visibility are exactly those of the REST API.
+To let agents act on your **data** (list posts, create an order), add the [mcp-server](/blocks/mcp-server) block. It serves MCP over Streamable HTTP at `/mcp` and turns each resource into tools (`post_list`, `post_get`, `post_create`, `post_update`, `post_delete`). Every tool call is executed as a real request against your API with the caller's session token, so policies, validation, scoping, rate limits and field visibility are exactly those of the REST API.
 
 ```bash
 npx calm add mcp-server
@@ -144,4 +145,4 @@ claude mcp add --transport http my-api http://localhost:5001/mcp --header "Autho
 
 ## llms.txt
 
-These docs are available in a form that is easy to give to a model: [/llms.txt](/llms.txt) lists every page with a short description and a link to its markdown source, and [/llms-full.txt](/llms-full.txt) contains all CalmAPI 2 pages in one file.
+These docs are available in a form that is easy to give to a model: [https://docs.calmapi.dev/llms.txt](/llms.txt) lists every page with a short description and a link to its markdown source, and [https://docs.calmapi.dev/llms-full.txt](/llms-full.txt) contains all CalmAPI 2 pages in one file. The markdown of any page is at its URL plus `.md`, for example [https://docs.calmapi.dev/policies.md](/policies.md).

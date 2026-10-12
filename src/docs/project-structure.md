@@ -30,7 +30,7 @@ my-api/
 
 ## calm/
 
-The framework itself, copied from the `calmapi` package when the project was created. It is your code: read it, debug it, change it. `calm upgrade` merges upstream fixes into it without discarding your edits (see [Upgrading](/docs/upgrading)).
+The framework itself, copied from the `calmapi` package when the project was created. It is your code: read it, debug it, change it. `calm upgrade` merges upstream fixes into it without discarding your edits (see [Upgrading](/upgrading)).
 
 | File | What it does |
 |---|---|
@@ -57,15 +57,15 @@ The framework itself, copied from the `calmapi` package when the project was cre
 
 One folder per resource. The folder name is the resource name, and files are named after the folder:
 
-- `<name>.resource.js` (required) default-exports `resource('<name>', { fields, policy })`. See [Resources and fields](/docs/resources).
-- `<name>.service.js` (optional) default-exports a class that extends `ResourceService`. See [Services and hooks](/docs/services).
-- `<name>.routes.js` (optional) default-exports `(r) => { ... }`. Its routes are mounted under the resource path, before the CRUD routes. See [Custom routes](/docs/routes).
+- `<name>.resource.js` (required) default-exports `resource('<name>', { fields, policy })`. See [Resources and fields](/resources).
+- `<name>.service.js` (optional) default-exports a class that extends `ResourceService`. See [Services and hooks](/services).
+- `<name>.routes.js` (optional) default-exports `(r) => { ... }`. Its routes are mounted under the resource path, before the CRUD routes. See [Custom routes](/routes).
 
 A folder without a `.resource.js` file is ignored. Create resources with `npx calm make resource`, which also writes a test.
 
 ## app/blocks
 
-Blocks added with `calm add` land here as `app/blocks/<name>/index.js` (some also add resources or `app/jobs/`). Every folder with an `index.js` that default-exports `definePlugin({ name, setup })` is loaded at boot, so this is also the place for your own plugins, for example an event listener. See [Publishing your own block](/docs/publishing-blocks) for the plugin API.
+Blocks added with `calm add` land here as `app/blocks/<name>/index.js` (some also add resources or `app/jobs/`). Every folder with an `index.js` that default-exports `definePlugin({ name, setup })` is loaded at boot, so this is also the place for your own plugins, for example an event listener. See [Publishing your own block](/publishing-blocks) for the plugin API.
 
 ## app/routes.js
 
@@ -98,7 +98,7 @@ try {
 
 ## calm.config.js and .env
 
-`calm.config.js` overrides the defaults in `calm/config.js`. Secrets (database URI, API keys) belong in `.env`, which is git-ignored. See [Configuration](/docs/configuration).
+`calm.config.js` overrides the defaults in `calm/config.js`. Secrets (database URI, API keys) belong in `.env`, which is git-ignored. See [Configuration](/configuration).
 
 ```js
 import { defineConfig } from '#calm';
@@ -137,7 +137,7 @@ Written by `calm create` and updated by `calm add` and `calm upgrade`. Commit it
 
 ## AGENTS.md and CLAUDE.md
 
-`AGENTS.md` tells AI coding agents (Claude Code, Codex, Cursor, Copilot) how this project is laid out and which rules to follow. `CLAUDE.md` points Claude Code to it. See [AI agents](/docs/ai-agents).
+`AGENTS.md` tells AI coding agents (Claude Code, Codex, Cursor, Copilot) how this project is laid out and which rules to follow. `CLAUDE.md` points Claude Code to it. See [AI agents](/ai-agents).
 
 ## #calm and #app imports
 
@@ -170,7 +170,7 @@ Subpath imports need the `.js` extension. Inside services and routes, reach othe
 | `ResourceService` | Base class for services |
 | `definePlugin` | Declare a plugin (what blocks export) |
 | `createApp`, `defineConfig` | Build the app, type-friendly config |
-| `CalmError`, `badRequest`, `unauthorized`, `forbidden`, `notFound`, `conflict`, `validationError`, `tooManyRequests` | Errors (see [Errors](/docs/errors)) |
+| `CalmError`, `badRequest`, `unauthorized`, `forbidden`, `notFound`, `conflict`, `validationError`, `tooManyRequests` | Errors (see [Errors](/errors)) |
 | `hasRole`, `isOwner` | Policy helpers |
 | `serialize`, `validateInput`, `standardSchema` | Apply a resource's output and input rules yourself |
 | `Reply` | What `ctx.reply()` returns |

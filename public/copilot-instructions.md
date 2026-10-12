@@ -2,7 +2,7 @@
 
 Save this file as `.github/copilot-instructions.md` in a CalmAPI 2 project. It mirrors the
 `AGENTS.md` that `npm create calmapi` puts at the root of every project; if your project has
-one, keep the two in sync (or point one at the other). Documentation: https://calmapi.dev
+one, keep the two in sync (or point one at the other). Documentation: https://docs.calmapi.dev
 
 ## What this project is
 

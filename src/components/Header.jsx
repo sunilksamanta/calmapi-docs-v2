@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Globe, Github } from 'lucide-react';
+import { SITE } from '../docs/manifest.js';
 import ThemeToggle from './ThemeToggle';
 import Search from './Search';
 import './Header.css';
@@ -17,7 +18,7 @@ function Header() {
           <Search />
           <ThemeToggle />
           <nav className="header-nav" aria-label="External links">
-            <a href="https://calmapi.dev" target="_blank" rel="noopener noreferrer" className="header-link-website">
+            <a href={SITE.website} target="_blank" rel="noopener noreferrer" className="header-link-website" title="CalmAPI website">
               <Globe size={18} />
               <span>Website</span>
             </a>

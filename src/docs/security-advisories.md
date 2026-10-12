@@ -16,6 +16,6 @@ Inside a CalmAPI 2 project, use `npx calm doctor`. Each finding names the adviso
 
 - Watch the [calmapi repository](https://github.com/sunilksamanta/calmapi) on GitHub for security advisories and releases.
 - Run `npx calm doctor --ci` in your CI pipeline, so new advisories are reported on the next build.
-- Apply fixes to framework files with [`calm upgrade`](/docs/upgrading).
+- Apply fixes to framework files with [`calm upgrade`](/upgrading).
 
-To report a vulnerability, see [Security](/docs/security#reporting-a-vulnerability).
+To report a vulnerability, see [Security](/security#reporting-a-vulnerability).

@@ -15,7 +15,7 @@ function LegacyBanner() {
       <p>
         You are reading the docs for <strong>CalmAPI 1.x (legacy)</strong>, which is no longer developed. Run{' '}
         <code>npx calmapi@next doctor</code> in your 1.x project to check it against published advisories, then see{' '}
-        <Link to="/docs/migrate-v1">Migrating from 1.x</Link> or the <Link to="/">CalmAPI 2 docs</Link>.
+        <Link to="/migrate-v1">Migrating from 1.x</Link> or the <Link to="/">CalmAPI 2 docs</Link>.
       </p>
     </div>
   );

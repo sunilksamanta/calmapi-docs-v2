@@ -68,4 +68,4 @@ The code is in your project. Common changes:
 - **More types:** add them to `UPLOAD_ALLOWED_TYPES`. Types without a known signature are accepted on the declared type alone; prefer types you can verify.
 - **Linking files to records:** add `f.ref('file')` fields to your resources, and `?include=avatar` returns the file metadata.
 
-Local disk does not work with several instances or ephemeral containers; `calm doctor --prod` points this out. Use [storage-s3](/docs/blocks/storage-s3) there.
+Local disk does not work with several instances or ephemeral containers; `calm doctor --prod` points this out. Use [storage-s3](/blocks/storage-s3) there.

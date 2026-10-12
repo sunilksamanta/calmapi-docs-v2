@@ -11,7 +11,7 @@ npx calm add rate-limit-mongo
 | Files | `app/blocks/rate-limit-mongo/index.js` |
 | Collection | `calm_rate_limits` (cleaned up by a TTL index) |
 
-Nothing to configure: once added, the global limit, the auth limit and per-route `rateLimit` options all count in MongoDB. The limits themselves stay in `config.rateLimit` (see [Configuration](/docs/configuration)).
+Nothing to configure: once added, the global limit, the auth limit and per-route `rateLimit` options all count in MongoDB. The limits themselves stay in `config.rateLimit` (see [Configuration](/configuration)).
 
 ## Why
 

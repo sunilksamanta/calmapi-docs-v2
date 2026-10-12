@@ -35,7 +35,7 @@ npm create calmapi@latest my-api -- --yes --template api --db mongodb://127.0.0.
 | `api` (default) | A `user` resource with sign up, login, sessions and password reset under `/api/auth`, an example `post` resource with a service and custom routes, and a test. |
 | `minimal` | Just the framework, an `app/routes.js` with `GET /api/hello`, and a test. No `user` resource, so no auth until you add one. |
 
-Every template also contains `calm/` (the framework), `calm.config.js`, `calm.lock`, `.env`, `AGENTS.md`, a `Dockerfile` and an ESLint config. See [Project structure](/docs/project-structure).
+Every template also contains `calm/` (the framework), `calm.config.js`, `calm.lock`, `.env`, `AGENTS.md`, a `Dockerfile` and an ESLint config. See [Project structure](/project-structure).
 
 ## Run it
 
@@ -54,7 +54,7 @@ npm run dev
   2 resources · 25 routes · 0 blocks · MongoDB connected
 ```
 
-`npm run dev` runs `calm dev`: development mode, a restart whenever something in `app/`, `calm/`, `calm.config.js`, `server.js` or `.env` changes, and [devtools](/docs/devtools) at `/_calm`. If MongoDB is not reachable, the app retries a few times and then exits with a clear message.
+`npm run dev` runs `calm dev`: development mode, a restart whenever something in `app/`, `calm/`, `calm.config.js`, `server.js` or `.env` changes, and [devtools](/devtools) at `/_calm`. If MongoDB is not reachable, the app retries a few times and then exits with a clear message.
 
 ## First requests
 
@@ -196,7 +196,7 @@ curl -g "http://localhost:5001/api/posts?body=x&sort=body&limit=500"
 }
 ```
 
-The full query language is in [Querying](/docs/querying).
+The full query language is in [Querying](/querying).
 
 ## Open the devtools
 
@@ -226,6 +226,6 @@ npm test           # node --test, needs MongoDB
 
 ## Next steps
 
-- [Project structure](/docs/project-structure): what each file and folder is for.
-- [Resources and fields](/docs/resources): every field type and modifier.
-- [Policies](/docs/policies): who may list, read, create, update and delete.
+- [Project structure](/project-structure): what each file and folder is for.
+- [Resources and fields](/resources): every field type and modifier.
+- [Policies](/policies): who may list, read, create, update and delete.

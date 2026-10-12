@@ -1,6 +1,6 @@
 # Devtools
 
-In development, every CalmAPI app serves a dashboard at **`http://localhost:5001/_calm`**. It shows what your API is doing right now: requests with their MongoDB queries, logs, emails, routes, resources and data, plus a playground to call the API as any user. It also shows what an AI agent is changing in your project, and who can access what.
+In development, every CalmAPI app serves a dashboard at **`http://localhost:5001/_calm`**. It shows what your API is doing right now: requests with their MongoDB queries, logs, emails, push notifications, routes, resources and data, plus a playground to call the API as any user. It also shows what an AI agent is changing in your project, and who can access what.
 
 ```bash
 npm run dev
@@ -25,11 +25,11 @@ Open a request to see:
 
 From there you can copy the request as `curl`, edit it in the Playground, replay it, or replay it as the user who made it.
 
-Requests that carry an `X-Calm-Agent` header (the [`calm_http`](/docs/ai-agents#calm-mcp-tools-for-coding-agents) tool sends it) are marked as sent by an AI agent, with its name, and the **Agent** filter shows only those.
+Requests that carry an `X-Calm-Agent` header (the [`calm_http`](/ai-agents#calm-mcp-tools-for-coding-agents) tool sends it) are marked as sent by an AI agent, with its name, and the **Agent** filter shows only those.
 
 ### Activity
 
-A live feed of what is happening to the project, read from `.calm/activity.jsonl` (see [Watching an agent work](/docs/ai-agents#watching-an-agent-work)): agent tool calls, file changes with their diffs, marked as made by an agent or by you, server restarts and crashes with their error output. Filter by agent, files or server events.
+A live feed of what is happening to the project, read from `.calm/activity.jsonl` (see [Watching an agent work](/ai-agents#watching-an-agent-work)): agent tool calls, file changes with their diffs, marked as made by an agent or by you, server restarts and crashes with their error output. Filter by agent, files or server events.
 
 ### Logs
 
@@ -38,6 +38,18 @@ A live tail of the app log with level filters, text search and a link from each 
 ### Mail
 
 In development, nothing is delivered: emails go to this inbox instead, password reset links included. The empty state shows a `curl` command (and a Playground shortcut) to trigger a reset email.
+
+### Push
+
+Every [push notification](/push-notifications) the app sent, live, as it would appear on an iPhone lock screen, in the Android notification shade and as a desktop browser notification. Switch between closed and expanded; previews use real device widths and type sizes, so text is cut off where a phone cuts it. Each notification also shows:
+
+- **Payloads**: the exact JSON for APNs, FCM, Expo and Web Push, with its size against the 4 KB limit.
+- **Warnings**: titles and bodies that will be cut off, data keys that look sensitive, non-string data for FCM, payloads a provider would reject.
+- **Delivery**: what happened on each device (captured, delivered with the provider's id, or failed and why), and the request that sent it.
+
+**New notification** composes one with a live preview and sends it through `app.push.send()`; **Send again** reopens a sent one in the composer and **Copy as code** gives you the `ctx.push.send()` call. **Devices** lists every registered device and adds **simulated devices** (an iPhone, an Android phone or a browser) to any user, so you can see notifications before any phone is involved. Simulated devices are never sent to a real provider.
+
+Without a transport block, notifications are only captured here. With [push-expo](/blocks/push-expo) or [push-fcm](/blocks/push-fcm) installed, real devices receive them in development too.
 
 ### Routes
 
@@ -57,21 +69,21 @@ Send requests to your API with route suggestions and sample bodies built from th
 
 ### Doctor
 
-The runtime checks of `calm doctor` (configuration, policies, exposed secrets, personal data exposure, unknown references), grouped by level and updated live. Run `npx calm doctor` in a terminal to add the static checks on your source files. See [Security](/docs/security#what-calm-doctor-checks).
+The runtime checks of `calm doctor` (configuration, policies, exposed secrets, personal data exposure, unknown references), grouped by level and updated live. Run `npx calm doctor` in a terminal to add the static checks on your source files. See [Security](/security#what-calm-doctor-checks).
 
 ### Security
 
 Who can access what, and what happened:
 
-- **Access**: the [exposure matrix](/docs/security#exposure-matrix), per resource: which actions anonymous visitors, users, owners, custom roles and admins may perform, and which fields each can read and write.
-- **Events**: the [security events](/docs/security#security-events) of the dev server, live: failed sign-ins, lockouts, bad tokens, rejected writes, `403`s.
+- **Access**: the [exposure matrix](/security#exposure-matrix), per resource: which actions anonymous visitors, users, owners, custom roles and admins may perform, and which fields each can read and write.
+- **Events**: the [security events](/security#security-events) of the dev server, live: failed sign-ins, lockouts, bad tokens, rejected writes, `403`s.
 - **Posture**: sessions, password rules, lockout, rate limits, CORS, encryption keys and encrypted fields, JSON limits and security headers.
 
-**Run audit** runs [`calm audit`](/docs/audit) on a throwaway database on the dev server's MongoDB and shows the result in the matrix.
+**Run audit** runs [`calm audit`](/audit) on a throwaway database on the dev server's MongoDB and shows the result in the matrix.
 
 ### Block panels
 
-Blocks can add panels: [jobs](/docs/blocks/jobs) shows queue statistics and recent jobs, [realtime-sse](/docs/blocks/realtime-sse) the connected subscribers, the storage blocks their configuration.
+Blocks can add panels: [jobs](/blocks/jobs) shows queue statistics and recent jobs, [realtime-sse](/blocks/realtime-sse) the connected subscribers, the storage blocks their configuration.
 
 ### Keyboard shortcuts
 
@@ -82,7 +94,8 @@ Blocks can add panels: [jobs](/docs/blocks/jobs) shows queue statistics and rece
 | `Enter` | Open the selected item |
 | `Esc` | Close the detail view |
 | `1` to `9` | Switch panel |
-| `Ctrl + Enter` | Send (Playground) |
+| `Ctrl + Enter` | Send (Playground, Push) |
+| `n` | New notification (Push) |
 | `?` | Show the shortcuts |
 
 The theme follows your system, or pick light or dark in the top bar.
@@ -93,9 +106,9 @@ Devtools can read your data and create sessions, so it is locked down:
 
 - **Development only.** It is on when the mode is `development` (`calm dev`). In production it is forced off, even if `calm.config.js` turns it on. MongoDB command monitoring is only enabled while devtools is on.
 - **This machine only.** Every `/_calm` request must arrive on a loopback socket (`127.0.0.1` or `::1`), with a `Host` header of `localhost`, `127.0.0.1` or `::1`, and without proxy headers (`X-Forwarded-For`, `Forwarded`). Anything else gets a plain `404`, which also defeats DNS rebinding.
-- **No cross-site writes.** Requests that change something (act as, explain, clear, run audit) need an `X-Calm-Devtools: 1` header, which a page on another site cannot send. `/_calm` has no CORS headers, a strict Content-Security-Policy and refuses to be framed.
+- **No cross-site writes.** Requests that change something (act as, explain, clear, run audit, send a test notification, add a simulated device) need an `X-Calm-Devtools: 1` header, which a page on another site cannot send. `/_calm` has no CORS headers, a strict Content-Security-Policy and refuses to be framed.
 - **Secrets stay out.** Request bodies are stored with secret-looking keys redacted, the `Cookie` header is redacted, and the `Authorization` header is shortened.
-- **Bounded memory.** It keeps the last 300 requests, 1,000 log lines, 100 emails, 200 background queries, 500 activity events and 300 security events.
+- **Bounded memory.** It keeps the last 300 requests, 1,000 log lines, 100 emails, 100 push notifications, 200 background queries, 500 activity events and 300 security events. Push records never hold a full device token.
 
 "Act as" is logged (`Devtools: acting as ada@example.com`) and creates an ordinary session that expires like any other.
 
@@ -108,6 +121,11 @@ The panels use a small JSON API under `/_calm/api` that you can call from script
 | `GET /_calm/api/overview` | App, runtime, database, resources, routes, blocks |
 | `GET /_calm/api/requests`, `GET /_calm/api/requests/:id` | Recent requests, one request in full |
 | `GET /_calm/api/logs`, `GET /_calm/api/mails` | Recent logs and emails |
+| `GET /_calm/api/pushes` | Recent push notifications: message, devices, payloads, warnings and delivery log |
+| `GET /_calm/api/devices?user=<userId>` | Registered and simulated devices (tokens masked) |
+| `POST /_calm/api/devices/simulate` `{ userId, platform }` | Adds a simulated device |
+| `DELETE /_calm/api/devices/:id` | Removes a device |
+| `POST /_calm/api/push/test` `{ userId \| deviceIds, ...message }` | Sends a notification through `app.push.send()` |
 | `GET /_calm/api/doctor` | Runtime doctor findings |
 | `GET /_calm/api/activity` | Project activity from `.calm/activity.jsonl`, newest first |
 | `GET /_calm/api/security` | Exposure matrix, security events and posture |
@@ -115,4 +133,4 @@ The panels use a small JSON API under `/_calm/api` that you can call from script
 | `GET /_calm/api/resources/:name/docs?as=<userId>` | Stored vs returned documents |
 | `POST /_calm/api/act-as` `{ userId }` | A session token for that user |
 
-The [`calm mcp`](/docs/ai-agents) server uses this API to give coding agents the recent requests, logs, emails and security events of your dev server, and to sign in as other users for `calm_http`.
+The [`calm mcp`](/ai-agents) server uses this API to give coding agents the recent requests, logs, emails, push notifications and security events of your dev server, and to sign in as other users for `calm_http`.

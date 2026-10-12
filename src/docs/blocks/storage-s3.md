@@ -74,4 +74,4 @@ The browser uploads to the bucket directly, so the bucket must allow `PUT` from 
 ]
 ```
 
-Keep the bucket private (no public access); every download goes through the API and a signed URL. Pending files whose upload never completed stay `pending`; clean them up with a scheduled [job](/docs/blocks/jobs) if you need to.
+Keep the bucket private (no public access); every download goes through the API and a signed URL. Pending files whose upload never completed stay `pending`; clean them up with a scheduled [job](/blocks/jobs) if you need to.

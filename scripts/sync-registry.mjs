@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Copy the built CalmAPI block registry into public/r so it is served at
-// https://calmapi.dev/r/<name>.json (the URL `calm add --remote` and custom tooling use).
+// https://docs.calmapi.dev/r/<name>.json (the URL `calm add --remote` and custom tooling use).
 //
 //   node scripts/sync-registry.mjs ../calmapi/v2            a calmapi v2 checkout
 //   node scripts/sync-registry.mjs ../calmapi/v2/registry/r  or the built folder itself

@@ -1,4 +1,13 @@
-import { resolveSections, normalizePath, REDIRECTS, ADVISORY_PREFIX, ADVISORIES_PAGE, SITE } from '../docs/manifest.js';
+import {
+  resolveSections,
+  normalizePath,
+  movedDocsPath,
+  REDIRECTS,
+  ADVISORY_PREFIX,
+  ADVISORIES_PAGE,
+  ADVISORIES_FALLBACK,
+  SITE,
+} from '../docs/manifest.js';
 
 // Markdown is loaded lazily: every page becomes its own small chunk.
 const loaders = import.meta.glob('../docs/**/*.md', { query: '?raw', import: 'default' });
@@ -16,7 +25,9 @@ export const findPage = (path) => byPath.get(normalizePath(path)) ?? null;
 export function redirectFor(path) {
   const p = normalizePath(path);
   if (REDIRECTS[p]) return REDIRECTS[p];
-  if (p.startsWith(ADVISORY_PREFIX)) return byPath.has(ADVISORIES_PAGE) ? ADVISORIES_PAGE : '/docs/security';
+  if (p.startsWith(ADVISORY_PREFIX)) return byPath.has(ADVISORIES_PAGE) ? ADVISORIES_PAGE : ADVISORIES_FALLBACK;
+  const moved = movedDocsPath(p);
+  if (moved && byPath.has(moved)) return moved;
   return null;
 }
 

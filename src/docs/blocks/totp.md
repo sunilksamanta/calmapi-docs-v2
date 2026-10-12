@@ -20,7 +20,7 @@ Encrypt the secrets at rest by setting encryption keys before users turn 2FA on:
 npx calm keygen --write
 ```
 
-With `CALM_ENCRYPTION_KEYS` set, `totpSecret` and `totpPendingSecret` are [`.encrypted()`](/docs/security#encryption-at-rest) fields. Without keys the block still works, but stores secrets in plain text, and `calm doctor` warns (`totp-unencrypted`). Set the same keys in production.
+With `CALM_ENCRYPTION_KEYS` set, `totpSecret` and `totpPendingSecret` are [`.encrypted()`](/security#encryption-at-rest) fields. Without keys the block still works, but stores secrets in plain text, and `calm doctor` warns (`totp-unencrypted`). Set the same keys in production.
 
 ## Routes
 
@@ -127,12 +127,12 @@ curl -X POST http://localhost:5001/api/auth/2fa/disable -H "Authorization: Beare
 - **No replay.** A code is accepted for its own 30 second step and the steps right before and after it (clock drift). The last used step is stored, so a code works only once.
 - **Recovery codes.** 10 per user, stored as SHA-256 hashes and removed when used.
 - **Secrets stay private.** They are hidden fields: never returned, not even to their owner, and encrypted at rest when keys are set.
-- **Rate limits.** `enable`, `verify` and `disable` share the auth limiter (10 requests per 15 minutes per IP and route). Wrong passwords still count toward [account lockout](/docs/authentication#account-lockout).
+- **Rate limits.** `enable`, `verify` and `disable` share the auth limiter (10 requests per 15 minutes per IP and route). Wrong passwords still count toward [account lockout](/authentication#account-lockout).
 - **Constant time.** Codes are compared with `timingSafeEqual`.
 
 ## Security events
 
-The block emits [security events](/docs/security#security-events) that show up in the devtools **Security** panel:
+The block emits [security events](/security#security-events) that show up in the devtools **Security** panel:
 
 | Event | Payload |
 |---|---|
@@ -143,7 +143,7 @@ The block emits [security events](/docs/security#security-events) that show up i
 
 ## How it hooks into login
 
-The block uses the `loginChallenge` [plugin hook](/docs/publishing-blocks#the-plugin-api). It runs after a correct password, before a session is created. A hook that returns an object answers the login with that object instead of a session. Once the second factor checks out, the block calls `calm.app.auth.service.finishLogin(user, req)`, which creates the session and returns the usual login response:
+The block uses the `loginChallenge` [plugin hook](/publishing-blocks#the-plugin-api). It runs after a correct password, before a session is created. A hook that returns an object answers the login with that object instead of a session. Once the second factor checks out, the block calls `calm.app.auth.service.finishLogin(user, req)`, which creates the session and returns the usual login response:
 
 ```js
 // app/blocks/totp/index.js (simplified)

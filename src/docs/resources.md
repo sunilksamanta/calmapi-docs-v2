@@ -90,7 +90,7 @@ fields: {
 
 ## Visibility and write rules
 
-These decide what clients may send and what they get back. They apply to every response, including populated references, [realtime events](/docs/blocks/realtime-sse) and [MCP tools](/docs/blocks/mcp-server).
+These decide what clients may send and what they get back. They apply to every response, including populated references, [realtime events](/blocks/realtime-sse) and [MCP tools](/blocks/mcp-server).
 
 | Modifier | Returned | Accepted from clients | Typical use |
 |---|---|---|---|
@@ -103,7 +103,7 @@ These decide what clients may send and what they get back. They apply to every r
 
 Hidden and write-only fields can never be filtered, sorted, selected with `?fields=` or included. Your service still sees them: hooks receive the full record (except password hashes), and API responses are serialized again on the way out.
 
-`visibleTo` and `writableBy` take the same tokens as [policies](/docs/policies), evaluated against each record. With `'owner'`, it means the owner of *that* record:
+`visibleTo` and `writableBy` take the same tokens as [policies](/policies), evaluated against each record. With `'owner'`, it means the owner of *that* record:
 
 ```js
 // app/resources/user/user.resource.js (from the api template)
@@ -132,13 +132,13 @@ fields: {
 }
 ```
 
-It needs `CALM_ENCRYPTION_KEYS` (create it with `npx calm keygen --write`). Encryption is about storage, not about who reads the field, so combine it with `.visibleTo()` or `.hidden()`. Ciphertext cannot be queried: an encrypted field cannot also be `.filterable()`, `.sortable()`, `.searchable()`, `.unique()`, `.index()` or `.owner()`, and `f.ref()` and `f.id()` fields cannot be encrypted. Keys and rotation are covered in [Security](/docs/security#encryption-at-rest).
+It needs `CALM_ENCRYPTION_KEYS` (create it with `npx calm keygen --write`). Encryption is about storage, not about who reads the field, so combine it with `.visibleTo()` or `.hidden()`. Ciphertext cannot be queried: an encrypted field cannot also be `.filterable()`, `.sortable()`, `.searchable()`, `.unique()`, `.index()` or `.owner()`, and `f.ref()` and `f.id()` fields cannot be encrypted. Keys and rotation are covered in [Security](/security#encryption-at-rest).
 
 ## Query modifiers
 
 | Modifier | Lets clients |
 |---|---|
-| `.filterable(ops?)` | Filter with `?field=value` and `?field[op]=value`. Without `ops`, the defaults for the type apply (see [Querying](/docs/querying#operators)). |
+| `.filterable(ops?)` | Filter with `?field=value` and `?field[op]=value`. Without `ops`, the defaults for the type apply (see [Querying](/querying#operators)). |
 | `.sortable()` | Sort with `?sort=field` or `?sort=-field`. Also adds an index. |
 | `.searchable()` | Be matched by `?q=text` (case-insensitive substring) |
 
@@ -175,7 +175,7 @@ resource('product-category', {
 
 Names are normalized: `resource('ProductCategory')` and `resource('product-category')` both become `product-category`, served at `/api/product-categories`, stored in `product_categories`, and reachable as `ctx.services.productCategory` or `ctx.services['product-category']`.
 
-Any other key (for example `softDelete: true` or `audit: false`) is kept in `def.options`, where [blocks](/docs/blocks) can read it.
+Any other key (for example `softDelete: true` or `audit: false`) is kept in `def.options`, where [blocks](/blocks) can read it.
 
 ## The CRUD routes
 
@@ -188,7 +188,7 @@ Any other key (for example `softDelete: true` or `audit: false`) is kept in `def
 | `PUT /api/products/:id` | `update` | `200` | alias of PATCH, hidden from OpenAPI |
 | `DELETE /api/products/:id` | `delete` | `204` | empty |
 
-Errors follow one shape (see [Errors](/docs/errors)): `401` when a signed-in user is required, `403` or `404` depending on what the user may see (see [Policies](/docs/policies#401-403-or-404)), `404` for malformed or unknown ids, `422` for invalid bodies and `409` for duplicates on unique fields.
+Errors follow one shape (see [Errors](/errors)): `401` when a signed-in user is required, `403` or `404` depending on what the user may see (see [Policies](/policies#401-403-or-404)), `404` for malformed or unknown ids, `422` for invalid bodies and `409` for duplicates on unique fields.
 
 On update, `null` clears an optional field; sending `null` for a required field is a `422`.
 
@@ -244,7 +244,7 @@ fields: {
 }
 ```
 
-Custom routes accept a Standard Schema as their `input` too (see [Custom routes](/docs/routes#validating-input)). The other way round, `standardSchema(def, mode)` exposes a resource's own input rules as a Standard Schema, for scripts or tests that should validate exactly like the API:
+Custom routes accept a Standard Schema as their `input` too (see [Custom routes](/routes#validating-input)). The other way round, `standardSchema(def, mode)` exposes a resource's own input rules as a Standard Schema, for scripts or tests that should validate exactly like the API:
 
 ```js
 import { standardSchema } from '#calm';
@@ -256,4 +256,4 @@ const result = await standardSchema(product, 'create')['~standard'].validate({ n
 
 ## OpenAPI
 
-The running app serves an OpenAPI 3.1 document at `/api/openapi.json`, generated from fields, policies and route options. Each resource has three schemas (`Product`, `ProductCreate`, `ProductUpdate`); hidden and write-only fields never appear in the output schema. Write it to a file with `npx calm openapi`, or add the [api-docs](/docs/blocks/api-docs) block for an interactive reference.
+The running app serves an OpenAPI 3.1 document at `/api/openapi.json`, generated from fields, policies and route options. Each resource has three schemas (`Product`, `ProductCreate`, `ProductUpdate`); hidden and write-only fields never appear in the output schema. Write it to a file with `npx calm openapi`, or add the [api-docs](/blocks/api-docs) block for an interactive reference.

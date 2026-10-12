@@ -2,13 +2,19 @@
 // React app and scripts/generate-docs-assets.mjs (llms.txt, search index) can import it.
 //
 // A page: { slug, title, description, icon?, nav?, path?, file? }
-//   path defaults to /docs/<slug> (/<slug> in the legacy section), file (relative to src/docs) defaults to <slug>.md.
+//   path defaults to /<slug> (CalmAPI 2 pages at /getting-started, blocks at /blocks/<name>,
+//   1.x pages at /v1/<name>), file (relative to src/docs) defaults to <slug>.md.
 //   A page whose file does not exist is left out everywhere (sidebar, search, llms.txt),
 //   so a page can be held back by moving its markdown file out of src/docs.
+//   The raw markdown of each CalmAPI 2 page is served at its path plus .md (/getting-started.md,
+//   /introduction.md for the introduction at /).
 
 export const SITE = {
   name: 'CalmAPI',
-  url: 'https://calmapi.dev',
+  // Where the docs are served. The block registry is at <url>/r/<name>.json.
+  url: 'https://docs.calmapi.dev',
+  // The CalmAPI website (a separate project).
+  website: 'https://calmapi.dev',
   tagline: 'The backend framework you own',
   description:
     'CalmAPI 2 is a backend framework for Node.js and MongoDB where every line of framework code lives in your repo: resources, policies, auth, devtools, blocks and an upgrade path.',
@@ -88,6 +94,12 @@ export const SECTIONS = [
         description: 'Register, login, sessions, password change and reset, lockout and password rules: every /api/auth endpoint with examples.',
       },
       {
+        slug: 'push-notifications',
+        title: 'Push notifications',
+        icon: 'BellRing',
+        description: 'Send notifications to phones and browsers with app.push, register devices, preview everything in devtools and deliver with Expo or FCM.',
+      },
+      {
         slug: 'errors',
         title: 'Errors',
         icon: 'TriangleAlert',
@@ -108,7 +120,7 @@ export const SECTIONS = [
         slug: 'devtools',
         title: 'Devtools',
         icon: 'Gauge',
-        description: 'The local dashboard at /_calm: requests with their MongoDB queries, data privacy lens, mail catcher, act as any user, agent activity and security.',
+        description: 'The local dashboard at /_calm: requests with their MongoDB queries, data privacy lens, mail and push notification previews, act as any user, agent activity and security.',
       },
       {
         slug: 'testing',
@@ -150,7 +162,7 @@ export const SECTIONS = [
         nav: 'Overview',
         title: 'Blocks',
         icon: 'Blocks',
-        description: 'Production features you copy into your project with calm add: jobs, storage, realtime, MCP, audit log, two-factor auth and more.',
+        description: 'Production features you copy into your project with calm add: jobs, storage, realtime, push, MCP, audit log, two-factor auth and more.',
       },
       block('api-docs', 'API docs', 'An interactive API reference at /docs, rendered from your OpenAPI document.', 'BookOpen'),
       block('audit-log', 'Audit log', 'Who changed what and when, with field-level diffs that never record private values.', 'ClipboardList'),
@@ -158,6 +170,8 @@ export const SECTIONS = [
       block('mail-resend', 'Email via Resend', 'Deliver password resets and notifications through the Resend HTTP API.', 'Send'),
       block('mail-smtp', 'Email via SMTP', 'Deliver email through any SMTP server with Nodemailer.', 'Mail'),
       block('mcp-server', 'MCP server', 'Expose your resources to AI agents as MCP tools, enforced by your API rules.', 'Plug'),
+      block('push-expo', 'Push notifications via Expo', 'Deliver push notifications to Expo and React Native apps through the Expo push service.', 'Bell'),
+      block('push-fcm', 'Push notifications via Firebase Cloud Messaging', 'Deliver push notifications to Android, iOS and web through Firebase Cloud Messaging HTTP v1, no SDK.', 'BellRing'),
       block('rate-limit-mongo', 'Shared rate limits', 'Keep rate limit counters in MongoDB so limits hold across instances.', 'Timer'),
       block('realtime-sse', 'Realtime (SSE)', 'Live resource events over Server-Sent Events, filtered per subscriber by your policies.', 'Radio'),
       block('soft-delete', 'Soft delete', 'Opt-in soft delete per resource, with trash and restore for admins.', 'ArchiveRestore'),
@@ -239,31 +253,48 @@ export const SECTIONS = [
   },
 ];
 
-// Old URLs (the 1.x site served its pages at the root) and convenience aliases.
+// Old URLs and convenience aliases. The 1.x site served its pages at the root; the root
+// paths that CalmAPI 2 pages now use (/getting-started, /services, /security, /deployment,
+// /quick-reference) are those pages, the others still go to the 1.x page.
 export const REDIRECTS = {
   '/docs': '/',
   '/docs/introduction': '/',
+  '/introduction': '/',
   '/v1/introduction': '/v1',
-  '/getting-started': '/v1/getting-started',
   '/architecture': '/v1/architecture',
   '/creating-modules': '/v1/creating-modules',
   '/models': '/v1/models',
   '/controllers': '/v1/controllers',
-  '/services': '/v1/services',
   '/dtos': '/v1/dtos',
   '/routing': '/v1/routing',
   '/built-in-modules': '/v1/built-in-modules',
   '/advanced': '/v1/advanced',
-  '/security': '/v1/security',
-  '/deployment': '/v1/deployment',
-  '/quick-reference': '/v1/quick-reference',
   '/example-project': '/v1/example-project',
   '/copilot-setup': '/v1/copilot-setup',
 };
 
+/**
+ * CalmAPI 2 pages used to be served under /docs/ (/docs/policies, /docs/blocks/jobs):
+ * /docs/<slug> now redirects to /<slug>. vercel.json does the same with permanent redirects.
+ */
+export const OLD_DOCS_PREFIX = '/docs/';
+export const movedDocsPath = (path) => (path.startsWith(OLD_DOCS_PREFIX) ? path.slice(OLD_DOCS_PREFIX.length - 1) : null);
+
+/**
+ * First path segments a CalmAPI 2 page must not use, because something else is served there:
+ * the 1.x docs, the block registry (/r/<name>.json), old /docs/ URLs, advisory links and the
+ * build output (/assets). scripts/generate-docs-assets.mjs also rejects names used in public/.
+ */
+export const RESERVED_SEGMENTS = ['v1', 'r', 'docs', 'advisories', 'assets'];
+
 /** Advisory links printed by `calm doctor` look like /advisories/<advisory id>. */
 export const ADVISORY_PREFIX = '/advisories/';
-export const ADVISORIES_PAGE = '/docs/security-advisories';
+export const ADVISORIES_PAGE = '/security-advisories';
+/** Where advisory links go while the advisories page is held back. */
+export const ADVISORIES_FALLBACK = '/security';
+
+/** URL of the raw markdown of a page: its path plus .md (/introduction.md for the introduction). */
+export const markdownPath = (page) => `${page.path === '/' ? `/${page.slug}` : page.path}.md`;
 
 /**
  * Fill in defaults and drop pages whose markdown file is missing.
@@ -276,7 +307,7 @@ export function resolveSections(exists) {
       .map((page) => ({
         ...page,
         nav: page.nav ?? page.title,
-        path: page.path ?? (section.legacy ? `/${page.slug}` : `/docs/${page.slug}`),
+        path: page.path ?? `/${page.slug}`,
         file: page.file ?? `${page.slug}.md`,
         legacy: Boolean(section.legacy),
         section: section.title,
