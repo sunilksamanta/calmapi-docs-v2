@@ -1,83 +1,54 @@
 'use client';
 
-import { useEffect, useSyncExternalStore } from 'react';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { useEffect } from 'react';
+import { Moon, Sun } from 'lucide-react';
 
-// The theme is "light", "dark" or "system", saved in localStorage. The script in the <head> of
-// app/layout.jsx applies it before the first paint; this toggle changes it afterwards.
+// The theme works as on the CalmAPI website: it follows the system setting until the visitor
+// picks one with this button, which is then remembered in localStorage ("calm-theme"). The
+// script in app/layout.jsx sets data-theme on <html> before the first paint, and both icons
+// are in the HTML (CSS shows the right one), so nothing changes when the page hydrates.
 
-const KEY = 'theme';
+export const THEME_KEY = 'calm-theme';
 const DARK = '(prefers-color-scheme: dark)';
-const listeners = new Set();
-let current = null;
 
-function readTheme() {
+function saved() {
   try {
-    return localStorage.getItem(KEY) || 'system';
+    return localStorage.getItem(THEME_KEY);
   } catch {
-    return 'system';
+    return null;
   }
 }
 
-function applyTheme(theme) {
-  const root = document.documentElement;
-  const dark = theme === 'dark' || (theme === 'system' && window.matchMedia(DARK).matches);
-  root.classList.remove('light', 'dark');
-  root.classList.add(dark ? 'dark' : 'light');
+function apply(theme) {
+  document.documentElement.dataset.theme = theme;
 }
-
-function setTheme(theme) {
-  current = theme;
-  try {
-    localStorage.setItem(KEY, theme);
-  } catch {
-    // Storage blocked (private mode): the theme still applies for this visit.
-  }
-  applyTheme(theme);
-  for (const listener of listeners) listener();
-}
-
-const subscribe = (listener) => {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-};
-const getSnapshot = () => (current ??= readTheme());
-// The prerendered HTML cannot know the saved theme: it shows "system" until the page hydrates.
-const getServerSnapshot = () => 'system';
-
-const THEMES = [
-  { value: 'light', icon: Sun, label: 'Light' },
-  { value: 'dark', icon: Moon, label: 'Dark' },
-  { value: 'system', icon: Monitor, label: 'System' },
-];
 
 function ThemeToggle() {
-  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-
-  // Follow the operating system while the theme is "system".
+  // Follow the system setting while the visitor has not picked a theme.
   useEffect(() => {
-    if (theme !== 'system') return undefined;
     const media = window.matchMedia(DARK);
-    const onChange = () => applyTheme('system');
+    const onChange = (e) => {
+      if (!saved()) apply(e.matches ? 'dark' : 'light');
+    };
     media.addEventListener('change', onChange);
     return () => media.removeEventListener('change', onChange);
-  }, [theme]);
+  }, []);
+
+  const toggle = () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    apply(next);
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch {
+      // Storage blocked (private mode): the theme still applies for this visit.
+    }
+  };
 
   return (
-    <div className="theme-toggle">
-      {THEMES.map(({ value, icon: Icon, label }) => (
-        <button
-          key={value}
-          type="button"
-          onClick={() => setTheme(value)}
-          className={`theme-button ${theme === value ? 'active' : ''}`}
-          title={label}
-          aria-label={`Switch to ${label} theme`}
-        >
-          <Icon size={16} />
-        </button>
-      ))}
-    </div>
+    <button type="button" className="icon-btn theme-toggle" onClick={toggle} aria-label="Toggle dark mode" title="Toggle dark mode">
+      <Sun className="only-dark" strokeWidth={1.7} aria-hidden="true" />
+      <Moon className="only-light" strokeWidth={1.7} aria-hidden="true" />
+    </button>
   );
 }
 

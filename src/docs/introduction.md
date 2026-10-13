@@ -16,6 +16,7 @@ npm run dev
   ➜  Devtools  http://localhost:5001/_calm
 ```
 
+> [!IMPORTANT]
 > **Status: 2.0.0-alpha.** APIs may still change before 2.0. Coming from CalmAPI 1.x? Run `npx calmapi@next doctor` inside your 1.x project first, then read [Migrating from 1.x](/migrate-v1).
 
 ## What makes it different

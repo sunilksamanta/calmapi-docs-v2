@@ -16,6 +16,11 @@ export const SITE = {
   url: 'https://docs.calmapi.dev',
   // The CalmAPI website (a separate project).
   website: 'https://www.calmapi.dev',
+  // The framework, and this documentation site (for "Edit this page on GitHub").
+  github: 'https://github.com/sunilksamanta/calmapi',
+  docsRepo: 'https://github.com/sunilksamanta/calmapi-docs-v2',
+  docsBranch: 'main',
+  install: 'npm create calmapi@latest',
   tagline: 'The backend framework you own',
   description:
     'CalmAPI 2 is a backend framework for Node.js and MongoDB where every line of framework code lives in your repo: resources, policies, auth, devtools, blocks and an upgrade path.',
@@ -148,6 +153,13 @@ export const SECTIONS = [
         title: 'Explain a request',
         icon: 'FileSearch',
         description: 'The Path tab in devtools and calm_explain for agents: the way a request took through the code, with the policy decision token by token and the reason for every 401, 403 and 404.',
+      },
+      {
+        slug: 'client',
+        nav: 'Typed client',
+        title: 'Typed client',
+        icon: 'Plug',
+        description: 'calm client writes a typed, dependency-free client for your web or mobile app from the API itself, and calm dev keeps it current as the API changes.',
       },
       {
         slug: 'checkpoints',

@@ -10,7 +10,7 @@ function CopyButton() {
   useEffect(() => () => clearTimeout(timer.current), []);
 
   async function copy(event) {
-    const code = event.currentTarget.parentElement?.querySelector('pre code');
+    const code = event.currentTarget.closest('.code-block')?.querySelector('pre code');
     if (!code) return;
     try {
       await navigator.clipboard.writeText(code.textContent);
@@ -30,15 +30,12 @@ function CopyButton() {
   }
 
   return (
-    <button
-      type="button"
-      className={`copy-button${copied ? ' copied' : ''}`}
-      onClick={copy}
-      aria-label={copied ? 'Copied' : 'Copy code'}
-      title={copied ? 'Copied' : 'Copy'}
-    >
-      {copied ? <Check size={14} /> : <Copy size={14} />}
-      <span>{copied ? 'Copied' : 'Copy'}</span>
+    <button type="button" className={`copy-button${copied ? ' copied' : ''}`} onClick={copy} aria-label={copied ? 'Copied' : 'Copy code'}>
+      {copied ? <Check size={13} strokeWidth={2} aria-hidden="true" /> : <Copy size={13} strokeWidth={1.7} aria-hidden="true" />}
+      <span>{copied ? 'copied' : 'copy'}</span>
+      <span className="sr-only" aria-live="polite">
+        {copied ? 'Code copied to the clipboard' : ''}
+      </span>
     </button>
   );
 }

@@ -87,7 +87,7 @@ export function parseMarkdown(md) {
 export function linesToText(lines) {
   return lines
     .filter((line) => !FENCE.test(line) && !/^\s*\|?\s*:?-{3,}/.test(line) && !/^\s*---\s*$/.test(line))
-    .map((line) => inlineToText(line.replace(/^\s*(>\s?|[-*+]\s+|\d+\.\s+)/, '').replace(/\|/g, ' ')))
+    .map((line) => inlineToText(line.replace(/^\s*(>\s?|[-*+]\s+|\d+\.\s+)/, '').replace(/^\[!(?:note|tip|important|warning|caution|danger)\]\s*/i, '').replace(/\|/g, ' ')))
     .join(' ')
     .replace(/\s+/g, ' ')
     .trim();
