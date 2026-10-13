@@ -18,6 +18,7 @@ A live list of every request (over Server-Sent Events): method, path, status, du
 Open a request to see:
 
 - **Timeline**: the request and each query as a waterfall, with log lines placed in time.
+- **Path**: the way the request took through the code, step by step: rate limits, authentication, guards, the policy decision token by token (with the file and line of the policy), validation, the handler, your service hooks, events and the error. A `403` or `404` names its exact reason. See [Explain a request](/request-path).
 - **Queries**: every MongoDB command with its filter, duration and document count. Repeated query shapes are flagged. **Explain** runs the query planner and tells you whether an index was used or the collection was scanned (`COLLSCAN`).
 - **Request** and **Response**: headers and bodies. Passwords, tokens, keys and other secret-looking values are redacted in both (in responses the first characters of a long value stay, so you can tell them apart), and the `Authorization` header is shortened.
 - **Logs**: everything logged during the request, linked by request id.
@@ -30,6 +31,8 @@ Requests that carry an `X-Calm-Agent` header (the [`calm_http`](/ai-agents#calm-
 ### Activity
 
 A live feed of what is happening to the project, read from `.calm/activity.jsonl` (see [Watching an agent work](/ai-agents#watching-an-agent-work)): agent tool calls, file changes with their diffs, marked as made by an agent or by you, server restarts and crashes with their error output. Filter by agent, files or server events.
+
+It also shows the current agent session and its [scope](/ai-agents#scopes-what-an-agent-may-do), refused tool calls in red, agent edits to protected paths or access rules with a warning badge, changes an agent [proposed](/ai-agents#proposals-the-agent-describes-you-apply) with an **Apply** button, and [checkpoints](/checkpoints) with a **Restore** button.
 
 ### Logs
 
@@ -72,6 +75,8 @@ Browse the documents of each resource with the **privacy lens**: for each record
 
 **Sample data** adds 10 records that look real to the resource you are looking at: names that look like names, prices like prices, values from enums, dates in the past or the future depending on the field name, and references to records that exist (referenced resources get a few records first). Records are created through the service, so validation and hooks run. When there are no users yet, demo users are created to own the records, and their email and password are shown. From a terminal: [`calm seed`](/cli#calm-seed).
 
+**Checkpoints** snapshots the development database and restores or deletes the snapshots you have, each with a confirmation that says what will be replaced. See [Checkpoints](/checkpoints).
+
 ### Blocks
 
 Every block in the app, from [`calm add`](/blocks) or [written here](/building-blocks):
@@ -99,6 +104,10 @@ Who can access what, and what happened:
 - **Posture**: sessions, password rules, lockout, rate limits, CORS, encryption keys and encrypted fields, JSON limits and security headers.
 
 **Run audit** runs [`calm audit`](/audit) on a throwaway database on the dev server's MongoDB and shows the result in the matrix.
+
+### About
+
+The [transparency report](/transparency): the request pipeline in the order it runs, the headers the framework sets, every collection with its owner and lifetime, what it logs and redacts, the hosts the code can reach (with the check that `calm/` reaches none), and every file the CLI writes.
 
 ### Block panels
 

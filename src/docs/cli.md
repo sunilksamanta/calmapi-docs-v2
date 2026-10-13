@@ -14,11 +14,15 @@ calm routes                             every route with its policy and source f
 calm openapi                            write openapi.json
 calm doctor [--prod] [--audit] [--ci]   security and correctness checks
 calm diff [ref] [--ci]                  what changed in behavior since a git ref
+calm about                              what the framework does that you did not write
+calm checkpoint [name]                  snapshot the dev database (list, delete <id>)
+calm restore [id] [--yes]               put the dev database back
 calm audit [--ci]                       test every route as every role on a throwaway database
 calm admin <email> [--revoke]           grant (or remove) the admin role
 calm keygen [--write]                   encryption key for .encrypted() fields (rotates)
 calm upgrade                            merge framework updates into calm/
-calm mcp                                MCP server for coding agents
+calm mcp [--scope read|scaffold|full]   MCP server for coding agents
+calm agent-hook [--client <name>]       mark a file an agent is about to edit (for agent hooks)
 ```
 
 `calm <command> --help` prints the options of a command, `calm --version` the version. Aliases: `new` and `init` for `create`; `generate`, `g` and `m` for `make`; `blocks` for `block`. Running `calmapi` with no arguments outside a project starts the `create` wizard. Commands other than `create` must run inside a project (a folder with `calm.lock`, or below one). Set `CALM_DEBUG=1` to see stack traces.
@@ -254,6 +258,25 @@ What changed in behavior since a git ref (default `HEAD`) or a saved snapshot fi
 | `--json` | `{ since, changes, summary }` |
 | `--save <file>` | Write the current snapshot |
 
+## calm about
+
+```text
+calm about [--json]
+```
+
+The [transparency report](/transparency): the request pipeline in order, headers, stored data with lifetimes, logging, the hosts the code can reach and every file the CLI writes.
+
+## calm checkpoint and calm restore
+
+```text
+calm checkpoint [name] [--note <text>] [--json]
+calm checkpoint list [--json]
+calm checkpoint delete <id>
+calm restore [id] [--yes] [--json]
+```
+
+Snapshot the development database to `.calm/checkpoints/<id>/` and put it back. `calm restore` restores the latest checkpoint without an id, shows what it will replace and asks first; `--yes` skips the question and is required without a terminal. Both refuse to run in production. See [Checkpoints](/checkpoints).
+
 ## calm audit
 
 ```text
@@ -333,7 +356,7 @@ Brings framework fixes into `calm/` without losing your edits. See [Upgrading](/
 ## calm mcp
 
 ```text
-calm mcp
+calm mcp [--scope read|scaffold|full] [--allow <glob>]...
 ```
 
 Starts a Model Context Protocol server on stdio for AI coding agents. Register it once:
@@ -342,4 +365,12 @@ Starts a Model Context Protocol server on stdio for AI coding agents. Register i
 claude mcp add calm -- npx calm mcp
 ```
 
-or add `{ "command": "npx", "args": ["calm", "mcp"] }` to your agent's MCP configuration. It offers 18 tools: inspect the project, scaffold, call the dev API as any user (`calm_http`), run tests, doctor and the audit, and read requests, logs, emails, security events and project activity. Every tool call is logged to `.calm/activity.jsonl` with the client's name, so you can follow it in devtools. See [AI agents](/ai-agents) for the list.
+or add `{ "command": "npx", "args": ["calm", "mcp"] }` to your agent's MCP configuration. It offers 24 tools: inspect the project, scaffold, compare behavior (`calm_diff`), explain a request (`calm_explain`), take and restore checkpoints, propose changes, call the dev API as any user (`calm_http`), run tests, doctor and the audit, and read requests, logs, emails, security events and project activity. Every tool call is logged to `.calm/activity.jsonl` with the client's name, so you can follow it in devtools. `--scope` limits what the agent may do and `--allow` opens a protected path for one session; see [Scopes](/ai-agents#scopes-what-an-agent-may-do). When the dev server runs, a [checkpoint](/checkpoints) is taken as the agent connects. See [AI agents](/ai-agents) for the list.
+
+## calm agent-hook
+
+```text
+calm agent-hook [--client <name>]
+```
+
+Reads one JSON object on stdin (the Claude Code hook payload, or `{ tool, path }`) and records that an agent is about to edit that file, so `calm dev` shows the change as the agent's. Prints nothing and always exits 0. New projects run it from `.claude/settings.json`; see [Telling your edits from an agent's](/ai-agents#telling-your-edits-from-an-agents).

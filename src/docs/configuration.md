@@ -103,6 +103,8 @@ Invalid configuration:
 | `mail.from` | `<app.name> <no-reply@localhost>` | Sender for app emails |
 | `blocks` | `{}` | Settings per block, merged over the block's defaults: `blocks: { webhooks: { maxEndpointsPerUser: 5 } }`. See each block's page. |
 | `invariants` | `[]` | Promises the framework holds you to: `'no public write routes'`, `'personal data is never public'`, `{ rule, except }` or a function. See [Invariants](/invariants). |
+| `agents.scope` | `'full'` | Default scope of `calm mcp`: `read`, `scaffold` or `full` (see [Scopes](/ai-agents#scopes-what-an-agent-may-do)) |
+| `agents.protected` | `['calm/security/**', 'calm/auth/**', 'calm.config.js']` | Paths an agent's edits to are flagged for review |
 | `plugins` | none | Extra plugins (`definePlugin(...)` objects) besides `app/blocks` |
 
 Read the effective configuration anywhere through `ctx.config` or `app.config`.

@@ -143,6 +143,26 @@ export const SECTIONS = [
         description: 'Promises in calm.config.js the framework holds you to: checked by doctor and devtools, enforced at boot in production, visible in the behavior diff.',
       },
       {
+        slug: 'request-path',
+        nav: 'Explain a request',
+        title: 'Explain a request',
+        icon: 'FileSearch',
+        description: 'The Path tab in devtools and calm_explain for agents: the way a request took through the code, with the policy decision token by token and the reason for every 401, 403 and 404.',
+      },
+      {
+        slug: 'checkpoints',
+        title: 'Checkpoints',
+        icon: 'History',
+        description: 'calm checkpoint and calm restore: snapshot the development database and put it back exactly, automatically before an agent session.',
+      },
+      {
+        slug: 'transparency',
+        nav: 'What the framework does',
+        title: 'What the framework does',
+        icon: 'Eye',
+        description: 'calm about: the request pipeline, headers, stored data and its lifetime, logging, the hosts the code can reach and every file the CLI writes, generated from your code.',
+      },
+      {
         slug: 'audit',
         title: 'Security audit',
         icon: 'ScanSearch',
@@ -152,7 +172,7 @@ export const SECTIONS = [
         slug: 'cli',
         title: 'CLI reference',
         icon: 'Terminal',
-        description: 'Every calm command and flag: create, dev, make, add, block, seed, routes, openapi, doctor, audit, admin, keygen, upgrade and mcp.',
+        description: 'Every calm command and flag: create, dev, make, add, block, seed, routes, openapi, doctor, diff, about, audit, checkpoint, restore, admin, keygen, upgrade, mcp and agent-hook.',
       },
       {
         slug: 'ai-agents',
