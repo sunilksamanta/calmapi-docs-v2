@@ -13,6 +13,7 @@ calm seed [resource...]                 sample records that look real
 calm routes                             every route with its policy and source file
 calm openapi                            write openapi.json
 calm doctor [--prod] [--audit] [--ci]   security and correctness checks
+calm diff [ref] [--ci]                  what changed in behavior since a git ref
 calm audit [--ci]                       test every route as every role on a throwaway database
 calm admin <email> [--revoke]           grant (or remove) the admin role
 calm keygen [--write]                   encryption key for .encrypted() fields (rotates)
@@ -237,6 +238,21 @@ Security and correctness checks: config, policies, private fields, personal data
 ```
 
 Doctor boots your app in a child process to inspect it, without connecting to MongoDB.
+
+## calm diff
+
+```text
+calm diff [ref] [--json] [--ci] [--save <file>]
+```
+
+What changed in behavior since a git ref (default `HEAD`) or a saved snapshot file: routes added or removed, policies loosened or tightened, fields visible to more people, environment variables, hosts the code can reach, events, blocks and invariants. `--ci` exits with code 1 when a change widens access. See [The behavior diff](/behavior-diff).
+
+| Option | Meaning |
+|---|---|
+| `[ref]` | Branch, tag, commit, or a snapshot file written with `--save` |
+| `--ci` | Fail when access got wider |
+| `--json` | `{ since, changes, summary }` |
+| `--save <file>` | Write the current snapshot |
 
 ## calm audit
 

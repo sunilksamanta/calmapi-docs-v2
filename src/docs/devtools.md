@@ -88,7 +88,7 @@ Send requests to your API with route suggestions and sample bodies built from th
 
 ### Doctor
 
-The runtime checks of `calm doctor` (configuration, policies, exposed secrets, personal data exposure, unknown references), grouped by level and updated live. Run `npx calm doctor` in a terminal to add the static checks on your source files. See [Security](/security#what-calm-doctor-checks).
+The runtime checks of `calm doctor` (configuration, policies, exposed secrets, personal data exposure, unknown references, broken [invariants](/invariants)), grouped by level and updated live. Run `npx calm doctor` in a terminal to add the static checks on your source files. See [Security](/security#what-calm-doctor-checks).
 
 ### Security
 

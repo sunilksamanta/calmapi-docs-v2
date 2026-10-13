@@ -3,7 +3,7 @@ import {
   Gauge, FlaskConical, Terminal, Bot, RefreshCw, Blocks, BookOpen, ClipboardList, Clock, Send, Mail, Plug, Timer, Radio,
   ArchiveRestore, HardDrive, CloudUpload, PackagePlus, Cloud, Shield, ShieldAlert, ArrowRightLeft, Zap, Layers, Package,
   Gamepad2, FileText, Puzzle, Lightbulb, ScanSearch, Smartphone, Bell, BellRing, Key, ToggleRight, Repeat, WandSparkles, Inbox,
-  UserX, Webhook, Hammer,
+  UserX, Webhook, Hammer, GitCompare, Lock, FileSearch, Eye, History, UserCog,
 } from 'lucide-react';
 import { sections } from '../lib/docs.js';
 import LegacyNav from './LegacyNav.jsx';
@@ -15,7 +15,7 @@ const ICONS = {
   Gauge, FlaskConical, Terminal, Bot, RefreshCw, Blocks, BookOpen, ClipboardList, Clock, Send, Mail, Plug, Timer, Radio,
   ArchiveRestore, HardDrive, CloudUpload, PackagePlus, Cloud, Shield, ShieldAlert, ArrowRightLeft, Zap, Layers, Package,
   Gamepad2, FileText, Puzzle, Lightbulb, ScanSearch, Smartphone, Bell, BellRing, Key, ToggleRight, Repeat, WandSparkles, Inbox,
-  UserX, Webhook, Hammer,
+  UserX, Webhook, Hammer, GitCompare, Lock, FileSearch, Eye, History, UserCog,
 };
 
 function PageLink({ page }) {

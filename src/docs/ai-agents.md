@@ -39,7 +39,7 @@ For other agents, add it to their MCP configuration:
 
 It must run inside the project (the agent's working directory). Static tools run the CLI in a child process, so they always see the current code; runtime tools talk to the dev server, so start `npm run dev` for those.
 
-It offers 18 tools.
+It offers 19 tools.
 
 **Understand the project**
 
@@ -78,6 +78,7 @@ It offers 18 tools.
 | `calm_doctor` | Run the security and correctness checks (optionally with production rules) |
 | `calm_audit` | Run [`calm audit`](/audit) and get the failed checks, field leaks and failed probes |
 | `calm_security` | The [exposure matrix](/security#exposure-matrix), the security related doctor findings, and recent [security events](/security#security-events) from the dev server |
+| `calm_diff` | The [behavior diff](/behavior-diff) between a git ref (default `HEAD`) and the working tree: what the agent changed in routes, policies, fields, env vars, hosts, events and invariants, with the count of changes that widen access |
 
 A typical loop: the agent edits a resource, calls `calm_activity` to see whether the dev server restarted or crashed, tries the endpoint with `calm_http` as different users, reads `calm_request` for the queries and errors it caused, then runs `calm_test`, `calm_doctor` and `calm_audit`. Nobody has to copy logs into the chat.
 

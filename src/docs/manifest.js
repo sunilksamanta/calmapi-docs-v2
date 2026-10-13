@@ -130,6 +130,19 @@ export const SECTIONS = [
         description: 'Write API tests with createTestApp and node:test against a throwaway database.',
       },
       {
+        slug: 'behavior-diff',
+        nav: 'Behavior diff',
+        title: 'The behavior diff',
+        icon: 'GitCompare',
+        description: 'calm diff compares two versions of your app by what they do: routes, policies, field visibility, env vars, hosts, events, blocks and invariants, and fails CI when access widens.',
+      },
+      {
+        slug: 'invariants',
+        title: 'Invariants',
+        icon: 'Lock',
+        description: 'Promises in calm.config.js the framework holds you to: checked by doctor and devtools, enforced at boot in production, visible in the behavior diff.',
+      },
+      {
         slug: 'audit',
         title: 'Security audit',
         icon: 'ScanSearch',

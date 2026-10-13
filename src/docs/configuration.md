@@ -102,6 +102,7 @@ Invalid configuration:
 | `shutdownTimeoutMs` | `10000` | How long open connections may finish on shutdown |
 | `mail.from` | `<app.name> <no-reply@localhost>` | Sender for app emails |
 | `blocks` | `{}` | Settings per block, merged over the block's defaults: `blocks: { webhooks: { maxEndpointsPerUser: 5 } }`. See each block's page. |
+| `invariants` | `[]` | Promises the framework holds you to: `'no public write routes'`, `'personal data is never public'`, `{ rule, except }` or a function. See [Invariants](/invariants). |
 | `plugins` | none | Extra plugins (`definePlugin(...)` objects) besides `app/blocks` |
 
 Read the effective configuration anywhere through `ctx.config` or `app.config`.

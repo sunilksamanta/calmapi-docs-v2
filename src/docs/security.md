@@ -29,7 +29,7 @@ Each finding names the advisory and the fix. Fixes for framework files reach you
 | Area | Default |
 |---|---|
 | Mode | Anything but `NODE_ENV=development` or `test` runs as production; production requires `APP_URL` and never runs devtools |
-| Access | Every route has a policy; missing ones default to `authenticated` and are reported by doctor |
+| Access | Every route has a policy; missing ones default to `authenticated` and are reported by doctor. [Invariants](/invariants) in `calm.config.js` keep promises such as `'no public write routes'` true, or the app refuses to start in production |
 | Private ids | Records a user cannot read answer `404`, not `403`, so their ids are not confirmed |
 | Input | Unknown, hidden and read-only fields are rejected (`422`); no silent type coercion |
 | Request bodies | At most 1 MB, 20 levels deep and 10,000 values (see [JSON guard](#json-guard)) |
@@ -230,6 +230,7 @@ Static checks tell you what the rules say. [`calm audit`](/audit) tells you what
 | `env-<NAME>` | An environment variable a block [declares](/building-blocks#environment-variables) as required is not set: an error when it is needed now, an info in development for variables needed in production |
 | (blocks) | Checks added by blocks, such as `totp-unencrypted`, `webhooks-failing` or `privacy-plan` |
 | `doctor-hook` | A block's doctor check crashed |
+| `invariant` | An [invariant](/invariants) from `calm.config.js` is broken (error) |
 
 **Static checks** on your files:
 
