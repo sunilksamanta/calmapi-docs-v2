@@ -49,3 +49,33 @@ Filters: `resource`, `recordId`, `action` (`created`, `updated`, `deleted`), `us
 - Exclude a resource with `audit: false` in its options: `resource('session-note', { audit: false, fields: { ... } })`.
 - Change the retention with `AUDIT_RETENTION_DAYS`. It is the TTL of an index, so once the index exists, changing the value also means updating that index in MongoDB (`collMod`).
 - The model is available as `app.ext.audit` for your own queries or an export job.
+
+<!-- block-guide:start (generated from block.json by scripts/sync-block-guides.mjs) -->
+
+## Official documentation
+
+Read these before changing the block; they are also in `app/blocks/audit-log/AGENTS.md` and in the devtools Blocks panel.
+
+- [OWASP Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html)
+- [OWASP Logging Vocabulary Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Vocabulary_Cheat_Sheet.html)
+- [MongoDB TTL indexes](https://www.mongodb.com/docs/manual/core/index-ttl/)
+- [Mongoose: populate](https://mongoosejs.com/docs/populate.html)
+
+## For AI agents
+
+Coding agents read these notes in `app/blocks/audit-log/AGENTS.md`:
+
+- Read first: `app/blocks/audit-log/index.js` (under 80 lines).
+- What it does: a `calm.on('*')` listener records every `<resource>.created|updated|deleted` event into `calm_audit_log` as `{ action, resource, recordId, user, changes, requestId, ip, at }`. `app.ext.audit` is the Mongoose model.
+- Reading: `GET /api/audit-log` (policy `admin`) with `resource`, `recordId`, `action`, `user` and `limit` (max 200) query filters.
+- Configuration: env `AUDIT_RETENTION_DAYS` (default 365) sets the TTL index on `at`. No `calm.config.js` options. MongoDB keeps the old `expireAfterSeconds` of an existing index, so changing the value later needs a `collMod` (or dropping the `at_1` index).
+- Invariant: `diff()` stores values only for fields with `field.isOutput`; hidden, write-only and password fields are recorded as `{ changed: true }`. Never store raw values of those fields, and never log `payload.doc`.
+- Invariant: the read route stays admin only: entries hold previous values of visible fields.
+- Opt a resource out: `resource('x', { audit: false, ... })`.
+- Only writes that go through resource services emit events. `model.updateOne()` or `model.collection` calls are not audited: use `ctx.service` or `app.services` for writes that must appear in the trail.
+- Custom entry (for example a login or an export): `await app.ext.audit.create({ action, resource, recordId, user, changes })`; `action` must be `created`, `updated` or `deleted` (schema enum).
+- Privacy: the privacy block erases accounts without per record events on purpose. To also remove a deleted user's audit entries, add `calm_audit_log: 'user'` to `blocks.privacy.alsoDelete` if your retention policy allows it.
+- Pitfall: `requestId` and `ip` come from `currentRequest()`, so writes made by jobs or scripts have none.
+- Pitfall: the listener runs on every event; keep it cheap, and add an index before adding a new query filter (existing: `resource + recordId + at`, `user + at`).
+
+<!-- block-guide:end -->

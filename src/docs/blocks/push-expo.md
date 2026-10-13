@@ -44,3 +44,36 @@ In development the block delivers to real Expo tokens, so you can test on your p
 |---|---|
 | `EXPO_ACCESS_TOKEN` | Access token for enhanced push security |
 | `EXPO_API_URL` | Expo push API base URL (default `https://exp.host/--/api/v2`): a proxy, or a fake server in tests |
+
+<!-- block-guide:start (generated from block.json by scripts/sync-block-guides.mjs) -->
+
+## Official documentation
+
+Read these before changing the block; they are also in `app/blocks/push-expo/AGENTS.md` and in the devtools Blocks panel.
+
+- [Expo: Send notifications with the Expo push service](https://docs.expo.dev/push-notifications/sending-notifications/)
+- [Expo: Push notifications overview](https://docs.expo.dev/push-notifications/overview/)
+- [Expo: Push notifications setup](https://docs.expo.dev/push-notifications/push-notifications-setup/)
+- [Expo SDK: Notifications (expo-notifications)](https://docs.expo.dev/versions/latest/sdk/notifications/)
+- [Expo: FCM credentials](https://docs.expo.dev/push-notifications/fcm-credentials/)
+- [expo-server-sdk-node (GitHub)](https://github.com/expo/expo-server-sdk-node)
+
+## For AI agents
+
+Coding agents read these notes in `app/blocks/push-expo/AGENTS.md`:
+
+- Read first: `app/blocks/push-expo/index.js` (`calm.push.use` transport, `request` with retries, `sendBatch`, `throttle`, `checkReceipts`).
+- Configuration: env `EXPO_ACCESS_TOKEN` (secret; required when enhanced push security is on for the Expo project, recommended) and `EXPO_API_URL` (tests and proxies). No `calm.config.js` options.
+- Send from features with `ctx.push.send` or `app.push.send({ to: userId, title, body, url, data, badge, collapseId, channel })`; never call the Expo API directly. The payload is built by the core: `providerPayloads(message, token).expo.payload`.
+- Devices register through the core: `POST /api/auth/devices { token, platform }` with the `ExponentPushToken[...]` from `getExpoPushTokenAsync({ projectId })`.
+- Invariant: keep Expo's limits: at most 100 messages per request (`SEND_BATCH`), 6 requests in flight (`CONCURRENCY`), 600 notifications a second (`throttle`), gzip above 1 KB, retries with backoff only on network errors, 429 and 5xx.
+- Invariant: never log `EXPO_ACCESS_TOKEN` or full device tokens.
+- `accepts()` only takes Expo tokens, so push-fcm handles native FCM tokens from the same `push.send`. Keep `isExpoPushToken` in line with the Expo SDK check.
+- Receipts: tickets go to `calm_expo_tickets` and are checked every 5 minutes once 15 minutes old in production (30 s and 1 min in development). `DeviceNotRegistered` is reported through `calm.push.receipt(..., { unregistered: true })`, which deletes the device; tickets older than 24 hours are dropped.
+- Task, check receipts now: `await app.ext.pushExpo.checkReceipts({ olderThan: 0 })`.
+- Tests: in test mode without `EXPO_API_URL` the transport is not registered and the core captures pushes; point `EXPO_API_URL` at a fake server to exercise this code.
+- Pitfall: `PUSH_TOO_MANY_EXPERIENCE_IDS` (tokens of several Expo projects in one batch) is handled by splitting per project; keep that branch when refactoring.
+- Pitfall: `InvalidCredentials` or `MismatchSenderId` receipts mean the FCM V1 key or APNs credentials in EAS are wrong: fix them with `eas credentials`, not in code.
+- Pitfall: payloads are limited to 4096 bytes (`MessageTooBig`): send ids in `data`, not documents.
+
+<!-- block-guide:end -->

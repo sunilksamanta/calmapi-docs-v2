@@ -209,3 +209,36 @@ test('deleting an account removes what the user owns', async () => {
 ```
 
 `t.delete()` sends no body, so use `t.request('DELETE', path, body, auth)` to send the password.
+
+<!-- block-guide:start (generated from block.json by scripts/sync-block-guides.mjs) -->
+
+## Official documentation
+
+Read these before changing the block; they are also in `app/blocks/privacy/AGENTS.md` and in the devtools Blocks panel.
+
+- [GDPR (Regulation (EU) 2016/679) on EUR-Lex](https://eur-lex.europa.eu/eli/reg/2016/679/oj)
+- [GDPR Art. 17: Right to erasure](https://gdpr-info.eu/art-17-gdpr/)
+- [GDPR Art. 20: Right to data portability](https://gdpr-info.eu/art-20-gdpr/)
+- [California Consumer Privacy Act (CCPA)](https://oag.ca.gov/privacy/ccpa)
+- [OWASP User Privacy Protection Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/User_Privacy_Protection_Cheat_Sheet.html)
+
+## For AI agents
+
+Coding agents read these notes in `app/blocks/privacy/AGENTS.md`:
+
+- Read first: `app/blocks/privacy/index.js` (routes, guard, sweep, doctor), `erase.js` (`deletionPlan`, `createEraser`: `request`, `purge`, `cancel`, `sweep`) and `export.js` (`streamExport`).
+- Configuration: `calm.config.js` `blocks.privacy`: `graceDays`, `sweepEveryMinutes`, `resources`, `personalFields`, `alsoDelete`, `exportLimit`, `batchSize`, `cascadeCrudDelete`. Per resource: `resource('x', { onOwnerDelete: 'delete' | 'anonymize' | 'keep', personalFields: [...] })`; fields with `opts.pii` count as personal too.
+- Task, new resource with an owner field (`f.ref('user').owner()`): it is exported and deleted with its owner by default. Decide `onOwnerDelete` and `personalFields`, then run `calm doctor` to read the plan.
+- Task, other user data (custom models, logs keyed by user id): add `{ collection: 'userIdField' }` to `alsoDelete`, or it survives account deletion.
+- Invariant: the deletion order (mark `status: 'deleting'`, revoke access, erase resources, `alsoDelete`, user record last) and every step must stay safe to run twice; the sweep finishes interrupted purges under a 10 minute lease.
+- Invariant: `DELETE /api/auth/me` requires the current password (`verifyPassword`) and uses `rateLimit: 'auth'`. Never remove the confirmation.
+- Invariant: a user with status `deleting` is refused at login (`loginChallenge`) and on every request (guard), whatever the credential.
+- Invariant: the export serializes every record with `serialize()` as its owner sees it: hidden and write-only fields and password hashes never appear, sessions have no token hashes, device tokens are masked. Never write raw documents into it.
+- Invariant: erasure uses raw collection calls and emits no per record `<name>.deleted` events (audit-log would copy erased data). React to `privacy.account_deleted`, whose payload holds counts only.
+- Records are deleted through service `beforeDelete`/`afterDelete` hooks when a service defines them (the storage blocks remove files there), otherwise with one `deleteMany`.
+- From code: `app.ext.privacy.request(userId, { by, immediate })`, `.purge(userId)`, `.cancel(userId)`, `.sweep()`, `.plan()`.
+- Pitfall: `keep` leaves the deleted user's id and personal data in place: use it only for legal retention (invoices) and say so in the privacy policy. Resources owned through `_id` cannot be anonymized.
+- Pitfall: user references in non owner fields (assignee, mentions) are neither exported nor erased; `calm doctor` lists them.
+- Pitfall: an export that fails midway destroys the connection so a partial file never looks complete; never catch the error and `end()` the response.
+
+<!-- block-guide:end -->

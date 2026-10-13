@@ -187,3 +187,34 @@ test('labs is only there for beta users', async () => {
   assert.equal((await t.get('/labs', other)).status, 200);
 });
 ```
+
+<!-- block-guide:start (generated from block.json by scripts/sync-block-guides.mjs) -->
+
+## Official documentation
+
+Read these before changing the block; they are also in `app/blocks/feature-flags/AGENTS.md` and in the devtools Blocks panel.
+
+- [OpenFeature specification](https://openfeature.dev/specification/)
+- [Feature Toggles (Martin Fowler)](https://martinfowler.com/articles/feature-toggles.html)
+- [MongoDB $setOnInsert](https://www.mongodb.com/docs/manual/reference/operator/update/setOnInsert/)
+- [MDN: Cache-Control](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control)
+
+## For AI agents
+
+Coding agents read these notes in `app/blocks/feature-flags/AGENTS.md`:
+
+- Read first: `app/blocks/feature-flags/evaluate.js` (pure rules), `gate.js` (`requireFlag`), then `index.js` (cache, guard, admin API, `app.ext.flags`).
+- Configuration: `calm.config.js` `blocks['feature-flags']`: `cacheTtlMs` (default 5000) and `flags` (flags created on start when missing). No env vars.
+- Check a flag: `ctx.flags.enabled('key')` and `ctx.flags.variant('key')` (synchronous) in handlers, hooks and services that get `ctx`. Outside requests: `await app.ext.flags.isEnabled(key, { user })`, `.variant(key, who)` or `.evaluate(who)`.
+- Task, add a flag your code relies on: declare it in `blocks['feature-flags'].flags` with a `description` and `rollout: 0`. It is inserted with `$setOnInsert` and never overwritten, so later changes go through `PATCH /api/admin/flags/:key`, not the config.
+- Task, gate a route: `policy: [requireFlag('key'), 'authenticated']` with `import { requireFlag } from '#app/blocks/feature-flags/index.js'`. Off answers 404. A gate never grants access by itself, so always keep the real policy next to it unless the route is open to anyone the flag is on for.
+- Invariant: evaluation is deterministic: bucket is `sha256(key:id) % 100`, variants hash `key:variant:id`. Never add randomness or per request state, and never change the hash input: every user would be reassigned.
+- Invariant: `GET /api/flags` returns only `clientVisible` flags, already evaluated, with `Cache-Control: private, no-store`. Never expose targeting (`users`, `roles`) or other flags to clients.
+- Invariant: fail closed. Unknown flags are off; if MongoDB cannot be read the last known flags are served, or every flag is off.
+- Keys match `KEY_PATTERN` (letters, digits, `.`, `-`, `_`, up to 100). Variants are `{ name: wholeWeight }`, checked by `checkVariants`.
+- Pitfall: writes made directly to `calm_flags` are seen after `cacheTtlMs`; call `app.ext.flags.invalidate()` after them. API changes apply at once only in the process that made them.
+- Pitfall: visitors are off unless `rollout` is 100 or the frontend sends `X-Anonymous-Id`; signed-in users are always bucketed by user id.
+- Pitfall: gates in field rules (`visibleTo`, `writableBy`) are always false; branch on `ctx.flags` in code instead.
+- Every change emits `flag.changed` (`{ key, action, flag, previous, user }`): use it for alerts or audit.
+
+<!-- block-guide:end -->

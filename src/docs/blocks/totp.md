@@ -157,3 +157,36 @@ calm.loginChallenge(async (user) => {
 ```
 
 The same hook works for other second factors, such as email codes or passkeys. The code is in your project, so you can change the challenge lifetime, the number of recovery codes or the issuer name there.
+
+<!-- block-guide:start (generated from block.json by scripts/sync-block-guides.mjs) -->
+
+## Official documentation
+
+Read these before changing the block; they are also in `app/blocks/totp/AGENTS.md` and in the devtools Blocks panel.
+
+- [RFC 6238: TOTP](https://datatracker.ietf.org/doc/html/rfc6238)
+- [RFC 4226: HOTP](https://datatracker.ietf.org/doc/html/rfc4226)
+- [Google Authenticator: Key URI format](https://github.com/google/google-authenticator/wiki/Key-Uri-Format)
+- [OWASP Multifactor Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html)
+- [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
+- [NIST SP 800-63B: Authentication and Lifecycle Management](https://pages.nist.gov/800-63-3/sp800-63b.html)
+
+## For AI agents
+
+Coding agents read these notes in `app/blocks/totp/AGENTS.md`:
+
+- Read first: `app/blocks/totp/totp.js` (RFC 6238 with SHA-1, 6 digits, 30 s steps, base32, `otpauthUrl`) and `index.js` (user fields, `calm.loginChallenge`, the `/auth/2fa` routes).
+- Configuration: env `TOTP_ISSUER` (default: the app name). Set `CALM_ENCRYPTION_KEYS` (`npx calm keygen --write`) so `totpSecret` and `totpPendingSecret` are encrypted at rest; `calm doctor` warns otherwise. No `calm.config.js` options.
+- Routes under `/api/auth/2fa`: `POST /setup`, `POST /enable { code }`, `POST /disable { password }`, `POST /verify { mfaToken, code | recoveryCode }`.
+- Invariant: secrets and recovery hashes are `.hidden()` user fields (`totpSecret`, `totpPendingSecret`, `totpLastStep`, `totpRecovery`). Never return them from an API or log them; the secret is shown once, by `/setup`.
+- Invariant: replay protection. `consumeCode` atomically moves `totpLastStep` forward with a conditional update; keep it, so an accepted code can never be used again.
+- Invariant: recovery codes are stored as SHA-256 only, consumed with `$pull` (single use) and shown once by `/enable`.
+- Invariant: challenges in `calm_mfa_challenges` are keyed by `sha256(mfaToken)`, expire after 5 minutes and allow 5 attempts, counted atomically before the code is checked. Keep both limits.
+- Invariant: `verifyCode` compares in constant time without early exit over a window of one step either side; do not widen the window.
+- Enabling 2FA ends the user's other sessions; disabling needs the password; `enable`, `disable` and `verify` use `rateLimit: 'auth'`.
+- Other sign-in paths (magic-link) get the challenge automatically through `calm.loginChallenge`. Any new login path must call `calm.app.auth.service.completeLogin`, never create sessions directly.
+- Security events: `security.2fa_enabled`, `2fa_disabled`, `2fa_failed`, `2fa_recovery_used`. Never put codes in them.
+- Task, admin reset for a user who lost the device and the codes: verify identity out of band, then `$unset` the same five fields `/disable` removes.
+- Pitfall: server clock drift breaks codes, so keep NTP running. Show 2FA status with `twoFactorEnabledAt` (readOnly, `visibleTo('owner | admin')`), never the secret fields.
+
+<!-- block-guide:end -->

@@ -22,7 +22,26 @@
   "meta": {
     "calmapi": {
       "minVersion": "2.0.0-alpha.0",
-      "conflicts": []
+      "conflicts": [],
+      "links": [
+        {
+          "title": "MongoDB findOneAndUpdate",
+          "url": "https://www.mongodb.com/docs/manual/reference/method/db.collection.findOneAndUpdate/"
+        },
+        {
+          "title": "MongoDB partial indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-partial/"
+        },
+        {
+          "title": "MongoDB TTL indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-ttl/"
+        },
+        {
+          "title": "crontab(5) manual page",
+          "url": "https://man7.org/linux/man-pages/man5/crontab.5.html"
+        }
+      ],
+      "agents": "- Read first: `app/blocks/jobs/index.js` (loader, admin routes), `queue.js` (the `calm_jobs` queue: enqueue, atomic claim, retries), `cron.js` (schedule parser, UTC) and the example `app/jobs/welcome-email.js`.\n- Configuration: env `JOBS_WORKER` (`off`: this instance does not process jobs) and `JOBS_CONCURRENCY` (default 4). No `calm.config.js` options; queue defaults (`pollMs` 1000, `lockTimeoutMs` 5 min, `keepCompletedDays` 7) are arguments of `createQueue`.\n- Task, add a job: create `app/jobs/<name>.js` with `export default defineJob({ name, run(data, { app, job, log }), retries, backoff, schedule, on })`, `defineJob` from `#app/blocks/jobs/index.js`. Every `.js` file in `app/jobs/` must default export `defineJob(...)` or boot fails; names must be unique.\n- Task, enqueue: `await ctx.app.ext.jobs.enqueue('name', data, { delay: '10m', runAt, uniqueKey, retries })`. With `uniqueKey` a second enqueue returns the existing job instead of a duplicate.\n- Schedules: 5 field cron in UTC, `@hourly`, `@daily`, `@weekly`, `@monthly`, or `'every 30s|5m|2h|1d'`. There is one `schedule:<name>` document per job, requeued for its next time after success or final failure.\n- Event triggers: `on: 'auth.registered'` enqueues the job with the event payload as `data`.\n- Invariant: `run()` must be idempotent. Failures retry with backoff doubling from `backoff` (default `10s`, capped at 1 hour), and a job whose worker died is requeued after `lockTimeoutMs`, so it can run twice.\n- Invariant: `data` is stored as is and admins read it through `GET /api/jobs`. Pass ids, not secrets, tokens or whole documents with sensitive fields (`on:` triggers store the full event payload, so check what the event carries).\n- Admin API (policy `admin`): `GET /api/jobs?status=&name=&limit=`, `GET /api/jobs/stats`, `POST /api/jobs/:jobId/retry` (failed jobs), `POST /api/jobs/enqueue { name, data }`.\n- Events: `job.completed` and `job.failed` (final failure only) for alerts.\n- Tests: the worker never starts in test mode; call `await app.ext.jobs.drain()` to run due jobs.\n- Pitfall: a `run()` longer than `lockTimeoutMs` can be claimed again by another worker; split long work into smaller jobs.\n- Pitfall: completed jobs are deleted after 7 days (TTL index on `finishedAt`), failed ones stay until retried or removed."
     }
   },
   "files": [
@@ -49,6 +68,12 @@
       "type": "registry:file",
       "target": "app/jobs/welcome-email.js",
       "content": "import { defineJob } from '#app/blocks/jobs/index.js';\n\n// Example job: runs in the background whenever someone signs up.\n// Other triggers: schedule: '0 9 * * 1-5' (cron, UTC) or schedule: 'every 10m',\n// or enqueue manually: ctx.app.ext.jobs.enqueue('welcome-email', { user })\nexport default defineJob({\n  name: 'welcome-email',\n  on: 'auth.registered',\n  retries: 3,\n  async run({ user }, { app }) {\n    await app.mailer.send({\n      to: user.email,\n      subject: `Welcome to ${app.config.app.name}`,\n      text: `Hi ${user.name},\\n\\nYour account is ready. Happy building!`,\n    });\n  },\n});\n"
+    },
+    {
+      "path": "registry/blocks/jobs/files/app/blocks/jobs/AGENTS.md",
+      "type": "registry:file",
+      "target": "app/blocks/jobs/AGENTS.md",
+      "content": "# Background jobs (block: jobs)\n\nBackground jobs and cron on MongoDB (no Redis): retries with backoff, schedules, event triggers, admin API and a devtools panel.\n\nThe code is in `app/blocks/jobs/` and belongs to this project. Options go in `calm.config.js` under `blocks['jobs']`; secrets go in `.env`.\n\n## For AI agents\n\n- Read first: `app/blocks/jobs/index.js` (loader, admin routes), `queue.js` (the `calm_jobs` queue: enqueue, atomic claim, retries), `cron.js` (schedule parser, UTC) and the example `app/jobs/welcome-email.js`.\n- Configuration: env `JOBS_WORKER` (`off`: this instance does not process jobs) and `JOBS_CONCURRENCY` (default 4). No `calm.config.js` options; queue defaults (`pollMs` 1000, `lockTimeoutMs` 5 min, `keepCompletedDays` 7) are arguments of `createQueue`.\n- Task, add a job: create `app/jobs/<name>.js` with `export default defineJob({ name, run(data, { app, job, log }), retries, backoff, schedule, on })`, `defineJob` from `#app/blocks/jobs/index.js`. Every `.js` file in `app/jobs/` must default export `defineJob(...)` or boot fails; names must be unique.\n- Task, enqueue: `await ctx.app.ext.jobs.enqueue('name', data, { delay: '10m', runAt, uniqueKey, retries })`. With `uniqueKey` a second enqueue returns the existing job instead of a duplicate.\n- Schedules: 5 field cron in UTC, `@hourly`, `@daily`, `@weekly`, `@monthly`, or `'every 30s|5m|2h|1d'`. There is one `schedule:<name>` document per job, requeued for its next time after success or final failure.\n- Event triggers: `on: 'auth.registered'` enqueues the job with the event payload as `data`.\n- Invariant: `run()` must be idempotent. Failures retry with backoff doubling from `backoff` (default `10s`, capped at 1 hour), and a job whose worker died is requeued after `lockTimeoutMs`, so it can run twice.\n- Invariant: `data` is stored as is and admins read it through `GET /api/jobs`. Pass ids, not secrets, tokens or whole documents with sensitive fields (`on:` triggers store the full event payload, so check what the event carries).\n- Admin API (policy `admin`): `GET /api/jobs?status=&name=&limit=`, `GET /api/jobs/stats`, `POST /api/jobs/:jobId/retry` (failed jobs), `POST /api/jobs/enqueue { name, data }`.\n- Events: `job.completed` and `job.failed` (final failure only) for alerts.\n- Tests: the worker never starts in test mode; call `await app.ext.jobs.drain()` to run due jobs.\n- Pitfall: a `run()` longer than `lockTimeoutMs` can be claimed again by another worker; split long work into smaller jobs.\n- Pitfall: completed jobs are deleted after 7 days (TTL index on `finishedAt`), failed ones stay until retried or removed.\n\n## Official documentation\n\n- [MongoDB findOneAndUpdate](https://www.mongodb.com/docs/manual/reference/method/db.collection.findOneAndUpdate/)\n- [MongoDB partial indexes](https://www.mongodb.com/docs/manual/core/index-partial/)\n- [MongoDB TTL indexes](https://www.mongodb.com/docs/manual/core/index-ttl/)\n- [crontab(5) manual page](https://man7.org/linux/man-pages/man5/crontab.5.html)\n\n## Usage\n\nJobs live in app/jobs/*.js (see welcome-email.js):\n  export default defineJob({ name, run(data, { app, job, log }), retries, schedule: '0 * * * *' | 'every 5m', on: 'auth.registered' })\nEnqueue from anywhere: ctx.app.ext.jobs.enqueue('name', data, { delay: '10m' })\nAdmin API: GET /api/jobs, GET /api/jobs/stats, POST /api/jobs/:id/retry. Set JOBS_WORKER=off on instances that should not process jobs.\n\n## Environment variables\n\n- `JOBS_WORKER`: on\n- `JOBS_CONCURRENCY`: 4\n\nMore: https://docs.calmapi.dev/blocks/jobs\n"
     }
   ]
 }

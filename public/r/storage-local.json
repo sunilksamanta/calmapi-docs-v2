@@ -26,7 +26,30 @@
       "minVersion": "2.0.0-alpha.0",
       "conflicts": [
         "storage-s3"
-      ]
+      ],
+      "links": [
+        {
+          "title": "OWASP File Upload Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html"
+        },
+        {
+          "title": "Multer (GitHub)",
+          "url": "https://github.com/expressjs/multer"
+        },
+        {
+          "title": "Express API reference (res.sendFile)",
+          "url": "https://expressjs.com/en/api.html"
+        },
+        {
+          "title": "MDN: Content-Disposition",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Disposition"
+        },
+        {
+          "title": "MDN: X-Content-Type-Options",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/X-Content-Type-Options"
+        }
+      ],
+      "agents": "- Read first: `app/blocks/storage-local/storage.js` (Multer setup, type allowlist, magic bytes, `pathOf`, `remove`), `app/resources/file/` (`file.resource.js`, `file.routes.js`, `file.service.js`) and `index.js` (doctor, devtools).\n- Configuration: env `UPLOAD_DIR` (`./uploads`), `UPLOAD_MAX_MB` (10), `UPLOAD_ALLOWED_TYPES` (PNG, JPEG, GIF, WebP, PDF). No `calm.config.js` options. Keep `uploads/` in `.gitignore`.\n- Routes: `POST /api/files/upload` (multipart, field `file`, authenticated), `GET /api/files`, `GET /api/files/:id`, `GET /api/files/:id/download` and `DELETE /api/files/:id` (owner or admin).\n- Invariant: files are stored under random UUID names with an extension from `EXT`; the uploaded name is metadata only, never part of a path. `pathOf` strips everything but `[\\w.-]` from keys.\n- Invariant: `key` is `.hidden()`; never expose it or accept it from a client.\n- Invariant: the declared type must be on the allowlist, and `verifySignature` checks magic bytes for PNG, JPEG, GIF, WebP and PDF (and deletes the file on mismatch). Types without an entry in `SIGNATURES` are trusted on the declared type.\n- Invariant: only `INLINE` image types are served inline; everything else downloads as `application/octet-stream` attachment, with `X-Content-Type-Options: nosniff` and `Content-Security-Policy: default-src 'none'; sandbox`. Never add `image/svg+xml` or `text/html` to `INLINE` (stored XSS).\n- Task, allow a new type: add it to `UPLOAD_ALLOWED_TYPES`, give it an extension in `EXT`, and a `SIGNATURES` check if the format has magic bytes.\n- Task, change who can see files (public avatars, shared documents): edit the policies in `file.resource.js` and the download route policy in `file.routes.js` together.\n- Deleting a file record removes the bytes in `FileService.afterDelete`; the privacy block calls it when an account is deleted.\n- Pitfall: Multer limits are 1 file, 10 fields and `UPLOAD_MAX_MB`; errors become 400.\n- Pitfall: local disk does not work with several instances or ephemeral containers; use storage-s3 instead (the two blocks conflict, install one)."
     }
   },
   "files": [
@@ -59,6 +82,12 @@
       "type": "registry:file",
       "target": "app/resources/file/file.service.js",
       "content": "import { ResourceService } from '#calm';\nimport { remove } from '#app/blocks/storage-local/storage.js';\n\nexport default class FileService extends ResourceService {\n  async afterDelete(doc) {\n    remove(doc.key);\n  }\n}\n"
+    },
+    {
+      "path": "registry/blocks/storage-local/files/app/blocks/storage-local/AGENTS.md",
+      "type": "registry:file",
+      "target": "app/blocks/storage-local/AGENTS.md",
+      "content": "# Local file storage (block: storage-local)\n\nFile uploads to local disk: a 'file' resource, type and size allowlists, magic-byte checks and safe downloads.\n\nThe code is in `app/blocks/storage-local/` and belongs to this project. Options go in `calm.config.js` under `blocks['storage-local']`; secrets go in `.env`.\n\n## For AI agents\n\n- Read first: `app/blocks/storage-local/storage.js` (Multer setup, type allowlist, magic bytes, `pathOf`, `remove`), `app/resources/file/` (`file.resource.js`, `file.routes.js`, `file.service.js`) and `index.js` (doctor, devtools).\n- Configuration: env `UPLOAD_DIR` (`./uploads`), `UPLOAD_MAX_MB` (10), `UPLOAD_ALLOWED_TYPES` (PNG, JPEG, GIF, WebP, PDF). No `calm.config.js` options. Keep `uploads/` in `.gitignore`.\n- Routes: `POST /api/files/upload` (multipart, field `file`, authenticated), `GET /api/files`, `GET /api/files/:id`, `GET /api/files/:id/download` and `DELETE /api/files/:id` (owner or admin).\n- Invariant: files are stored under random UUID names with an extension from `EXT`; the uploaded name is metadata only, never part of a path. `pathOf` strips everything but `[\\w.-]` from keys.\n- Invariant: `key` is `.hidden()`; never expose it or accept it from a client.\n- Invariant: the declared type must be on the allowlist, and `verifySignature` checks magic bytes for PNG, JPEG, GIF, WebP and PDF (and deletes the file on mismatch). Types without an entry in `SIGNATURES` are trusted on the declared type.\n- Invariant: only `INLINE` image types are served inline; everything else downloads as `application/octet-stream` attachment, with `X-Content-Type-Options: nosniff` and `Content-Security-Policy: default-src 'none'; sandbox`. Never add `image/svg+xml` or `text/html` to `INLINE` (stored XSS).\n- Task, allow a new type: add it to `UPLOAD_ALLOWED_TYPES`, give it an extension in `EXT`, and a `SIGNATURES` check if the format has magic bytes.\n- Task, change who can see files (public avatars, shared documents): edit the policies in `file.resource.js` and the download route policy in `file.routes.js` together.\n- Deleting a file record removes the bytes in `FileService.afterDelete`; the privacy block calls it when an account is deleted.\n- Pitfall: Multer limits are 1 file, 10 fields and `UPLOAD_MAX_MB`; errors become 400.\n- Pitfall: local disk does not work with several instances or ephemeral containers; use storage-s3 instead (the two blocks conflict, install one).\n\n## Official documentation\n\n- [OWASP File Upload Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html)\n- [Multer (GitHub)](https://github.com/expressjs/multer)\n- [Express API reference (res.sendFile)](https://expressjs.com/en/api.html)\n- [MDN: Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Disposition)\n- [MDN: X-Content-Type-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/X-Content-Type-Options)\n\n## Usage\n\nUpload:   curl -H 'Authorization: Bearer <token>' -F file=@photo.png http://localhost:5001/api/files/upload\nDownload: GET /api/files/:id/download   List: GET /api/files   Delete: DELETE /api/files/:id\nAdd uploads/ to .gitignore. Files are private to their owner; change policies in app/resources/file/file.resource.js.\n\n## Environment variables\n\n- `UPLOAD_DIR`: ./uploads\n- `UPLOAD_MAX_MB`: 10\n- `UPLOAD_ALLOWED_TYPES`: image/png,image/jpeg,image/gif,image/webp,application/pdf\n\nMore: https://docs.calmapi.dev/blocks/storage-local\n"
     }
   ]
 }

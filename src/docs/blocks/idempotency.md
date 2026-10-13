@@ -149,3 +149,34 @@ test('a retried order is created once', async () => {
   assert.equal(await t.app.model('order').countDocuments(), 1);
 });
 ```
+
+<!-- block-guide:start (generated from block.json by scripts/sync-block-guides.mjs) -->
+
+## Official documentation
+
+Read these before changing the block; they are also in `app/blocks/idempotency/AGENTS.md` and in the devtools Blocks panel.
+
+- [IETF draft: The Idempotency-Key HTTP Header Field](https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/)
+- [RFC 9110: HTTP Semantics (idempotent methods)](https://www.rfc-editor.org/rfc/rfc9110.html)
+- [RFC 8941: Structured Field Values for HTTP](https://www.rfc-editor.org/rfc/rfc8941.html)
+- [Stripe: Idempotent requests](https://docs.stripe.com/api/idempotent_requests)
+- [MongoDB TTL indexes](https://www.mongodb.com/docs/manual/core/index-ttl/)
+
+## For AI agents
+
+Coding agents read these notes in `app/blocks/idempotency/AGENTS.md`:
+
+- Read first: `app/blocks/idempotency/index.js` (`parseKey`, `canonicalJSON`, `compilePattern`, `claim`, `settle`, `capture`, `replay`, the guard).
+- Configuration: `calm.config.js` `blocks.idempotency`: `methods`, `required`, `ttlHours`, `lockTimeoutSeconds`, `maxResponseKb`, `docsUrl` (defaults in `options`). No env vars.
+- Task, require the header on a route: add `'POST /api/orders'` to `required` (method or `*`, full path with the `/api` prefix, `:name` or `*` for one segment, a final `**` for the rest). `calm doctor` warns about patterns that match no route.
+- Invariant: the record `_id` is `sha256(scope, method, path, key)` with scope `user:<id>` or `anonymous:<ip>`. Never drop the scope: one caller's key must never replay another caller's response.
+- Invariant: 5xx outcomes delete the lock so the retry runs again; 2xx to 4xx are stored and replayed with `Idempotent-Replayed: true`. Same key with another fingerprint is `422 IDEMPOTENCY_KEY_REUSED`; a running lock is `409 IDEMPOTENCY_IN_PROGRESS` with `Retry-After: 1`.
+- Invariant: only `SAFE_HEADERS` are stored and replayed. Never add `set-cookie`, rate limit headers or `x-request-id`.
+- Invariant: the guard is registered with `{ order: 100 }` so it runs after other guards (API key scopes, maintenance): refused requests are never stored. Keep it last.
+- Handlers can read `req.idempotency` (`{ key, replayed }`); a replayed request never reaches the handler.
+- Pitfall: the fingerprint is the canonical JSON of `req.body` plus the query string. Multipart bodies are parsed after guards, so uploads are not fingerprinted: one key per upload.
+- Pitfall: side effects (emails, enqueued jobs, calls to other APIs) happen once per execution. A handler that fails with 5xx after a side effect runs again on retry, so make those effects idempotent too.
+- Pitfall: bodies over `maxResponseKb` are not stored; the replay has the status and headers only.
+- Tell API clients the retention (`ttlHours`, default 24): a retry after it runs the operation again. The privacy block deletes a user's `calm_idempotency` rows on account deletion (`alsoDelete`).
+
+<!-- block-guide:end -->
