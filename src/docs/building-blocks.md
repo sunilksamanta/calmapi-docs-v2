@@ -42,11 +42,12 @@ npx calm make block hello
 ✔ Created block hello
   + app/blocks/hello/index.js
   + app/blocks/hello/block.json
+  + app/blocks/hello/AGENTS.md
   + app/blocks/hello/README.md
   + test/blocks/hello.test.js
 ```
 
-`index.js` lists every extension point in comments, `block.json` describes the block for sharing, and the test runs with `npm test`. Add `--no-test` to skip the test, `--force` to overwrite.
+`index.js` lists every extension point in comments, `block.json` describes the block for sharing, `AGENTS.md` tells AI agents how to work on it (see [Agents and links](#agents-and-links-the-blocks-own-guide)), and the test runs with `npm test`. Add `--no-test` to skip the test, `--force` to overwrite.
 
 ## definePlugin
 
@@ -421,14 +422,18 @@ Events, emails and push notifications are captured too: `await t.idle()` waits f
   "title": "Slack notifications",
   "description": "Post to a Slack channel when a post is published.",
   "version": "1.0.0",
-  "minVersion": "2.0.0-alpha.1",
+  "minVersion": "2.0.0-beta.1",
   "author": "Acme",
   "license": "MIT",
   "categories": ["notifications"],
   "envVars": { "SLACK_WEBHOOK_URL": "" },
   "dependencies": [],
   "files": [],
-  "docs": "Set SLACK_WEBHOOK_URL to an incoming webhook URL (Slack, Apps, Incoming Webhooks)."
+  "docs": "Set SLACK_WEBHOOK_URL to an incoming webhook URL (Slack, Apps, Incoming Webhooks).",
+  "links": [
+    { "title": "Slack: Sending messages using incoming webhooks", "url": "https://api.slack.com/messaging/webhooks" }
+  ],
+  "agents": "- Never log SLACK_WEBHOOK_URL: anyone with it can post to the channel.\n- Escape user text before it goes into a message."
 }
 ```
 
@@ -443,8 +448,43 @@ Events, emails and push notifications are captured too: `await t.idle()` waits f
 | `conflicts` | Blocks that cannot be installed together with this one |
 | `files` | Extra files or folders outside `app/blocks/<name>/` to ship: `"app/jobs/digest.js"`, `"app/resources/invoice"` |
 | `docs` | Printed right after installing: what to set, what to call |
+| `links` | The official documentation of what the block integrates: `[{ "title", "url" }]`, `http` and `https` URLs only |
+| `agents` | Instructions for AI coding agents, as markdown: the rules the block must keep, its options, common tasks |
 
 Everything in `app/blocks/<name>/` is shipped, except `block.json` itself and a `docs.md`.
+
+### Agents and links: the block's own guide
+
+A block is code someone else will change later, often with an AI agent. `links` and `agents` in `block.json` become `app/blocks/<name>/AGENTS.md`, next to the code, which the project's `AGENTS.md` tells agents to read before they change anything in the block. `calm make block` writes both fields and the file:
+
+```markdown
+# Hello (block: hello)
+
+What Hello adds, in one sentence.
+
+The code is in `app/blocks/hello/` and belongs to this project. Options go in `calm.config.js` under `blocks['hello']`; secrets go in `.env`.
+
+## For AI agents
+
+- Read app/blocks/hello/index.js first: options, env vars and routes are declared there.
+- Keep the block self-contained: other code talks to it through its routes or calm.provide, never through its models.
+- Add the official documentation of any service this block calls to "links" in block.json.
+
+## Official documentation
+
+- [Building blocks (CalmAPI docs)](https://docs.calmapi.dev/building-blocks)
+
+## Usage
+
+GET /api/hello/hello says hello.
+Settings: blocks: { 'hello': { greeting } } in calm.config.js.
+```
+
+The file has the block's title and description, then **For AI agents** (from `agents`), **Official documentation** (from `links`), **Usage** (from `docs`) and **Environment variables** (from `envVars`), each only when there is something to put in it. It is an ordinary file: edit it as the block changes. When you pack a block whose `block.json` has `agents` or `links` but that has no `AGENTS.md` yet, `calm block pack` generates it and ships it with the other files.
+
+The devtools **Blocks** panel reads the two sections back and shows them for each block: **Official documentation** with each link and its host, and **For AI agents** with a link to the file.
+
+Write `agents` for what is easy to get wrong: what must never break, what to call instead of reaching into the block's models, which option does what. Put the documentation of every service the block calls in `links`, so an agent follows the provider's current documentation instead of what it remembers. All 35 official blocks have both.
 
 ### calm block check
 
@@ -453,7 +493,7 @@ npx calm block check slack-notify
 ```
 
 ```text
-  slack-notify v1.0.0 · 2 file(s)
+  slack-notify v1.0.0 · 3 file(s)
   ok    nothing to fix
 
   What the code does
@@ -540,7 +580,7 @@ npx calm block list
                        1 file(s) changed since added: app/blocks/slack-notify/index.js
 ```
 
-Every block in the project with its version, where it came from, and the files you changed since adding it. The devtools **Blocks** panel shows the same, plus what each block hooks into, its environment variables, its settings and its routes.
+Every block in the project with its version, where it came from, and the files you changed since adding it. The devtools **Blocks** panel shows the same, plus what each block hooks into, its environment variables, its settings, its routes, and its official documentation and instructions for AI agents.
 
 ## Good blocks
 

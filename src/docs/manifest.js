@@ -126,7 +126,7 @@ export const SECTIONS = [
         slug: 'devtools',
         title: 'Devtools',
         icon: 'Gauge',
-        description: 'The local dashboard at /_calm: requests with their MongoDB queries, data privacy lens and sample data, mail, push notifications on simulated phones, installed blocks, act as any user, agent activity and security.',
+        description: 'The local dashboard at /_calm: requests with their MongoDB queries, data privacy lens and sample data, mail, push notifications on simulated phones, installed blocks, act as any user, agent activity, review and sign, budgets and security.',
       },
       {
         slug: 'testing',
@@ -135,11 +135,31 @@ export const SECTIONS = [
         description: 'Write API tests with createTestApp and node:test against a throwaway database.',
       },
       {
+        slug: 'replay',
+        nav: 'Replay',
+        title: 'Replay and recorded tests',
+        icon: 'Repeat',
+        description: 'The dev server records requests as shapes, never values; calm replay sends them again as the same users against the new code and shows which answers changed. Save any request as a test.',
+      },
+      {
+        slug: 'budgets',
+        title: 'Budgets',
+        icon: 'Timer',
+        description: 'How many MongoDB queries, how much time and how many bytes each route may cost, in calm.config.js: measured in devtools and enforced in CI with calm budgets --ci.',
+      },
+      {
         slug: 'behavior-diff',
         nav: 'Behavior diff',
         title: 'The behavior diff',
         icon: 'GitCompare',
-        description: 'calm diff compares two versions of your app by what they do: routes, policies, field visibility, env vars, hosts, events, blocks and invariants, and fails CI when access widens.',
+        description: 'calm diff compares two versions of your app by what they do: routes, policies, field visibility, env vars, hosts, events, blocks and invariants, and fails CI when access widens. calm diff --api sorts API contract changes into breaking, minor and patch.',
+      },
+      {
+        slug: 'review',
+        nav: 'Review and sign',
+        title: 'Review and sign',
+        icon: 'ClipboardList',
+        description: 'calm review shows what changed since a person last signed, including the files AI agents wrote and what they declared; calm review --sign records the signature in .calm/reviews/ and --ci fails when access widens.',
       },
       {
         slug: 'invariants',
@@ -181,16 +201,22 @@ export const SECTIONS = [
         description: 'calm audit calls every route as every role on a throwaway database and checks policies, field leaks, mass assignment and token handling.',
       },
       {
+        slug: 'exposure-budget',
+        title: 'Exposure budget',
+        icon: 'ShieldAlert',
+        description: 'calm audit --accept writes who may do what to security.snapshot.json; from then on wider access fails calm doctor and calm audit --ci until a person accepts it with a reason.',
+      },
+      {
         slug: 'cli',
         title: 'CLI reference',
         icon: 'Terminal',
-        description: 'Every calm command and flag: create, dev, make, add, block, seed, routes, openapi, doctor, diff, about, audit, checkpoint, restore, admin, keygen, upgrade, mcp and agent-hook.',
+        description: 'Every calm command and flag: create, dev, make, add, block, seed, routes, openapi, client, doctor, diff, review, replay, budgets, about, audit, checkpoint, restore, admin, keygen, upgrade, mcp and agent-hook.',
       },
       {
         slug: 'ai-agents',
         title: 'AI agents',
         icon: 'Bot',
-        description: 'AGENTS.md, the calm mcp server for coding agents, the activity log that shows what they change, and the mcp-server block.',
+        description: 'AGENTS.md, the calm mcp server for coding agents, the activity log that shows what they change, a disposable database copy with calm dev --agent-db, and the mcp-server block.',
       },
       {
         slug: 'upgrading',
@@ -250,7 +276,7 @@ export const SECTIONS = [
         nav: 'Building a block',
         title: 'Building your own block',
         icon: 'Hammer',
-        description: 'Write a block with definePlugin: settings, env vars, routes, guards, credentials, named policies, doctor checks, the auth service helpers, and the calm make block, block check, block pack and gh: installs toolkit.',
+        description: 'Write a block with definePlugin: settings, env vars, routes, guards, credentials, named policies, doctor checks, the auth service helpers, its AGENTS.md for AI agents, and the calm make block, block check, block pack and gh: installs toolkit.',
       },
       {
         slug: 'publishing-blocks',

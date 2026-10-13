@@ -171,7 +171,9 @@ assert.equal(stored.cost, 10); // a hidden field, set by the service
 
 ## Generated tests
 
-`calm make resource` writes `test/<plural>.test.js` with two tests: create, read and list as a signed-in user, and a `401` for signed-out requests. It is skipped when the project has no `user` resource, and when required references would need fixtures it cannot guess. Use it as a starting point.
+`calm make resource` writes `test/<plural>.test.js` with two tests: create, read and list as a signed-in user, and a `401` for signed-out requests. It is skipped when the project has no `user` resource, and when required references would need fixtures it cannot guess. Use it as a starting point. With `--team`, the tests check that members of the team see the records and people outside it see nothing.
+
+**Save as test** in devtools turns a real request into `test/recorded/<name>.test.js`: the same request as the same kind of user, checking the status and that no field is returned that was not returned before. See [Replay and recorded tests](/replay#save-as-test).
 
 ## In CI
 
@@ -198,3 +200,5 @@ jobs:
 ```
 
 `calm audit` uses the same throwaway database setup to call every route as every kind of user. See [Security audit](/audit).
+
+Other checks fit the same pipeline: `npx calm budgets --ci` runs the tests with the meter on and fails when a route costs more than its [budget](/budgets) (it can replace `npm test`), `npx calm review --ci` fails when access widened since the last [signed review](/review), and `npx calm diff main --api --ci` fails on a [breaking API change](/behavior-diff#api-contract).

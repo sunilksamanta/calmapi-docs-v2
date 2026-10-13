@@ -28,6 +28,8 @@ npx calm add jobs
 
 ## Official blocks
 
+There are 35, each with its own page here and its own guide in the project after you add it (below).
+
 | Block | What you get |
 |---|---|
 | **Users and access** | |
@@ -76,7 +78,11 @@ npx calm add jobs --dry-run         # show the plan, write nothing
 npx calm block list                 # blocks in this project, and the files you changed
 ```
 
-The devtools **Blocks** panel shows every installed block: where it came from, the files you changed since, what it hooks into, its environment variables (set or missing) and its routes.
+The devtools **Blocks** panel shows every installed block: where it came from, the files you changed since, what it hooks into, its environment variables (set or missing), its routes, links to the official documentation of what it integrates, and its instructions for AI agents.
+
+## Each block brings its own guide
+
+Every block is added with an `app/blocks/<name>/AGENTS.md` next to its code: the rules it must keep, its options, common tasks, and links to the official documentation of the service it integrates (Stripe, Twilio, Slack, OpenID Connect, OWASP...). The project's `AGENTS.md` tells coding agents to read it before they change the block, so they follow the provider's documentation rather than memory. It comes from the `links` and `agents` fields of the block's `block.json`; see [Agents and links](/building-blocks#agents-and-links-the-blocks-own-guide).
 
 ## Where blocks come from
 

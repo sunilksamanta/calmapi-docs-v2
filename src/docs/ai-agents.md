@@ -6,14 +6,16 @@ CalmAPI is designed to be worked on by coding agents as well as people: conventi
 
 Every new project has an `AGENTS.md` at its root, the file Claude Code, Codex, Cursor, Copilot and other agents look for. It describes the layout, the import conventions (`#calm`, `#app/...`) and the golden rules:
 
-1. Add resources with the CLI (`npx calm make resource ...`), then edit them.
+1. Add resources with the CLI (`npx calm make resource product title:string+required price:number`), then edit them.
 2. Declare fields once with `f.*()`; visibility and validation come from there.
 3. Every route needs a policy.
 4. Handlers return values; throw `notFound()`, `forbidden()`... instead of calling `res.json`.
 5. Business logic goes in the service, with hooks before whole-method overrides, and queries scoped with `this.filterFor(ctx, filter)`.
 6. Never return raw documents from non-resource routes; use `ctx.serialize(doc, 'resource')`.
 7. Sensitive data: `.visibleTo('owner | admin')` for personal fields, `.encrypted()` for secrets at rest. Never log secrets.
-8. Before finishing: `npm test`, `npx calm doctor` (fix every `error`) and, after changing policies or fields, `npx calm audit`.
+8. Email and push go through `ctx.app.mailer.send()` and `ctx.push.send()`, with ids in push `data`, never secrets or personal details.
+9. Blocks carry their own instructions: before changing anything in `app/blocks/<name>/`, read `app/blocks/<name>/AGENTS.md` and follow the official documentation it links to, not memory (see [Each block's own guide](#each-blocks-own-guide)).
+10. Before finishing: `npm test`, `npx calm doctor` (fix every `error`) and, after changing policies or fields, `npx calm audit`.
 
 `CLAUDE.md` contains one line pointing Claude Code to `AGENTS.md`. Edit `AGENTS.md` with your own project's rules; it is yours.
 
@@ -39,7 +41,7 @@ For other agents, add it to their MCP configuration:
 
 It must run inside the project (the agent's working directory). Static tools run the CLI in a child process, so they always see the current code; runtime tools talk to the dev server, so start `npm run dev` for those.
 
-It offers 24 tools.
+It offers 29 tools.
 
 **Understand the project**
 
@@ -49,15 +51,17 @@ It offers 24 tools.
 | `calm_routes` | Every route with method, path, policy and source file |
 | `calm_resource` | One resource: the source of its resource, service and routes files, and its routes |
 | `calm_openapi` | The OpenAPI 3.1 document |
+| `calm_client` | The [typed client](/client) for a web or mobile frontend: returns the TypeScript source, or writes the file with `{ out }` (a `.js` path writes JavaScript plus a `.d.ts`) |
 | `calm_blocks` | List the official blocks |
 
 **Change it**
 
 | Tool | What it does |
 |---|---|
-| `calm_make_resource` | Scaffold a resource from field specs (`title:string!+searchable`, `status:enum:draft,live=draft`...), optionally with a service and routes file |
+| `calm_make_resource` | Scaffold a resource from field specs (`title:string+required+searchable`, `status:enum:draft,live=draft`...), optionally with a service and routes file |
 | `calm_add_block` | Add blocks (with a dry run option) |
 | `calm_propose` | Describe a change as a reviewable diff instead of making it; you apply it from devtools (see [Proposals](#proposals-the-agent-describes-you-apply)) |
+| `calm_declare` | Before changing behavior, say what is about to change (`"route POST /api/refunds"`, `{ kind: 'route', key, policy }`): the [review](/review#for-agents-calm_declare-and-calm_review) compares it with what the agent did |
 | `calm_checkpoint`, `calm_restore` | Snapshot the development database and put it back (see [Checkpoints](/checkpoints)). One is taken automatically when the agent connects. |
 
 **Try it** (dev server)
@@ -82,9 +86,12 @@ It offers 24 tools.
 | `calm_doctor` | Run the security and correctness checks (optionally with production rules) |
 | `calm_audit` | Run [`calm audit`](/audit) and get the failed checks, field leaks and failed probes |
 | `calm_security` | The [exposure matrix](/security#exposure-matrix), the security related doctor findings, and recent [security events](/security#security-events) from the dev server |
-| `calm_diff` | The [behavior diff](/behavior-diff) between a git ref (default `HEAD`) and the working tree: what the agent changed in routes, policies, fields, env vars, hosts, events and invariants, with the count of changes that widen access |
+| `calm_diff` | The [behavior diff](/behavior-diff) between a git ref (default `HEAD`) and the working tree: what the agent changed in routes, policies, fields, env vars, hosts, events and invariants, with the count of changes that widen access. `api: true` compares the [API contract](/behavior-diff#api-contract) instead: breaking, minor and patch changes. |
+| `calm_replay` | [Replay](/replay) the requests recorded by the dev server, as the users who made them, against the code as it is now: which answers changed status or shape, and which fields are newly returned. `writes: true` replays writes between a checkpoint and its restore. |
+| `calm_budgets` | What each route costs on the dev server (queries, p95 time, largest response) next to its [budget](/budgets) |
+| `calm_review` | What the developer will [review](/review): behavior changes since their last signature, the agent files nobody signed, and the agent's declarations next to what it did. Agents cannot sign. |
 
-A typical loop: the agent edits a resource, calls `calm_activity` to see whether the dev server restarted or crashed, tries the endpoint with `calm_http` as different users, reads `calm_request` for the queries and errors it caused, then runs `calm_test`, `calm_doctor` and `calm_audit`. Nobody has to copy logs into the chat.
+A typical loop: the agent declares what it is about to change with `calm_declare`, edits a resource, calls `calm_activity` to see whether the dev server restarted or crashed, tries the endpoint with `calm_http` as different users, reads `calm_request` for the queries and errors it caused, then runs `calm_test`, `calm_doctor`, `calm_audit`, `calm_replay` and `calm_budgets`, and ends with `calm_review` to show you what you are about to sign. Nobody has to copy logs into the chat.
 
 `calm_http` signs in as other users through the devtools "act as" endpoint, so `admin` and email callers need the dev server and existing users. Make your first admin with `npx calm admin <email>`.
 
@@ -95,12 +102,14 @@ A typical loop: the agent edits a resource, calls `calm_activity` to see whether
 | `type` | Written by | Records |
 |---|---|---|
 | `session` | `calm dev` | The dev server started |
-| `file` | `calm dev` | A file in `app/`, `calm/`, `calm.config.js`, `server.js` or `.env` was added, modified or deleted, with a line diff and who changed it |
+| `file` | `calm dev` | A file in `app/`, `calm/` or `test/`, or a project file (`calm.config.js`, `server.js`, `.env`, `.env.example`, `package.json`, `calm.lock`, `README.md`, `AGENTS.md`, `CLAUDE.md`, `Dockerfile`, `eslint.config.js`) was added, modified or deleted, with a line diff and who changed it |
 | `restart`, `ready` | `calm dev` | The server restarted after a change, and came back up |
 | `crash` | `calm dev` | The server crashed or failed to start, with the last lines of its error output |
 | `agent` | `calm mcp`, `calm agent-hook` | A tool call (client name, tool, arguments, success, duration, a short summary), or a file an agent is about to edit |
 | `proposal` | `calm mcp` | A change an agent proposed with `calm_propose` |
 | `checkpoint` | checkpoints | A checkpoint was created, restored or deleted |
+| `declaration` | `calm mcp` | An agent declared what it is about to change with `calm_declare` |
+| `review` | `calm review --sign`, devtools | A person signed a [review](/review) |
 
 A file change looks like this (one JSON object per line, shown here formatted):
 
@@ -135,7 +144,7 @@ A file change looks like this (one JSON object per line, shown here formatted):
 
 - **Who changed it.** A file system event does not say who saved the file, so `calm dev` looks for signals, strongest first. It records which one it used as `"via"`. See [Telling your edits from an agent's](#telling-your-edits-from-an-agents).
 - **Secrets stay out.** Changes to `.env` are recorded without their contents or a diff. Diffs are kept for text files up to 256 KB.
-- **Bounded.** The file is trimmed to its last 2,000 events when it grows past 4 MB. New projects list `.calm/` in `.gitignore`.
+- **Bounded.** The file is trimmed to its last 2,000 events when it grows past 4 MB. New projects keep `.calm/` out of git (`.calm/*` in `.gitignore`), except the signed reviews in `.calm/reviews/`.
 
 Agents read the same log back with `calm_activity`, which is how they find out that their last edit crashed the server.
 
@@ -151,8 +160,8 @@ claude mcp add calm -- npx calm mcp --scope scaffold
 
 | Scope | Tools |
 |---|---|
-| `read` | Inspect only: `calm_project`, `calm_routes`, `calm_resource`, `calm_doctor`, `calm_blocks`, `calm_openapi`, `calm_recent_requests`, `calm_request`, `calm_logs`, `calm_test`, `calm_audit`, `calm_security`, `calm_activity`, `calm_mails`, `calm_pushes`, `calm_diff`, `calm_explain`, `calm_about`, `calm_propose`, and `calm_http` with `GET` only |
-| `scaffold` | Everything in `read`, plus `calm_make_resource`, `calm_add_block`, `calm_checkpoint`, and `calm_http` with any method |
+| `read` | Inspect only: `calm_project`, `calm_routes`, `calm_resource`, `calm_doctor`, `calm_blocks`, `calm_openapi`, `calm_recent_requests`, `calm_request`, `calm_logs`, `calm_test`, `calm_audit`, `calm_security`, `calm_activity`, `calm_mails`, `calm_pushes`, `calm_diff`, `calm_explain`, `calm_about`, `calm_propose`, `calm_review`, `calm_declare`, `calm_budgets`, `calm_client` without `out`, and `calm_http` with `GET` only |
+| `scaffold` | Everything in `read`, plus `calm_make_resource`, `calm_add_block`, `calm_checkpoint`, `calm_replay`, `calm_client` with `out`, and `calm_http` with any method |
 | `full` | Everything, including `calm_restore`. The default. |
 
 A tool that is not in one of these lists (one added by a later release, for example) needs `full`.
@@ -231,6 +240,43 @@ Without any of them, the change is yours. Devtools shows the signal in the toolt
 For an existing project, copy that file. It runs before each edit (so the note is in Activity when the file changes), prints nothing, always exits 0 and only appends a line to `.calm/activity.jsonl`.
 
 **Other agents** can do the same from whatever hook they offer: pipe `{ "tool": "edit", "path": "app/routes.js" }` into `npx calm agent-hook --client <name>` before changing a file. `calm agent-hook` also reads the Claude Code payload (`tool_name`, `tool_input.file_path`).
+
+## A database the agent can break: calm dev --agent-db
+
+Checkpoints let you undo what an agent did to your data. `calm dev --agent-db` keeps it from touching your data at all:
+
+```bash
+npx calm dev --agent-db
+```
+
+```text
+  Copying the development database for the agent...
+✔ Running on my_api_agent, a copy of my_api (7 collections, 1204 documents). It is dropped when calm dev stops.
+```
+
+Before the app starts, `calm dev` copies the development database (`MONGODB_URI` from the environment, else `.env`) to `<name>_agent` on the same server: every collection with its documents and indexes. The app then runs on the copy, so the agent can create, change and delete data freely (through the API, `calm_http`, devtools or code running in the app), and your database stays as it was. When `calm dev` stops, the copy is dropped (`Dropped my_api_agent.`). A copy left behind by a crash is replaced on the next `calm dev --agent-db`.
+
+Devtools marks the database in the top bar as a **copy**, with a tooltip naming the database it was copied from, and Activity records when the copy was made and dropped.
+
+- The copy is made on the server in one step on MongoDB 4.4 or newer, and document by document on older servers.
+- It refuses to start when `MONGODB_URI` already points at a copy (a name ending in `_agent`), or when the copy's name would be longer than MongoDB allows.
+- Commands that connect on their own, such as `calm seed`, `calm admin` or `calm checkpoint` in a terminal, read `MONGODB_URI` from `.env` and reach your database, not the copy.
+
+## Reviewing what an agent did
+
+Everything above helps you follow an agent while it works. When it is done, three tools let you decide whether to keep what it did:
+
+- **[Review and sign](/review)**: `calm review` (or the devtools **Review** panel) shows what changed in behavior since you last signed, the files agents wrote that nobody signed, and what the agent declared with `calm_declare` next to what it did. You sign it; the agent cannot. In **Routes** and **Resources**, what an agent changed and nobody signed has an **unsigned** badge.
+- **[Replay](/replay)**: `calm replay` sends the requests you made earlier again, as the same users, and shows which answers changed.
+- **[Budgets](/budgets)**: the devtools **Budgets** panel shows what each route costs in queries, time and bytes, so an N+1 query an agent added shows up as a number going up.
+
+`calm review --sign` and `calm audit --accept` (the [exposure budget](/exposure-budget)) refuse to run in an agent's shell: accepting wider access is for a person.
+
+## Each block's own guide
+
+Every block brings instructions for agents, next to its code: `app/blocks/<name>/AGENTS.md`. It holds the rules the block must keep (for the [teams](/blocks/teams) block: records never move between teams, never trust a team id without checking membership...), its options, common tasks, and links to the official documentation of what it integrates (Stripe, Twilio, OpenID Connect, OWASP...). The project's `AGENTS.md` tells agents to read it before changing a block and to follow the official documentation rather than memory.
+
+The devtools **Blocks** panel shows the same two parts for each block: **Official documentation** (the links) and **For AI agents** (the instructions). See [Building your own block](/building-blocks#agents-and-links-the-blocks-own-guide) to write them for yours.
 
 ## The mcp-server block: your API as tools
 

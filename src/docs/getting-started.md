@@ -51,7 +51,7 @@ npm run dev
   ➜  OpenAPI   http://localhost:5001/api/openapi.json
   ➜  Devtools  http://localhost:5001/_calm
 
-  2 resources · 25 routes · 0 blocks · MongoDB connected
+  2 resources · 30 routes · 0 blocks · MongoDB connected
 ```
 
 `npm run dev` runs `calm dev`: development mode, a restart whenever something in `app/`, `calm/`, `calm.config.js`, `server.js` or `.env` changes, and [devtools](/devtools) at `/_calm`. If MongoDB is not reachable, the app retries a few times and then exits with a clear message.
@@ -205,7 +205,7 @@ Visit `http://localhost:5001/_calm`. Every request you just made is there with i
 ## Add your own resource
 
 ```bash
-npx calm make resource product name:string!+searchable price:number! status:enum:draft,live=draft --service
+npx calm make resource product name:string+required+searchable price:number+required status:enum:draft,live=draft --service
 ```
 
 ```text

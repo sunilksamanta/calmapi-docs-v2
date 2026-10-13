@@ -6,6 +6,7 @@
 npx calm diff            # the working tree against the last commit
 npx calm diff main       # against the main branch
 npx calm diff --ci       # exit 1 when access got wider (for pipelines)
+npx calm diff main --api # the API contract: breaking changes for your clients
 ```
 
 ```text
@@ -54,12 +55,63 @@ npx calm diff behavior.json             # compare the working tree with it
 
 The file is JSON you can read and commit. Its shape is stable within a major version (`version: 1`).
 
+## API contract
+
+The behavior diff asks "who may do what". Your web and mobile apps ask something else: "will my calls still work?" `calm diff --api` compares the OpenAPI contract your clients see (the same document as `/api/openapi.json`) and sorts every change into **breaking**, **minor** or **patch**, with the version bump it needs.
+
+```bash
+npx calm diff --api            # the working tree against HEAD
+npx calm diff main --api       # against the main branch
+npx calm diff v1.2.0 --api --ci  # exit 1 on a breaking change
+```
+
+Here a `name` field got `.max(80)` and a new optional `sku` field was added:
+
+```text
+  API contract changes since HEAD (7d630d3) (8)
+    breaking  POST /api/products        body.name: maxLength none -> 80
+    breaking  PATCH /api/products/{id}  body.name: maxLength none -> 80
+    minor     GET /api/products         response.data[].sku: added to the response
+    minor     POST /api/products        body.sku: new optional input
+    minor     POST /api/products        response.data.sku: added to the response
+    minor     GET /api/products/{id}    response.data.sku: added to the response
+    minor     PATCH /api/products/{id}  body.sku: new optional input
+    minor     PATCH /api/products/{id}  response.data.sku: added to the response
+
+  2 breaking · 6 added · 0 other
+  Suggested version 0.1.0 -> 0.2.0 (breaking: before 1.0 that is a minor bump)
+```
+
+A change is **breaking** when a client that worked before can fail now, **minor** when something was added, **patch** when nothing a client relies on changed:
+
+| Breaking | Minor | Patch |
+|---|---|---|
+| A route removed | A route added | A route that needed a session is now public |
+| A public route now needs a signed-in user | A new optional input field or optional parameter | An input field no longer used (when unknown fields are not rejected) |
+| A different success status (`200` to `201`) | A field added to the response | A required input field became optional |
+| A new required input field or parameter, a field or parameter that became required, a body that is now required | An enum that accepts a new value | A response enum that no longer returns a value |
+| An input field removed when sending it is now a `422` | A response enum that may return a new value (clients that handle every value need it) | |
+| A type changed (`string` to `number`), in the input or the response | | |
+| A tighter limit on input: a lower `maxLength`, `maximum` or `maxItems`, a higher `minLength`, `minimum` or `minItems`, a new `pattern`, an enum value no longer accepted | | |
+| A field or the whole body removed from the response, a query or path parameter removed | | |
+
+Request bodies, parameters and the success response are compared field by field, nested objects and array items included.
+
+**The version.** The suggestion starts from `version` in your `package.json`. A breaking change is a major bump, an addition a minor bump, anything else a patch. Before 1.0 everything moves down one level, as semver allows: a breaking change takes `0.1.0` to `0.2.0`, and additions take it to `0.1.1`.
+
+`--ci` fails when at least one change is breaking. `--json` prints `{ since, changes, summary, bump, version, next }`, where each change is `{ level, where, what }`, `summary` counts `breaking`, `minor` and `patch`, and `bump` is `major`, `minor`, `patch` or `null`.
+
+Snapshot files work here too: `calm diff --save` stores the OpenAPI document next to the behavior. A snapshot saved before `--api` existed has no contract to compare with; save a new one.
+
+The [typed client](/client) is generated from the same contract: after a breaking change, generate it again and a TypeScript frontend shows removed routes and fields as type errors.
+
 ## Options
 
 | Option | Meaning |
 |---|---|
 | `[ref]` | A git ref (branch, tag, commit) or a snapshot file. Default `HEAD` |
-| `--ci` | Exit with code 1 when a change widens access |
+| `--api` | Compare the API contract (OpenAPI) instead: breaking, minor and patch changes and the version bump |
+| `--ci` | Exit with code 1 when a change widens access (with `--api`: when a change is breaking) |
 | `--json` | Machine readable: `{ since, changes, summary: { total, widen, tighten } }` |
 | `--save <file>` | Write the current snapshot to a file |
 
@@ -67,7 +119,7 @@ Each change in the JSON has `kind` (`route`, `field`, `resource`, `env`, `host`,
 
 ## For agents
 
-The MCP tool `calm_diff` runs the same comparison (`ref` optional) and returns the JSON, so an agent can show you what it changed in behavior terms before it finishes. `AGENTS.md` asks agents to run it.
+The MCP tool `calm_diff` runs the same comparison (`ref` optional, `api: true` for the [API contract](#api-contract)) and returns the JSON, so an agent can show you what it changed in behavior terms before it finishes. `AGENTS.md` asks agents to run it.
 
 ## Limits
 
