@@ -6,6 +6,8 @@
 //   public/<slug>.md             raw markdown of each CalmAPI 2 page (linked from llms.txt and from
 //                                each page's <link rel="alternate">), served at /<slug>.md
 //   src/generated/search-index.json    titles, headings and text for the search dialog
+//   src/generated/blocks.json          the block catalog on /blocks (public/r, the manifest and the
+//                                      groups of the "Official blocks" table in blocks.md)
 //   src/generated/last-modified.json   date of the last commit that changed each markdown file
 //
 // Files in public/ are served as they are by Next.js, so the generated ones are written there
@@ -159,15 +161,73 @@ try {
 }
 
 // ---- search index --------------------------------------------------------------------------
+// One entry per page: its URL, title, sidebar group and one item per h2 and h3 section (the text
+// before the first h2 is the page itself, id ""). Short keys keep the file small; it is
+// downloaded the first time the search dialog opens and searched in the browser
+// (src/components/Search.jsx).
 const index = pages.map((page) => ({
-  path: page.path,
-  title: page.title,
-  legacy: page.legacy || undefined,
-  sections: page.parsed.sections
-    .map((s) => ({ id: s.id, heading: s.heading, text: linesToText(s.lines).slice(0, page.legacy ? 400 : 1200) }))
-    .filter((s) => s.id || s.text),
+  p: page.path,
+  t: page.title,
+  g: page.legacy ? 'CalmAPI 1.x' : page.section,
+  ...(page.legacy ? { l: 1 } : {}),
+  s: page.parsed.sections
+    .map((s) => [s.id, s.heading, linesToText(s.lines).slice(0, page.legacy ? 400 : 1200)])
+    .filter(([id, , text]) => id || text),
 }));
 writeFileSync(join(GENERATED, 'search-index.json'), JSON.stringify(index));
+
+// ---- block catalog -------------------------------------------------------------------------
+// Every block of the registry in public/r, with the title and description of its page in the
+// manifest and its group in the "Official blocks" table of blocks.md (rows like
+// "| **Messaging** | |" start a group). Rendered by src/components/BlocksCatalog.jsx.
+const REGISTRY = join(PUBLIC, 'r');
+const blockGroups = new Map();
+const groupOrder = [];
+{
+  const overview = byPath.get('/blocks')?.markdown ?? '';
+  const start = overview.indexOf('\n## Official blocks');
+  const table = start < 0 ? '' : overview.slice(start + 1).split(/\n## /)[0];
+  let group = 'Other';
+  for (const line of table.split('\n')) {
+    const heading = /^\|\s*\*\*([^*]+)\*\*\s*\|\s*\|?\s*$/.exec(line);
+    if (heading) {
+      group = heading[1].trim();
+      groupOrder.push(group);
+      continue;
+    }
+    for (const [, name] of line.matchAll(/\]\(\/blocks\/([a-z0-9-]+)\)/g)) if (!blockGroups.has(name)) blockGroups.set(name, group);
+  }
+}
+const blocks = [];
+if (existsSync(REGISTRY)) {
+  for (const file of readdirSync(REGISTRY).filter((f) => f.endsWith('.json') && f !== 'index.json').sort()) {
+    let item;
+    try {
+      item = JSON.parse(readFileSync(join(REGISTRY, file), 'utf8'));
+    } catch {
+      problems.push(`public/r/${file}: not valid JSON`);
+      continue;
+    }
+    const page = byPath.get(`/blocks/${item.name}`);
+    const group = blockGroups.get(item.name);
+    if (!page) notes.push(`public/r/${file}: block ${item.name} has no page at /blocks/${item.name}`);
+    if (!group) notes.push(`public/r/${file}: block ${item.name} is not in the "Official blocks" table of blocks.md`);
+    blocks.push({
+      name: item.name,
+      title: (page?.title ?? item.title ?? item.name).replace(new RegExp(`\\s*\\(${item.name}\\)$`), ''),
+      description: page?.description ?? item.description ?? '',
+      version: item.version ?? '',
+      group: group ?? 'Other',
+      tags: item.categories ?? [],
+      dependencies: (item.dependencies ?? []).map((d) => d.replace(/(?!^)@.*$/, '')),
+      env: Object.keys(item.envVars ?? {}),
+      files: (item.files ?? []).length,
+      path: page ? page.path : null,
+    });
+  }
+}
+if (blocks.some((b) => b.group === 'Other')) groupOrder.push('Other');
+writeFileSync(join(GENERATED, 'blocks.json'), JSON.stringify({ groups: groupOrder.filter((g) => blocks.some((b) => b.group === g)), blocks }));
 
 // ---- last modified dates ---------------------------------------------------------------------
 // Date of the last commit that changed each markdown file (keyed by its path in src/docs), for

@@ -69,3 +69,34 @@ The code is in your project. Common changes:
 - **Linking files to records:** add `f.ref('file')` fields to your resources, and `?include=avatar` returns the file metadata.
 
 Local disk does not work with several instances or ephemeral containers; `calm doctor --prod` points this out. Use [storage-s3](/blocks/storage-s3) there.
+
+<!-- block-guide:start (generated from block.json by scripts/sync-block-guides.mjs) -->
+
+## Official documentation
+
+Read these before changing the block; they are also in `app/blocks/storage-local/AGENTS.md` and in the devtools Blocks panel.
+
+- [OWASP File Upload Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html)
+- [Multer (GitHub)](https://github.com/expressjs/multer)
+- [Express API reference (res.sendFile)](https://expressjs.com/en/api.html)
+- [MDN: Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Disposition)
+- [MDN: X-Content-Type-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/X-Content-Type-Options)
+
+## For AI agents
+
+Coding agents read these notes in `app/blocks/storage-local/AGENTS.md`:
+
+- Read first: `app/blocks/storage-local/storage.js` (Multer setup, type allowlist, magic bytes, `pathOf`, `remove`), `app/resources/file/` (`file.resource.js`, `file.routes.js`, `file.service.js`) and `index.js` (doctor, devtools).
+- Configuration: env `UPLOAD_DIR` (`./uploads`), `UPLOAD_MAX_MB` (10), `UPLOAD_ALLOWED_TYPES` (PNG, JPEG, GIF, WebP, PDF). No `calm.config.js` options. Keep `uploads/` in `.gitignore`.
+- Routes: `POST /api/files/upload` (multipart, field `file`, authenticated), `GET /api/files`, `GET /api/files/:id`, `GET /api/files/:id/download` and `DELETE /api/files/:id` (owner or admin).
+- Invariant: files are stored under random UUID names with an extension from `EXT`; the uploaded name is metadata only, never part of a path. `pathOf` strips everything but `[\w.-]` from keys.
+- Invariant: `key` is `.hidden()`; never expose it or accept it from a client.
+- Invariant: the declared type must be on the allowlist, and `verifySignature` checks magic bytes for PNG, JPEG, GIF, WebP and PDF (and deletes the file on mismatch). Types without an entry in `SIGNATURES` are trusted on the declared type.
+- Invariant: only `INLINE` image types are served inline; everything else downloads as `application/octet-stream` attachment, with `X-Content-Type-Options: nosniff` and `Content-Security-Policy: default-src 'none'; sandbox`. Never add `image/svg+xml` or `text/html` to `INLINE` (stored XSS).
+- Task, allow a new type: add it to `UPLOAD_ALLOWED_TYPES`, give it an extension in `EXT`, and a `SIGNATURES` check if the format has magic bytes.
+- Task, change who can see files (public avatars, shared documents): edit the policies in `file.resource.js` and the download route policy in `file.routes.js` together.
+- Deleting a file record removes the bytes in `FileService.afterDelete`; the privacy block calls it when an account is deleted.
+- Pitfall: Multer limits are 1 file, 10 fields and `UPLOAD_MAX_MB`; errors become 400.
+- Pitfall: local disk does not work with several instances or ephemeral containers; use storage-s3 instead (the two blocks conflict, install one).
+
+<!-- block-guide:end -->

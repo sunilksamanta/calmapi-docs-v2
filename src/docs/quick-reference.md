@@ -7,7 +7,7 @@ CalmAPI 2 on one page. Follow the links for details.
 ```bash
 npm create calmapi@latest my-api           # new project (templates: api, minimal)
 npm run dev                                 # watch mode + devtools at /_calm
-npx calm make resource product name:string!+searchable price:number! status:enum:draft,live=draft category:ref --service --routes
+npx calm make resource product name:string+required+searchable price:number+required status:enum:draft,live=draft category:ref --service --routes
 npx calm add jobs storage-s3 api-docs       # blocks (calm add --list)
 npx calm add gh:acme/blocks/billing         # a block from GitHub, reviewed before it is written
 npx calm make block slack-notify            # your own block (calm block check | pack | list)
@@ -15,6 +15,14 @@ npx calm seed product --count 50            # sample data that looks real
 npx calm routes                             # routes and policies
 npx calm doctor --prod --ci                 # checks, CI friendly (--audit adds npm audit)
 npx calm audit --ci                         # every route as every role, on a throwaway database
+npx calm audit --accept --reason "why"      # accept who may do what (security.snapshot.json)
+npx calm diff main --ci                     # behavior changes since main, fail on wider access
+npx calm diff main --api                    # API contract: breaking, minor, patch
+npx calm review --sign                      # read and sign what changed (commit .calm/reviews/)
+npx calm replay                             # replay recorded requests against the new code
+npx calm budgets --ci                       # queries, p95 and size per route, against budgets
+npx calm client --out ../web/src/api/calm-client.ts   # typed client for your frontend
+npx calm dev --agent-db                     # dev server on a disposable copy of the database
 npx calm admin ada@example.com              # grant the admin role (--revoke to remove)
 npx calm keygen --write                     # CALM_ENCRYPTION_KEYS for .encrypted() fields (rotates)
 npx calm openapi --out openapi.json

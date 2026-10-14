@@ -1,6 +1,6 @@
 # Devtools
 
-In development, every CalmAPI app serves a dashboard at **`http://localhost:5001/_calm`**. It shows what your API is doing right now: requests with their MongoDB queries, logs, emails, push notifications on simulated phones, routes, resources, data and the blocks you installed, plus a playground to call the API as any user. It also shows what an AI agent is changing in your project, and who can access what.
+In development, every CalmAPI app serves a dashboard at **`http://localhost:5001/_calm`**. It shows what your API is doing right now: requests with their MongoDB queries, logs, emails, push notifications on simulated phones, routes, resources, data and the blocks you installed, plus a playground to call the API as any user. It also shows what an AI agent is changing in your project, lets you review and sign it, shows what each route costs, and who can access what.
 
 ```bash
 npm run dev
@@ -24,7 +24,11 @@ Open a request to see:
 - **Logs**: everything logged during the request, linked by request id.
 - **Error**: the original error and stack trace, with links that open the file in VS Code.
 
-From there you can copy the request as `curl`, edit it in the Playground, replay it, or replay it as the user who made it.
+From there you can copy the request as `curl` or as a call of the [typed client](/client) (**Copy as client call**), edit it in the Playground, replay it, replay it as the user who made it, or **Save as test**: write it as `test/recorded/<name>.test.js`, a plain `node --test` file that makes the same request as the same kind of user on a throwaway database (see [Replay and recorded tests](/replay#save-as-test)).
+
+**Replay all** sends the last 200 recorded reads again, as the users who made them, against the code as it is now, and shows which answers changed status or shape (see [Replay](/replay)). Requests a replay sends carry a **replay** tag; they are not recorded as traffic and not counted for budgets.
+
+A request that went over its route's [budget](/budgets) (more MongoDB queries or a larger response than allowed, or slower than the p95 limit) has an **over budget** tag that opens the Budgets panel.
 
 Requests that carry an `X-Calm-Agent` header (the [`calm_http`](/ai-agents#calm-mcp-tools-for-coding-agents) tool sends it) are marked as sent by an AI agent, with its name, and the **Agent** filter shows only those.
 
@@ -63,11 +67,11 @@ Without a transport block, notifications to real devices are only captured here.
 
 ### Routes
 
-Every endpoint grouped by resource, block or source, with its policy and the file that defines it. Filter by policy, and spot routes whose policy is **not explicit**.
+Every endpoint grouped by resource, block or source, with its policy and the file that defines it. Filter by policy, and spot routes whose policy is **not explicit**. A route whose file an AI agent changed and nobody signed yet has an **unsigned** badge that opens [Review](#review).
 
 ### Resources
 
-A diagram of how resources reference each other, then each resource with its policies (defaulted ones highlighted), owner field and fields. Each field shows its type and flags (`hidden`, `readOnly`, `filterable`...) and whether it is readable (R) and writable (W) through the API.
+A diagram of how resources reference each other, then each resource with its policies (defaulted ones highlighted), owner field and fields. Each field shows its type and flags (`hidden`, `readOnly`, `filterable`...) and whether it is readable (R) and writable (W) through the API. Resources with an agent change nobody signed have an **unsigned** badge, as in Routes.
 
 ### Data
 
@@ -86,6 +90,16 @@ Every block in the app, from [`calm add`](/blocks) or [written here](/building-b
 - **Environment**: each variable it declares, set or missing (missing required ones are flagged, and the panel's badge counts blocks with missing variables). The values of secret variables never leave the server.
 - **Options**: its settings after `calm.config.js` overrides, with secret-looking keys redacted.
 - **Routes**: every route it adds, with its policy.
+- **Official documentation**: links to the documentation of what the block integrates (Stripe, Twilio, OpenID Connect, OWASP...), from its `AGENTS.md`.
+- **For AI agents**: the block's instructions for coding agents (the rules it must keep, its options, common tasks), with a link to `app/blocks/<name>/AGENTS.md`. See [Agents and links](/building-blocks#agents-and-links-the-blocks-own-guide).
+
+### Review
+
+What changed since a person last signed, and a form to sign it: the behavior changes (routes, who may call them, fields more people can see, env vars, hosts, events, invariants) with links to their files, the files AI agents wrote that nobody signed, what agents declared with `calm_declare` next to what they did, and the last test run. **Sign** takes your name and email (filled in from your git settings) and an optional note, and writes `.calm/reviews/` for you to commit. Once something has been signed, the badge counts the changes and agent files left to sign, in red when access widens or an agent's changes do not match what it declared. See [Review and sign](/review).
+
+### Budgets
+
+What each route costs, measured on every request while the dev server runs: requests, the most MongoDB queries one request ran, the p95 time and the largest response, each next to its budget from `calm.config.js`, and the budget key that applies. Routes over budget come first, in red, and the badge counts them. **Reset** forgets the measurements so far. Without budgets the numbers are shown anyway, with an example to copy. See [Budgets](/budgets).
 
 ### Playground
 
@@ -93,7 +107,7 @@ Send requests to your API with route suggestions and sample bodies built from th
 
 ### Doctor
 
-The runtime checks of `calm doctor` (configuration, policies, exposed secrets, personal data exposure, unknown references, broken [invariants](/invariants)), grouped by level and updated live. Run `npx calm doctor` in a terminal to add the static checks on your source files. See [Security](/security#what-calm-doctor-checks).
+The runtime checks of `calm doctor` (configuration, policies, exposed secrets, personal data exposure, unknown references, broken [invariants](/invariants), access wider than the [exposure budget](/exposure-budget)), grouped by level and updated live. Run `npx calm doctor` in a terminal to add the static checks on your source files. See [Security](/security#what-calm-doctor-checks).
 
 ### Security
 
@@ -140,13 +154,15 @@ Your own block adds one with [`calm.devtools.panel()`](/building-blocks#extensio
 
 The theme follows your system, or pick light or dark in the top bar.
 
+The top bar also shows the database the app is connected to. With [`calm dev --agent-db`](/ai-agents#a-database-the-agent-can-break-calm-dev---agent-db) it is marked **copy**, and its tooltip names the database it was copied from.
+
 ## Safety model
 
 Devtools can read your data and create sessions, so it is locked down:
 
 - **Development only.** It is on when the mode is `development` (`calm dev`). In production it is forced off, even if `calm.config.js` turns it on. MongoDB command monitoring is only enabled while devtools is on.
 - **This machine only.** Every `/_calm` request must arrive on a loopback socket (`127.0.0.1` or `::1`), with a `Host` header of `localhost`, `127.0.0.1` or `::1`, and without proxy headers (`X-Forwarded-For`, `Forwarded`). Anything else gets a plain `404`, which also defeats DNS rebinding.
-- **No cross-site writes.** Requests that change something (act as, explain, clear, run audit, sample data, send a test notification, add or change a device) need an `X-Calm-Devtools: 1` header, which a page on another site cannot send. `/_calm` has no CORS headers, a strict Content-Security-Policy and refuses to be framed.
+- **No cross-site writes.** Requests that change something (act as, explain, clear, run audit, sample data, send a test notification, add or change a device, replay, save as test, sign a review) need an `X-Calm-Devtools: 1` header, which a page on another site cannot send. `/_calm` has no CORS headers, a strict Content-Security-Policy and refuses to be framed.
 - **Secrets stay out.** Request and response bodies are stored with secret-looking values redacted, the `Cookie` header is redacted, and the `Authorization` header is shortened. Block environment variables marked secret are never sent to the page.
 - **Bounded memory.** It keeps the last 300 requests, 1,000 log lines, 100 emails, 100 push notifications, 200 background queries, 500 activity events and 300 security events. Push records never hold a full device token.
 
@@ -179,5 +195,12 @@ The panels use a small JSON API under `/_calm/api` that you can call from script
 | `POST /_calm/api/audit` | Runs the security audit on a throwaway database and returns the report |
 | `GET /_calm/api/resources/:name/docs?as=<userId>` | Stored vs returned documents |
 | `POST /_calm/api/act-as` `{ userId }` | A session token for that user |
+| `GET /_calm/api/review` | The [review](/review): changes since the last signature, unsigned agent files, declarations, tests |
+| `GET /_calm/api/review/signer` | The name and email the Sign form starts with (`GIT_AUTHOR_NAME`/`GIT_AUTHOR_EMAIL`, else git config) |
+| `POST /_calm/api/review/sign` `{ name, email?, note? }` | Signs the review and writes `.calm/reviews/` |
+| `GET /_calm/api/budgets`, `DELETE /_calm/api/budgets` | What each route costs against its [budget](/budgets); forget the measurements |
+| `GET /_calm/api/traffic` | How many requests are recorded in `.calm/traffic.jsonl`, how many are reads, and the newest |
+| `POST /_calm/api/replay` `{ limit?, writes? }` | [Replays](/replay) recorded traffic and returns the report |
+| `POST /_calm/api/requests/:id/test` | Writes the request as `test/recorded/<name>.test.js` and returns `{ file, content }` |
 
-The [`calm mcp`](/ai-agents) server uses this API to give coding agents the recent requests, logs, emails, push notifications and security events of your dev server, and to sign in as other users for `calm_http`.
+The [`calm mcp`](/ai-agents) server uses this API to give coding agents the recent requests, logs, emails, push notifications and security events of your dev server, to replay traffic (`calm_replay`), to read budgets (`calm_budgets`), and to sign in as other users for `calm_http`. It never signs a review.

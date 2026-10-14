@@ -233,3 +233,36 @@ test('a read-only key can list posts but not create them', async () => {
 ```
 
 The test client takes a token string as `auth`, so a key works like a session there too.
+
+<!-- block-guide:start (generated from block.json by scripts/sync-block-guides.mjs) -->
+
+## Official documentation
+
+Read these before changing the block; they are also in `app/blocks/api-keys/AGENTS.md` and in the devtools Blocks panel.
+
+- [OWASP REST Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html)
+- [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
+- [OWASP Secrets Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html)
+- [RFC 6750: OAuth 2.0 Bearer Token Usage](https://datatracker.ietf.org/doc/html/rfc6750)
+- [GitHub secret scanning](https://docs.github.com/en/code-security/secret-scanning)
+- [MongoDB TTL indexes](https://www.mongodb.com/docs/manual/core/index-ttl/)
+
+## For AI agents
+
+Coding agents read these notes in `app/blocks/api-keys/AGENTS.md`:
+
+- Read first: `app/blocks/api-keys/index.js` (schema, `calm.authenticate`, `calm.guard`, routes, `calm.provide('apiKeys')`), `keys.js` (key format and CRC32 checksum) and `scopes.js` (scope rules).
+- Configuration: `calm.config.js` `blocks['api-keys']`: `policy`, `maxKeysPerUser`, `defaultExpiryDays`, `maxLifetimeDays`, `allowNoExpiry`, `defaultScopes`, `routeScopes`, `revokeOnPasswordReset` (defaults in `options` in index.js). No env vars.
+- Invariant: only `hashToken(key)` (SHA-256) is stored in `calm_api_keys.tokenHash`, plus a display prefix (`calm_ak_` + 6 chars). The full key exists only in the `POST /api/auth/api-keys` response (sent with `cache-control: no-store`). Never store, log, emit or return it anywhere else.
+- Invariant: `security.*` events (`api_key_created`, `api_key_revoked`, `api_keys_revoked`, `invalid_api_key`) never contain the key. Keep it that way in new listeners and logs.
+- Invariant: keys cannot call `/auth/*` (except `GET /auth/me`) nor any route this block registers (`keysCannotUse`). Never relax this: a leaked key must not mint keys, change passwords or manage sessions.
+- Invariant: scopes only narrow. Policies, service `scope()` and field rules still run after the guard, so a key never does more than its owner.
+- Keep the key shape `calm_ak_` + 32 base62 + 6 base62 checksum: secret scanners match `calm_ak_[0-9A-Za-z]{38}`, and `isKeyShaped` lets session tokens fall through to the next authenticator.
+- Implied scope of a route: first URL segment after `/api` plus `:read` (GET, HEAD) or `:write` (other methods). `GET /api/auth/api-keys/scopes` lists valid scopes; creation refuses unknown ones with 422.
+- Task, custom scope for a sensitive route: add `'POST /reports/export': 'reports:export'` to `routeScopes` (method and path as registered, `:params` included). `calm doctor` reports entries that match no route (`api-keys-route-scope`).
+- Task, service key from a script: `await app.ext.apiKeys.create(user, { name, scopes, expiresInDays })`; revoke with `app.ext.apiKeys.revoke(id)`.
+- Task, behave differently for keys in a handler: read `ctx.auth.via` (`'api-key'` or `'session'`) and `ctx.auth.scopes`.
+- Pitfall: `lastUsedAt` and `lastUsedIp` are written at most once a minute (`TOUCH_MS`) through `calm.app.background`; do not add a write per request.
+- Pitfall: revoked and expired keys are deleted by the TTL index on `purgeAt` 30 days later (`KEEP_DAYS`), and a password reset revokes all keys of the user (`auth.password_reset` listener).
+
+<!-- block-guide:end -->

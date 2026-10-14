@@ -1,32 +1,29 @@
 import Link from 'next/link';
-import { Globe, Github } from 'lucide-react';
 import { SITE } from '../docs/manifest.js';
-import ThemeToggle from './ThemeToggle.jsx';
-import { Logo, Lotus } from './Logo.jsx';
+import { GithubMark } from './icons.jsx';
+import HeaderLinks from './HeaderLinks.jsx';
+import { Logo } from './Logo.jsx';
+import NavToggle from './NavToggle.jsx';
 import Search from './Search.jsx';
+import ThemeToggle from './ThemeToggle.jsx';
 
+/** The top bar, laid out like the CalmAPI website's: logo, links, then icon buttons. */
 function Header() {
   return (
     <header className="header">
-      <div className="header-content">
-        <Link href="/" className="logo" aria-label="Calm API docs home">
-          <Logo className="logo-svg" />
-          <Lotus className="logo-svg logo-lotus" />
-          <span className="tagline">Keep Calm &amp; REST</span>
+      <div className="header-inner">
+        <NavToggle />
+        <Link href="/" className="brand" aria-label="CalmAPI docs home">
+          <Logo className="logo" />
+          <span className="brand-tag">docs</span>
         </Link>
+        <Search />
+        <HeaderLinks website={SITE.website} />
         <div className="header-actions">
-          <Search />
+          <a className="icon-btn" href={SITE.github} target="_blank" rel="noopener noreferrer" aria-label="CalmAPI on GitHub" title="GitHub">
+            <GithubMark />
+          </a>
           <ThemeToggle />
-          <nav className="header-nav" aria-label="External links">
-            <a href={SITE.website} target="_blank" rel="noopener noreferrer" className="header-link-website" title="CalmAPI website">
-              <Globe size={18} />
-              <span>Website</span>
-            </a>
-            <a href="https://github.com/sunilksamanta/calmapi" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
-              <Github size={18} />
-              <span>GitHub</span>
-            </a>
-          </nav>
         </div>
       </div>
     </header>

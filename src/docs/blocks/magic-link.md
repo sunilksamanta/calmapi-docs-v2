@@ -174,3 +174,36 @@ test('a magic link signs the user in once', async () => {
   assert.equal(again.body.error.code, 'INVALID_TOKEN');
 });
 ```
+
+<!-- block-guide:start (generated from block.json by scripts/sync-block-guides.mjs) -->
+
+## Official documentation
+
+Read these before changing the block; they are also in `app/blocks/magic-link/AGENTS.md` and in the devtools Blocks panel.
+
+- [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
+- [OWASP Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)
+- [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)
+- [OWASP Unvalidated Redirects and Forwards Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html)
+- [OWASP Cross-Site Request Forgery Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
+- [MongoDB TTL indexes](https://www.mongodb.com/docs/manual/core/index-ttl/)
+
+## For AI agents
+
+Coding agents read these notes in `app/blocks/magic-link/AGENTS.md`:
+
+- Read first: `app/blocks/magic-link/index.js` (`checkRedirect`, `claimCooldown`, `sendLink`, `newAccount`, `POST /api/auth/magic-link` and `POST /api/auth/magic-link/verify`).
+- Configuration: `calm.config.js` `blocks['magic-link']`: `linkUrl`, `ttlMinutes` (15), `cooldownSeconds` (60), `createAccount` (false), `allowedRedirects` (origin of `APP_URL`), `requireSameDevice` (false). Links are built from `APP_URL` (`config.app.url`). No new env vars.
+- Invariant: tokens (`createToken('magic')`) are stored only as `hashToken(token)` in `calm_magic_links.tokenHash`. The plain token goes only into the email; never log it or return it from an API.
+- Invariant: the request route always answers 202 with the same body, and the user lookup and email run in `calm.app.background`. Never add an error, status or timing difference that reveals whether an account exists.
+- Invariant: single use. The claim is one `findOneAndUpdate` on `{ usedAt: null, expiresAt > now }`. Put any new refusal (device, lockout) before the claim so a wrong browser does not burn the link.
+- Invariant: redirects are checked at request time by `checkRedirect` (parsed origin in `allowedRedirects`, http or https only, no credentials) and stored server side. Never accept a redirect on verify or put it in the email link.
+- Invariant: sign-in goes through `calm.app.auth.service.completeLogin`, so lockout, disabled accounts and the totp challenge apply. Never create sessions directly.
+- Task, the user resource has more required fields: add them to the `input` object in `newAccount()` before `validateInput`.
+- Task, change the email text: edit the `calm.mailer.send` call in `sendLink`; keep the link, the expiry and the "ignore this email" sentence.
+- Both routes use `rateLimit: 'auth'`; the per address cooldown lives in `calm_magic_link_cooldowns`, so it holds across instances.
+- Verify errors: `400 INVALID_TOKEN` for unknown, used or expired links, `400 OTHER_DEVICE` when the `requestId` does not match. `security.invalid_magic_link` carries a masked email only.
+- Pitfall: with `createAccount`, the account is created when the link is verified and only while `config.auth.register` is on; `auth.registered` is emitted with `via: 'magic-link'`.
+- Pitfall: the routes are not registered when auth is off (`calm doctor` error `magic-link-no-auth`).
+
+<!-- block-guide:end -->

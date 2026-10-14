@@ -145,12 +145,18 @@ The fix is to keep the request context, so owner scoping still applies: call `su
 
 ```text
 calm audit [--json] [--ci]
+calm audit --accept [--reason <why>] [--as "Name <email>"]
 ```
 
 | Option | Meaning |
 |---|---|
-| `--ci` | Exit with code 1 when a check fails |
-| `--json` | The report as JSON: `ok`, `summary` (`checks`, `passed`, `failed`, `skipped`, `leaks`), `results`, `leaks`, `probes`, `notes` |
+| `--ci` | Exit with code 1 when a check fails, or when access is wider than `security.snapshot.json` |
+| `--json` | The report as JSON: `ok`, `summary` (`checks`, `passed`, `failed`, `skipped`, `leaks`), `results`, `leaks`, `probes`, `notes`, and `budget` (the comparison with `security.snapshot.json`, or `null`) |
+| `--accept` | Write who may do what to `security.snapshot.json`, the [exposure budget](/exposure-budget). Needs no database. |
+| `--reason <why>` | With `--accept`: why access changed. Required when it widened. |
+| `--as "Name <email>"` | With `--accept`: who accepts, instead of your git user |
+
+After the checks, the audit compares the exposure matrix with `security.snapshot.json` when the file exists, and lists every cell where access is now wider. See [Exposure budget](/exposure-budget).
 
 Each entry in `results` looks like this:
 

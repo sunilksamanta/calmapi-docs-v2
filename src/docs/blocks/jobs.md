@@ -103,3 +103,34 @@ Completed jobs are deleted after 7 days by a TTL index; failed jobs stay until y
 | `POST /api/jobs/enqueue` `{ name, data }` | Queue a job by name |
 
 The devtools **Jobs** panel shows the same statistics and the latest jobs. The block emits `job.completed` and `job.failed` events.
+
+<!-- block-guide:start (generated from block.json by scripts/sync-block-guides.mjs) -->
+
+## Official documentation
+
+Read these before changing the block; they are also in `app/blocks/jobs/AGENTS.md` and in the devtools Blocks panel.
+
+- [MongoDB findOneAndUpdate](https://www.mongodb.com/docs/manual/reference/method/db.collection.findOneAndUpdate/)
+- [MongoDB partial indexes](https://www.mongodb.com/docs/manual/core/index-partial/)
+- [MongoDB TTL indexes](https://www.mongodb.com/docs/manual/core/index-ttl/)
+- [crontab(5) manual page](https://man7.org/linux/man-pages/man5/crontab.5.html)
+
+## For AI agents
+
+Coding agents read these notes in `app/blocks/jobs/AGENTS.md`:
+
+- Read first: `app/blocks/jobs/index.js` (loader, admin routes), `queue.js` (the `calm_jobs` queue: enqueue, atomic claim, retries), `cron.js` (schedule parser, UTC) and the example `app/jobs/welcome-email.js`.
+- Configuration: env `JOBS_WORKER` (`off`: this instance does not process jobs) and `JOBS_CONCURRENCY` (default 4). No `calm.config.js` options; queue defaults (`pollMs` 1000, `lockTimeoutMs` 5 min, `keepCompletedDays` 7) are arguments of `createQueue`.
+- Task, add a job: create `app/jobs/<name>.js` with `export default defineJob({ name, run(data, { app, job, log }), retries, backoff, schedule, on })`, `defineJob` from `#app/blocks/jobs/index.js`. Every `.js` file in `app/jobs/` must default export `defineJob(...)` or boot fails; names must be unique.
+- Task, enqueue: `await ctx.app.ext.jobs.enqueue('name', data, { delay: '10m', runAt, uniqueKey, retries })`. With `uniqueKey` a second enqueue returns the existing job instead of a duplicate.
+- Schedules: 5 field cron in UTC, `@hourly`, `@daily`, `@weekly`, `@monthly`, or `'every 30s|5m|2h|1d'`. There is one `schedule:<name>` document per job, requeued for its next time after success or final failure.
+- Event triggers: `on: 'auth.registered'` enqueues the job with the event payload as `data`.
+- Invariant: `run()` must be idempotent. Failures retry with backoff doubling from `backoff` (default `10s`, capped at 1 hour), and a job whose worker died is requeued after `lockTimeoutMs`, so it can run twice.
+- Invariant: `data` is stored as is and admins read it through `GET /api/jobs`. Pass ids, not secrets, tokens or whole documents with sensitive fields (`on:` triggers store the full event payload, so check what the event carries).
+- Admin API (policy `admin`): `GET /api/jobs?status=&name=&limit=`, `GET /api/jobs/stats`, `POST /api/jobs/:jobId/retry` (failed jobs), `POST /api/jobs/enqueue { name, data }`.
+- Events: `job.completed` and `job.failed` (final failure only) for alerts.
+- Tests: the worker never starts in test mode; call `await app.ext.jobs.drain()` to run due jobs.
+- Pitfall: a `run()` longer than `lockTimeoutMs` can be claimed again by another worker; split long work into smaller jobs.
+- Pitfall: completed jobs are deleted after 7 days (TTL index on `finishedAt`), failed ones stay until retried or removed.
+
+<!-- block-guide:end -->

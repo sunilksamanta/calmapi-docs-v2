@@ -168,3 +168,36 @@ test('the welcome notification reaches the inbox and the phone', async () => {
   assert.equal(unread.body.data.count, 1);
 });
 ```
+
+<!-- block-guide:start (generated from block.json by scripts/sync-block-guides.mjs) -->
+
+## Official documentation
+
+Read these before changing the block; they are also in `app/blocks/notifications/AGENTS.md` and in the devtools Blocks panel.
+
+- [Expo: Push notifications overview](https://docs.expo.dev/push-notifications/overview/)
+- [Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging)
+- [MDN: Intl.DateTimeFormat (timeZone)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat)
+- [IANA Time Zone Database](https://www.iana.org/time-zones)
+- [MDN: Server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events)
+- [MongoDB TTL indexes](https://www.mongodb.com/docs/manual/core/index-ttl/)
+
+## For AI agents
+
+Coding agents read these notes in `app/blocks/notifications/AGENTS.md`:
+
+- Read first: `app/blocks/notifications/index.js` (`notify`, `channelsFor`, quiet hours, preferences routes), `app/resources/notification/` (the inbox resource and its routes) and `app/notifications/welcome.js` (a type).
+- Configuration: `calm.config.js` `blocks.notifications`: `defaultChannels` (`['inbox', 'push']`) and `badge` (true). No env vars. Push goes through `app.push` (push-expo or push-fcm deliver it), email through `app.mailer`.
+- Task, add a type: create `app/notifications/<type>.js` exporting `{ title, body, url, category, channels, required, email: { subject, text, html }, collapseId, androidChannel, data, description }`; any field can be a function of the data passed. The file name is the type; restart to load it.
+- Task, send: `await ctx.notify(userOrIdOrArray, '<type>', data)` in requests, `await app.ext.notify(...)` in jobs and listeners. Ad hoc: `ctx.notify(id, { title, body, url, channels })`.
+- Invariant: respect preferences. `channelsFor` applies per type, then per category settings; only `required: true` types (security notices) ignore preferences and quiet hours. Never mark marketing types required.
+- Invariant: quiet hours only remove push; inbox and email still go out.
+- Invariant: the notification resource stays owner only for list, read, update and delete, with `create: 'none'`. `notify()` creates entries with `{ system: true }`, and `push.opened` only marks the user's own entries read.
+- Disabled or missing users are skipped. Push and email failures are caught and reported as `'failed'` in the result, never thrown.
+- Preferences: `GET` and `PATCH /api/notifications/preferences`. Keys must be a known type, a category or `message`; quiet hours need `HH:MM` and an IANA `timeZone`.
+- Inbox entries expire after 180 days (TTL index in `notification.resource.js`); unread means `readAt: null`.
+- Pitfall: never put secrets or tokens in `title`, `body`, `url` or `data`: they are stored in the inbox, sent to push providers and emailed.
+- Pitfall: `notify()` handles users one after another; for large audiences enqueue jobs in batches (jobs block).
+- `notification.sent` is emitted per user with the channel results; `calm doctor` flags types without title or body and unknown channels.
+
+<!-- block-guide:end -->

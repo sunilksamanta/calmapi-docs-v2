@@ -345,7 +345,8 @@ Then run:
 nodemon index.js
 ```
 
-> ⚠️ **Why we don't recommend nodemon for database-heavy projects:**
+> [!WARNING]
+> **Why we don't recommend nodemon for database-heavy projects:**
 > 
 > Automatic restarts on file save can cause subtle, hard-to-debug issues, especially when working with database schemas. For example, if you modify a Mongoose model's index configuration, nodemon may restart the server mid-change and apply a partial or unintended index to your database. When you save again with the correct configuration, the damage is already done, but there's no obvious error, leaving you chasing a phantom bug.
 > 

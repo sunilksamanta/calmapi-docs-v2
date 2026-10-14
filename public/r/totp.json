@@ -20,7 +20,34 @@
   "meta": {
     "calmapi": {
       "minVersion": "2.0.0-alpha.0",
-      "conflicts": []
+      "conflicts": [],
+      "links": [
+        {
+          "title": "RFC 6238: TOTP",
+          "url": "https://datatracker.ietf.org/doc/html/rfc6238"
+        },
+        {
+          "title": "RFC 4226: HOTP",
+          "url": "https://datatracker.ietf.org/doc/html/rfc4226"
+        },
+        {
+          "title": "Google Authenticator: Key URI format",
+          "url": "https://github.com/google/google-authenticator/wiki/Key-Uri-Format"
+        },
+        {
+          "title": "OWASP Multifactor Authentication Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html"
+        },
+        {
+          "title": "OWASP Authentication Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"
+        },
+        {
+          "title": "NIST SP 800-63B: Authentication and Lifecycle Management",
+          "url": "https://pages.nist.gov/800-63-3/sp800-63b.html"
+        }
+      ],
+      "agents": "- Read first: `app/blocks/totp/totp.js` (RFC 6238 with SHA-1, 6 digits, 30 s steps, base32, `otpauthUrl`) and `index.js` (user fields, `calm.loginChallenge`, the `/auth/2fa` routes).\n- Configuration: env `TOTP_ISSUER` (default: the app name). Set `CALM_ENCRYPTION_KEYS` (`npx calm keygen --write`) so `totpSecret` and `totpPendingSecret` are encrypted at rest; `calm doctor` warns otherwise. No `calm.config.js` options.\n- Routes under `/api/auth/2fa`: `POST /setup`, `POST /enable { code }`, `POST /disable { password }`, `POST /verify { mfaToken, code | recoveryCode }`.\n- Invariant: secrets and recovery hashes are `.hidden()` user fields (`totpSecret`, `totpPendingSecret`, `totpLastStep`, `totpRecovery`). Never return them from an API or log them; the secret is shown once, by `/setup`.\n- Invariant: replay protection. `consumeCode` atomically moves `totpLastStep` forward with a conditional update; keep it, so an accepted code can never be used again.\n- Invariant: recovery codes are stored as SHA-256 only, consumed with `$pull` (single use) and shown once by `/enable`.\n- Invariant: challenges in `calm_mfa_challenges` are keyed by `sha256(mfaToken)`, expire after 5 minutes and allow 5 attempts, counted atomically before the code is checked. Keep both limits.\n- Invariant: `verifyCode` compares in constant time without early exit over a window of one step either side; do not widen the window.\n- Enabling 2FA ends the user's other sessions; disabling needs the password; `enable`, `disable` and `verify` use `rateLimit: 'auth'`.\n- Other sign-in paths (magic-link) get the challenge automatically through `calm.loginChallenge`. Any new login path must call `calm.app.auth.service.completeLogin`, never create sessions directly.\n- Security events: `security.2fa_enabled`, `2fa_disabled`, `2fa_failed`, `2fa_recovery_used`. Never put codes in them.\n- Task, admin reset for a user who lost the device and the codes: verify identity out of band, then `$unset` the same five fields `/disable` removes.\n- Pitfall: server clock drift breaks codes, so keep NTP running. Show 2FA status with `twoFactorEnabledAt` (readOnly, `visibleTo('owner | admin')`), never the secret fields."
     }
   },
   "files": [
@@ -35,6 +62,12 @@
       "type": "registry:file",
       "target": "app/blocks/totp/totp.js",
       "content": "import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';\n\n// RFC 6238 TOTP (SHA-1, 6 digits, 30 s), the format every authenticator app speaks.\n\nconst ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';\n\nexport function base32Encode(buf) {\n  let bits = 0;\n  let value = 0;\n  let out = '';\n  for (const byte of buf) {\n    value = (value << 8) | byte;\n    bits += 8;\n    while (bits >= 5) {\n      out += ALPHABET[(value >>> (bits - 5)) & 31];\n      bits -= 5;\n    }\n  }\n  if (bits > 0) out += ALPHABET[(value << (5 - bits)) & 31];\n  return out;\n}\n\nexport function base32Decode(text) {\n  const clean = String(text).toUpperCase().replace(/[^A-Z2-7]/g, '');\n  let bits = 0;\n  let value = 0;\n  const out = [];\n  for (const ch of clean) {\n    value = (value << 5) | ALPHABET.indexOf(ch);\n    bits += 5;\n    if (bits >= 8) {\n      out.push((value >>> (bits - 8)) & 255);\n      bits -= 8;\n    }\n  }\n  return Buffer.from(out);\n}\n\nexport const newSecret = () => base32Encode(randomBytes(20));\nexport const currentStep = (now = Date.now()) => Math.floor(now / 30_000);\n\nexport function codeAt(secret, step) {\n  const counter = Buffer.alloc(8);\n  counter.writeBigUInt64BE(BigInt(step));\n  const mac = createHmac('sha1', base32Decode(secret)).update(counter).digest();\n  const offset = mac[mac.length - 1] & 15;\n  const bin = ((mac[offset] & 127) << 24) | (mac[offset + 1] << 16) | (mac[offset + 2] << 8) | mac[offset + 3];\n  return String(bin % 1_000_000).padStart(6, '0');\n}\n\n/** Returns the matching time step (within +-1 window), or null. */\nexport function verifyCode(secret, code, { now = Date.now(), window = 1 } = {}) {\n  const given = Buffer.from(String(code).replace(/\\s/g, '').padStart(6, '0').slice(-6));\n  const step = currentStep(now);\n  let match = null;\n  for (let s = step - window; s <= step + window; s++) {\n    const expected = Buffer.from(codeAt(secret, s));\n    if (timingSafeEqual(expected, given)) match = s; // no early exit: constant work\n  }\n  return match;\n}\n\nexport const otpauthUrl = (secret, account, issuer) =>\n  `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(account)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;\n"
+    },
+    {
+      "path": "registry/blocks/totp/files/app/blocks/totp/AGENTS.md",
+      "type": "registry:file",
+      "target": "app/blocks/totp/AGENTS.md",
+      "content": "# Two-factor authentication (TOTP) (block: totp)\n\nAuthenticator-app codes (RFC 6238) on login: setup with an otpauth URL, hashed single-use recovery codes, replay protection, attempt limits. Zero dependencies.\n\nThe code is in `app/blocks/totp/` and belongs to this project. Options go in `calm.config.js` under `blocks['totp']`; secrets go in `.env`.\n\n## For AI agents\n\n- Read first: `app/blocks/totp/totp.js` (RFC 6238 with SHA-1, 6 digits, 30 s steps, base32, `otpauthUrl`) and `index.js` (user fields, `calm.loginChallenge`, the `/auth/2fa` routes).\n- Configuration: env `TOTP_ISSUER` (default: the app name). Set `CALM_ENCRYPTION_KEYS` (`npx calm keygen --write`) so `totpSecret` and `totpPendingSecret` are encrypted at rest; `calm doctor` warns otherwise. No `calm.config.js` options.\n- Routes under `/api/auth/2fa`: `POST /setup`, `POST /enable { code }`, `POST /disable { password }`, `POST /verify { mfaToken, code | recoveryCode }`.\n- Invariant: secrets and recovery hashes are `.hidden()` user fields (`totpSecret`, `totpPendingSecret`, `totpLastStep`, `totpRecovery`). Never return them from an API or log them; the secret is shown once, by `/setup`.\n- Invariant: replay protection. `consumeCode` atomically moves `totpLastStep` forward with a conditional update; keep it, so an accepted code can never be used again.\n- Invariant: recovery codes are stored as SHA-256 only, consumed with `$pull` (single use) and shown once by `/enable`.\n- Invariant: challenges in `calm_mfa_challenges` are keyed by `sha256(mfaToken)`, expire after 5 minutes and allow 5 attempts, counted atomically before the code is checked. Keep both limits.\n- Invariant: `verifyCode` compares in constant time without early exit over a window of one step either side; do not widen the window.\n- Enabling 2FA ends the user's other sessions; disabling needs the password; `enable`, `disable` and `verify` use `rateLimit: 'auth'`.\n- Other sign-in paths (magic-link) get the challenge automatically through `calm.loginChallenge`. Any new login path must call `calm.app.auth.service.completeLogin`, never create sessions directly.\n- Security events: `security.2fa_enabled`, `2fa_disabled`, `2fa_failed`, `2fa_recovery_used`. Never put codes in them.\n- Task, admin reset for a user who lost the device and the codes: verify identity out of band, then `$unset` the same five fields `/disable` removes.\n- Pitfall: server clock drift breaks codes, so keep NTP running. Show 2FA status with `twoFactorEnabledAt` (readOnly, `visibleTo('owner | admin')`), never the secret fields.\n\n## Official documentation\n\n- [RFC 6238: TOTP](https://datatracker.ietf.org/doc/html/rfc6238)\n- [RFC 4226: HOTP](https://datatracker.ietf.org/doc/html/rfc4226)\n- [Google Authenticator: Key URI format](https://github.com/google/google-authenticator/wiki/Key-Uri-Format)\n- [OWASP Multifactor Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html)\n- [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)\n- [NIST SP 800-63B: Authentication and Lifecycle Management](https://pages.nist.gov/800-63-3/sp800-63b.html)\n\n## Usage\n\n1. POST /api/auth/2fa/setup -> { secret, otpauthUrl } (render the URL as a QR code in your app)\n2. POST /api/auth/2fa/enable { code } -> { recoveryCodes } (shown once)\n3. Login now answers { mfaRequired: true, mfaToken }: POST /api/auth/2fa/verify { mfaToken, code } -> { token, user }\nRecovery: send { mfaToken, recoveryCode } instead of code. Disable: POST /api/auth/2fa/disable { password }.\nSet CALM_ENCRYPTION_KEYS (npx calm keygen --write) so TOTP secrets are encrypted at rest.\n\n## Environment variables\n\n- `TOTP_ISSUER`: My App\n\nMore: https://docs.calmapi.dev/blocks/totp\n"
     }
   ]
 }

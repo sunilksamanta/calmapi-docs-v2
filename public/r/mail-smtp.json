@@ -22,7 +22,33 @@
   "meta": {
     "calmapi": {
       "minVersion": "2.0.0-alpha.0",
-      "conflicts": []
+      "conflicts": [
+        "mail-resend",
+        "mail-postmark"
+      ],
+      "links": [
+        {
+          "title": "Nodemailer",
+          "url": "https://nodemailer.com/"
+        },
+        {
+          "title": "Nodemailer: SMTP transport",
+          "url": "https://nodemailer.com/smtp"
+        },
+        {
+          "title": "Nodemailer: Message configuration",
+          "url": "https://nodemailer.com/message"
+        },
+        {
+          "title": "Amazon SES: Using the SMTP interface",
+          "url": "https://docs.aws.amazon.com/ses/latest/dg/send-email-smtp.html"
+        },
+        {
+          "title": "RFC 5321: Simple Mail Transfer Protocol",
+          "url": "https://www.rfc-editor.org/rfc/rfc5321.html"
+        }
+      ],
+      "agents": "- Read first: `app/blocks/mail-smtp/index.js` (one Nodemailer transport registered with `calm.mailer.use`).\n- Configuration: env `SMTP_URL` (secret; `smtp://` with STARTTLS, usually port 587, or `smtps://` for implicit TLS on 465) and `MAIL_FROM`. No `calm.config.js` options. Unset, or still the `smtp.example.com` placeholder, means no transport: development mail stays in devtools and `calm doctor` errors in production.\n- Invariant: `SMTP_URL` contains credentials. Never log it, include it in errors or commit it; URL-encode special characters in the user name and password.\n- Send through `app.mailer.send({ to, subject, text, html })`; do not create other Nodemailer transports in features, so tests and devtools keep capturing mail.\n- Only `from`, `to`, `subject`, `text` and `html` reach `transport.sendMail`. Add `cc`, `bcc`, `replyTo`, `attachments` or `headers` there using Nodemailer message fields. `meta` is stripped by the core.\n- Transport options beyond the URL (`pool`, timeouts, `tls`): pass an options object to `nodemailer.createTransport` instead of the URL string. Keep `transport.close()` in `calm.onShutdown`.\n- Only one mail transport is active: `calm.mailer.use` replaces the previous one, so do not install mail-resend next to it.\n- Pitfall: most providers (SES, Postmark, Gmail) only accept a verified sender in `MAIL_FROM`; SES SMTP credentials are not your IAM access keys.\n- Pitfall: `sendMail` errors propagate to the caller; send from a job (jobs block) when you need retries. When delivery fails, `await transport.verify()` in a script checks the connection and credentials."
     }
   },
   "files": [
@@ -31,6 +57,12 @@
       "type": "registry:file",
       "target": "app/blocks/mail-smtp/index.js",
       "content": "import nodemailer from 'nodemailer';\nimport { definePlugin } from '#calm';\n\nexport default definePlugin({\n  name: 'mail-smtp',\n  env: {\n    SMTP_URL: { secret: true, description: 'smtp://user:password@host:587: without it, mail stays in devtools' },\n    MAIL_FROM: 'Sender address, for example \"Acme <hello@acme.com>\"',\n  },\n  setup(calm) {\n    const url = process.env.SMTP_URL;\n    if (!url || url.includes('smtp.example.com')) {\n      calm.doctor(() =>\n        calm.config.mode === 'production' ? [{ level: 'error', id: 'smtp-url', title: 'SMTP_URL is not configured', detail: 'Emails cannot be delivered in production.' }] : [],\n      );\n      return;\n    }\n    const transport = nodemailer.createTransport(url);\n    calm.mailer.use({\n      name: 'smtp',\n      send: ({ to, from, subject, text, html }) => transport.sendMail({ from: process.env.MAIL_FROM || from, to, subject, text, html }),\n    });\n    calm.onShutdown(() => transport.close());\n  },\n});\n"
+    },
+    {
+      "path": "registry/blocks/mail-smtp/files/app/blocks/mail-smtp/AGENTS.md",
+      "type": "registry:file",
+      "target": "app/blocks/mail-smtp/AGENTS.md",
+      "content": "# Email via SMTP (block: mail-smtp)\n\nDeliver emails through any SMTP server (SES, Postmark, Mailgun, your own) with Nodemailer.\n\nThe code is in `app/blocks/mail-smtp/` and belongs to this project. Options go in `calm.config.js` under `blocks['mail-smtp']`; secrets go in `.env`.\n\n## For AI agents\n\n- Read first: `app/blocks/mail-smtp/index.js` (one Nodemailer transport registered with `calm.mailer.use`).\n- Configuration: env `SMTP_URL` (secret; `smtp://` with STARTTLS, usually port 587, or `smtps://` for implicit TLS on 465) and `MAIL_FROM`. No `calm.config.js` options. Unset, or still the `smtp.example.com` placeholder, means no transport: development mail stays in devtools and `calm doctor` errors in production.\n- Invariant: `SMTP_URL` contains credentials. Never log it, include it in errors or commit it; URL-encode special characters in the user name and password.\n- Send through `app.mailer.send({ to, subject, text, html })`; do not create other Nodemailer transports in features, so tests and devtools keep capturing mail.\n- Only `from`, `to`, `subject`, `text` and `html` reach `transport.sendMail`. Add `cc`, `bcc`, `replyTo`, `attachments` or `headers` there using Nodemailer message fields. `meta` is stripped by the core.\n- Transport options beyond the URL (`pool`, timeouts, `tls`): pass an options object to `nodemailer.createTransport` instead of the URL string. Keep `transport.close()` in `calm.onShutdown`.\n- Only one mail transport is active: `calm.mailer.use` replaces the previous one, so do not install mail-resend next to it.\n- Pitfall: most providers (SES, Postmark, Gmail) only accept a verified sender in `MAIL_FROM`; SES SMTP credentials are not your IAM access keys.\n- Pitfall: `sendMail` errors propagate to the caller; send from a job (jobs block) when you need retries. When delivery fails, `await transport.verify()` in a script checks the connection and credentials.\n\n## Official documentation\n\n- [Nodemailer](https://nodemailer.com/)\n- [Nodemailer: SMTP transport](https://nodemailer.com/smtp)\n- [Nodemailer: Message configuration](https://nodemailer.com/message)\n- [Amazon SES: Using the SMTP interface](https://docs.aws.amazon.com/ses/latest/dg/send-email-smtp.html)\n- [RFC 5321: Simple Mail Transfer Protocol](https://www.rfc-editor.org/rfc/rfc5321.html)\n\n## Usage\n\nSet SMTP_URL (smtp:// or smtps://) and MAIL_FROM.\n\n## Environment variables\n\n- `SMTP_URL`: smtps://user:password@smtp.example.com:465\n- `MAIL_FROM`: My App <no-reply@example.com>\n\nMore: https://docs.calmapi.dev/blocks/mail-smtp\n"
     }
   ]
 }

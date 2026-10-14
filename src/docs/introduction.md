@@ -16,13 +16,14 @@ npm run dev
   ➜  Devtools  http://localhost:5001/_calm
 ```
 
-> **Status: 2.0.0-alpha.** APIs may still change before 2.0. Coming from CalmAPI 1.x? Run `npx calmapi@next doctor` inside your 1.x project first, then read [Migrating from 1.x](/migrate-v1).
+> [!IMPORTANT]
+> **Status: 2.0.0-beta.** APIs may still change before 2.0. Coming from CalmAPI 1.x? Run `npx calmapi@next doctor` inside your 1.x project first, then read [Migrating from 1.x](/migrate-v1).
 
 ## What makes it different
 
 ### Owned code, nothing hidden in node_modules
 
-`npm create calmapi` copies the framework into your project as `calm/`: around 5,500 lines of plain, commented JavaScript on Express 5 and Mongoose. Read it, step through it in a debugger, change it. When something behaves unexpectedly, the answer is in your editor, not in a minified dependency.
+`npm create calmapi` copies the framework into your project as `calm/`: around 8,600 lines of plain, commented JavaScript on Express 5 and Mongoose. Read it, step through it in a debugger, change it. When something behaves unexpectedly, the answer is in your editor, not in a minified dependency.
 
 A new project has **two runtime dependencies**: `express` and `mongoose`. The CLI (`calmapi`) and the devtools UI (`@calmapi/devtools`) are dev dependencies and never ship to production.
 
@@ -57,7 +58,7 @@ Every project ships with `AGENTS.md`. `calm mcp` is an MCP server that gives cod
 
 ### Blocks, shadcn style
 
-`calm add jobs` copies production code into your project: a MongoDB job queue, file storage on disk or S3, realtime events, an audit log, soft delete, two-factor authentication, an MCP server for your API and more. You own that code too, and anyone can publish blocks in the shadcn registry format. See [Blocks](/blocks).
+`calm add jobs` copies production code into your project: a MongoDB job queue, file storage on disk or S3, realtime events, an audit log, soft delete, two-factor authentication, OAuth sign-in, Stripe payments, teams, an MCP server for your API and more, 35 official blocks in all, each with instructions for AI agents and links to the official documentation of what it integrates. You own that code too, and anyone can publish blocks in the shadcn registry format. See [Blocks](/blocks).
 
 ## A resource
 

@@ -103,6 +103,8 @@ Invalid configuration:
 | `mail.from` | `<app.name> <no-reply@localhost>` | Sender for app emails |
 | `blocks` | `{}` | Settings per block, merged over the block's defaults: `blocks: { webhooks: { maxEndpointsPerUser: 5 } }`. See each block's page. |
 | `invariants` | `[]` | Promises the framework holds you to: `'no public write routes'`, `'personal data is never public'`, `{ rule, except }` or a function. See [Invariants](/invariants). |
+| `budgets` | `{}` | What a route may cost: `{ 'GET /api/feed': { queries: 4, p95: '150ms', response: '200kb' }, '*': { queries: 12 } }`. Measured in development and by `calm budgets`, never in production. See [Budgets](/budgets). |
+| `client.out` | `null` | Where `calm client` writes the [typed client](/client); with it set, `calm dev` writes it again whenever the API changes |
 | `agents.scope` | `'full'` | Default scope of `calm mcp`: `read`, `scaffold` or `full` (see [Scopes](/ai-agents#scopes-what-an-agent-may-do)) |
 | `agents.protected` | `['calm/security/**', 'calm/auth/**', 'calm.config.js']` | Paths an agent's edits to are flagged for review |
 | `plugins` | none | Extra plugins (`definePlugin(...)` objects) besides `app/blocks` |

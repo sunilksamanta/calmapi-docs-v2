@@ -10,6 +10,28 @@
       "version": "1.0.1",
       "categories": [
         "docs"
+      ],
+      "links": [
+        {
+          "title": "OpenAPI Specification (latest)",
+          "url": "https://spec.openapis.org/oas/latest.html"
+        },
+        {
+          "title": "OpenAPI Initiative: Learn OpenAPI",
+          "url": "https://learn.openapis.org/"
+        },
+        {
+          "title": "Scalar API reference (GitHub)",
+          "url": "https://github.com/scalar/scalar"
+        },
+        {
+          "title": "MDN: Content-Security-Policy",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy"
+        },
+        {
+          "title": "JSON Schema",
+          "url": "https://json-schema.org/"
+        }
       ]
     },
     {
@@ -20,6 +42,32 @@
       "categories": [
         "security",
         "auth"
+      ],
+      "links": [
+        {
+          "title": "OWASP REST Security Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html"
+        },
+        {
+          "title": "OWASP Authentication Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"
+        },
+        {
+          "title": "OWASP Secrets Management Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html"
+        },
+        {
+          "title": "RFC 6750: OAuth 2.0 Bearer Token Usage",
+          "url": "https://datatracker.ietf.org/doc/html/rfc6750"
+        },
+        {
+          "title": "GitHub secret scanning",
+          "url": "https://docs.github.com/en/code-security/secret-scanning"
+        },
+        {
+          "title": "MongoDB TTL indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-ttl/"
+        }
       ]
     },
     {
@@ -30,6 +78,161 @@
       "categories": [
         "security",
         "compliance"
+      ],
+      "links": [
+        {
+          "title": "OWASP Logging Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html"
+        },
+        {
+          "title": "OWASP Logging Vocabulary Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Vocabulary_Cheat_Sheet.html"
+        },
+        {
+          "title": "MongoDB TTL indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-ttl/"
+        },
+        {
+          "title": "Mongoose: populate",
+          "url": "https://mongoosejs.com/docs/populate.html"
+        }
+      ]
+    },
+    {
+      "name": "cache",
+      "title": "Response cache",
+      "description": "Caches JSON answers of chosen GET routes in MongoDB (TTL index) or an in-memory LRU: keys per identity so users never share answers, invalidation on resource events and by tag or path, strong ETags with 304, Cache-Control, x-cache headers and stampede protection. Zero dependencies.",
+      "version": "1.0.0",
+      "categories": [
+        "performance",
+        "http",
+        "caching"
+      ],
+      "links": [
+        {
+          "title": "MDN: HTTP caching",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching"
+        },
+        {
+          "title": "MDN: ETag",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag"
+        },
+        {
+          "title": "MDN: If-None-Match",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match"
+        },
+        {
+          "title": "MDN: Cache-Control",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control"
+        },
+        {
+          "title": "RFC 9111: HTTP Caching",
+          "url": "https://www.rfc-editor.org/rfc/rfc9111"
+        },
+        {
+          "title": "MongoDB: TTL indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-ttl/"
+        }
+      ]
+    },
+    {
+      "name": "captcha",
+      "title": "CAPTCHA (Turnstile, hCaptcha, reCAPTCHA v3)",
+      "description": "Protects sign up, sign in, password reset and magic links (or any routes you list) with Cloudflare Turnstile, hCaptcha or Google reCAPTCHA v3: tokens verified server side with the client IP, minimum score and action checks, fails closed when the provider is down, skipped locally when no key is set. Zero dependencies.",
+      "version": "1.0.0",
+      "categories": [
+        "security",
+        "auth"
+      ],
+      "links": [
+        {
+          "title": "Cloudflare Turnstile: Server-side validation",
+          "url": "https://developers.cloudflare.com/turnstile/get-started/server-side-validation/"
+        },
+        {
+          "title": "Cloudflare Turnstile: Testing (dummy keys)",
+          "url": "https://developers.cloudflare.com/turnstile/troubleshooting/testing/"
+        },
+        {
+          "title": "hCaptcha: Developer guide (verify the user response server side)",
+          "url": "https://docs.hcaptcha.com/"
+        },
+        {
+          "title": "Google reCAPTCHA v3",
+          "url": "https://developers.google.com/recaptcha/docs/v3"
+        },
+        {
+          "title": "Google reCAPTCHA: Verifying the user response",
+          "url": "https://developers.google.com/recaptcha/docs/verify"
+        }
+      ]
+    },
+    {
+      "name": "email-verification",
+      "title": "Email verification",
+      "description": "Prove that people own their email address: a single use link (stored hashed, 24 hour expiry) after registration and after every address change, resend with a per address cooldown, emailVerified on the user and in /auth/me, a 'verified' policy token, and optional enforcement at sign-in or on every route.",
+      "version": "1.0.0",
+      "categories": [
+        "auth",
+        "security"
+      ],
+      "links": [
+        {
+          "title": "OWASP Authentication Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"
+        },
+        {
+          "title": "OWASP Forgot Password Cheat Sheet (token handling)",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html"
+        },
+        {
+          "title": "NIST SP 800-63B Digital Identity Guidelines",
+          "url": "https://pages.nist.gov/800-63-3/sp800-63b.html"
+        },
+        {
+          "title": "MongoDB TTL indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-ttl/"
+        },
+        {
+          "title": "MDN: Retry-After header",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After"
+        }
+      ]
+    },
+    {
+      "name": "export",
+      "title": "Data export and import",
+      "description": "Admins export any resource as CSV, NDJSON or JSON, streamed from a cursor (memory safe), with the list route's filters and the API's field visibility (hidden, write-only and encrypted fields never leave). Import from CSV, NDJSON or JSON through the resource's own validation, with a dry run that reports per row errors. Optional self export of owned records.",
+      "version": "1.0.0",
+      "categories": [
+        "data",
+        "admin"
+      ],
+      "links": [
+        {
+          "title": "RFC 4180: Common Format for CSV Files",
+          "url": "https://www.rfc-editor.org/rfc/rfc4180"
+        },
+        {
+          "title": "OWASP CSV Injection",
+          "url": "https://owasp.org/www-community/attacks/CSV_Injection"
+        },
+        {
+          "title": "NDJSON specification",
+          "url": "https://github.com/ndjson/ndjson-spec"
+        },
+        {
+          "title": "MongoDB cursors (iterate a cursor)",
+          "url": "https://www.mongodb.com/docs/manual/tutorial/iterate-a-cursor/"
+        },
+        {
+          "title": "Node.js stream backpressure",
+          "url": "https://nodejs.org/en/learn/modules/backpressuring-in-streams"
+        },
+        {
+          "title": "MDN: Content-Disposition header",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition"
+        }
       ]
     },
     {
@@ -41,6 +244,24 @@
         "flags",
         "rollout",
         "experiments"
+      ],
+      "links": [
+        {
+          "title": "OpenFeature specification",
+          "url": "https://openfeature.dev/specification/"
+        },
+        {
+          "title": "Feature Toggles (Martin Fowler)",
+          "url": "https://martinfowler.com/articles/feature-toggles.html"
+        },
+        {
+          "title": "MongoDB $setOnInsert",
+          "url": "https://www.mongodb.com/docs/manual/reference/operator/update/setOnInsert/"
+        },
+        {
+          "title": "MDN: Cache-Control",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control"
+        }
       ]
     },
     {
@@ -52,6 +273,28 @@
         "http",
         "reliability",
         "payments"
+      ],
+      "links": [
+        {
+          "title": "IETF draft: The Idempotency-Key HTTP Header Field",
+          "url": "https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/"
+        },
+        {
+          "title": "RFC 9110: HTTP Semantics (idempotent methods)",
+          "url": "https://www.rfc-editor.org/rfc/rfc9110.html"
+        },
+        {
+          "title": "RFC 8941: Structured Field Values for HTTP",
+          "url": "https://www.rfc-editor.org/rfc/rfc8941.html"
+        },
+        {
+          "title": "Stripe: Idempotent requests",
+          "url": "https://docs.stripe.com/api/idempotent_requests"
+        },
+        {
+          "title": "MongoDB TTL indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-ttl/"
+        }
       ]
     },
     {
@@ -63,6 +306,24 @@
         "jobs",
         "queue",
         "cron"
+      ],
+      "links": [
+        {
+          "title": "MongoDB findOneAndUpdate",
+          "url": "https://www.mongodb.com/docs/manual/reference/method/db.collection.findOneAndUpdate/"
+        },
+        {
+          "title": "MongoDB partial indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-partial/"
+        },
+        {
+          "title": "MongoDB TTL indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-ttl/"
+        },
+        {
+          "title": "crontab(5) manual page",
+          "url": "https://man7.org/linux/man-pages/man5/crontab.5.html"
+        }
       ]
     },
     {
@@ -73,6 +334,59 @@
       "categories": [
         "auth",
         "security"
+      ],
+      "links": [
+        {
+          "title": "OWASP Authentication Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"
+        },
+        {
+          "title": "OWASP Forgot Password Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html"
+        },
+        {
+          "title": "OWASP Session Management Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"
+        },
+        {
+          "title": "OWASP Unvalidated Redirects and Forwards Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
+        },
+        {
+          "title": "OWASP Cross-Site Request Forgery Prevention Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html"
+        },
+        {
+          "title": "MongoDB TTL indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-ttl/"
+        }
+      ]
+    },
+    {
+      "name": "mail-postmark",
+      "title": "Email via Postmark",
+      "description": "Deliver emails (password resets, notifications) through the Postmark HTTP API: message streams, tags, metadata, attachments and clear errors. No SDK, just fetch.",
+      "version": "1.0.0",
+      "categories": [
+        "mail"
+      ],
+      "links": [
+        {
+          "title": "Postmark Email API",
+          "url": "https://postmarkapp.com/developer/api/email-api"
+        },
+        {
+          "title": "Postmark API overview and error codes",
+          "url": "https://postmarkapp.com/developer/api/overview"
+        },
+        {
+          "title": "Sending email with the API",
+          "url": "https://postmarkapp.com/developer/user-guide/send-email-with-api"
+        },
+        {
+          "title": "Message Streams API",
+          "url": "https://postmarkapp.com/developer/api/message-streams-api"
+        }
       ]
     },
     {
@@ -82,6 +396,24 @@
       "version": "1.0.1",
       "categories": [
         "mail"
+      ],
+      "links": [
+        {
+          "title": "Resend: Introduction",
+          "url": "https://resend.com/docs/introduction"
+        },
+        {
+          "title": "Resend API: Send email",
+          "url": "https://resend.com/docs/api-reference/emails/send-email"
+        },
+        {
+          "title": "Resend API reference (authentication, rate limits)",
+          "url": "https://resend.com/docs/api-reference/introduction"
+        },
+        {
+          "title": "Resend: Domains",
+          "url": "https://resend.com/docs/dashboard/domains/introduction"
+        }
       ]
     },
     {
@@ -91,6 +423,60 @@
       "version": "1.0.1",
       "categories": [
         "mail"
+      ],
+      "links": [
+        {
+          "title": "Nodemailer",
+          "url": "https://nodemailer.com/"
+        },
+        {
+          "title": "Nodemailer: SMTP transport",
+          "url": "https://nodemailer.com/smtp"
+        },
+        {
+          "title": "Nodemailer: Message configuration",
+          "url": "https://nodemailer.com/message"
+        },
+        {
+          "title": "Amazon SES: Using the SMTP interface",
+          "url": "https://docs.aws.amazon.com/ses/latest/dg/send-email-smtp.html"
+        },
+        {
+          "title": "RFC 5321: Simple Mail Transfer Protocol",
+          "url": "https://www.rfc-editor.org/rfc/rfc5321.html"
+        }
+      ]
+    },
+    {
+      "name": "maintenance",
+      "title": "Maintenance mode",
+      "description": "Maintenance and read-only mode switched at runtime by admins: stored in MongoDB and cached briefly so every instance agrees, 503 with Retry-After and a message, reads kept in read-only mode, scheduled windows, an allowlist (admins, IPs, sign-in, health checks, devtools), a public status route for banners, and an env override for deploys.",
+      "version": "1.0.0",
+      "categories": [
+        "operations",
+        "admin"
+      ],
+      "links": [
+        {
+          "title": "RFC 9110: 503 Service Unavailable",
+          "url": "https://www.rfc-editor.org/rfc/rfc9110#name-503-service-unavailable"
+        },
+        {
+          "title": "RFC 9110: Retry-After",
+          "url": "https://www.rfc-editor.org/rfc/rfc9110#name-retry-after"
+        },
+        {
+          "title": "MDN: 503 Service Unavailable",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503"
+        },
+        {
+          "title": "Express: behind proxies (req.ip and trust proxy)",
+          "url": "https://expressjs.com/en/guide/behind-proxies.html"
+        },
+        {
+          "title": "MongoDB update operators",
+          "url": "https://www.mongodb.com/docs/manual/reference/operator/update/"
+        }
       ]
     },
     {
@@ -101,6 +487,28 @@
       "categories": [
         "ai",
         "mcp"
+      ],
+      "links": [
+        {
+          "title": "Model Context Protocol specification (2025-11-25)",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25"
+        },
+        {
+          "title": "MCP: Transports (Streamable HTTP)",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/basic/transports"
+        },
+        {
+          "title": "MCP: Tools",
+          "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools"
+        },
+        {
+          "title": "MCP Inspector",
+          "url": "https://modelcontextprotocol.io/docs/tools/inspector"
+        },
+        {
+          "title": "JSON-RPC 2.0 specification",
+          "url": "https://www.jsonrpc.org/specification"
+        }
       ]
     },
     {
@@ -112,6 +520,106 @@
         "notifications",
         "push",
         "email"
+      ],
+      "links": [
+        {
+          "title": "Expo: Push notifications overview",
+          "url": "https://docs.expo.dev/push-notifications/overview/"
+        },
+        {
+          "title": "Firebase Cloud Messaging",
+          "url": "https://firebase.google.com/docs/cloud-messaging"
+        },
+        {
+          "title": "MDN: Intl.DateTimeFormat (timeZone)",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat"
+        },
+        {
+          "title": "IANA Time Zone Database",
+          "url": "https://www.iana.org/time-zones"
+        },
+        {
+          "title": "MDN: Server-sent events",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events"
+        },
+        {
+          "title": "MongoDB TTL indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-ttl/"
+        }
+      ]
+    },
+    {
+      "name": "oauth",
+      "title": "Sign in with Google, GitHub and OpenID Connect",
+      "description": "OAuth 2.0 / OpenID Connect sign-in: Google and GitHub presets plus any OIDC provider by discovery, PKCE (S256), state and nonce stored hashed, single use flows bound to the browser, ID tokens verified with the provider JWKS, safe account linking by verified email, link and unlink. Lockout, disabled accounts and 2FA (totp) still apply. Zero dependencies.",
+      "version": "1.0.0",
+      "categories": [
+        "auth",
+        "security"
+      ],
+      "links": [
+        {
+          "title": "Google: OpenID Connect",
+          "url": "https://developers.google.com/identity/openid-connect/openid-connect"
+        },
+        {
+          "title": "Google: Using OAuth 2.0 for Web Server Applications",
+          "url": "https://developers.google.com/identity/protocols/oauth2/web-server"
+        },
+        {
+          "title": "GitHub: Authorizing OAuth apps",
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps"
+        },
+        {
+          "title": "RFC 7636: Proof Key for Code Exchange (PKCE)",
+          "url": "https://www.rfc-editor.org/rfc/rfc7636"
+        },
+        {
+          "title": "OpenID Connect Core 1.0",
+          "url": "https://openid.net/specs/openid-connect-core-1_0.html"
+        },
+        {
+          "title": "OpenID Connect Discovery 1.0",
+          "url": "https://openid.net/specs/openid-connect-discovery-1_0.html"
+        }
+      ]
+    },
+    {
+      "name": "payments-stripe",
+      "title": "Payments with Stripe",
+      "description": "Stripe Checkout, subscriptions and the customer portal without the SDK: allowlisted prices, redirect allowlist, one customer per user, signed webhooks processed exactly once, plan checks for routes (meta: { plan }, 'plan-pro' policies) and billing.* events. Zero dependencies.",
+      "version": "1.0.0",
+      "categories": [
+        "payments",
+        "billing",
+        "subscriptions",
+        "webhooks"
+      ],
+      "links": [
+        {
+          "title": "Stripe: Checkout quickstart",
+          "url": "https://docs.stripe.com/checkout/quickstart"
+        },
+        {
+          "title": "Stripe: Build a subscriptions integration",
+          "url": "https://docs.stripe.com/billing/subscriptions/build-subscriptions"
+        },
+        {
+          "title": "Stripe: Customer portal",
+          "url": "https://docs.stripe.com/customer-management"
+        },
+        {
+          "title": "Stripe: Webhooks and signature verification",
+          "url": "https://docs.stripe.com/webhooks"
+        },
+        {
+          "title": "Stripe CLI: test webhooks locally",
+          "url": "https://docs.stripe.com/stripe-cli"
+        },
+        {
+          "title": "Stripe API reference",
+          "url": "https://docs.stripe.com/api"
+        }
       ]
     },
     {
@@ -123,6 +631,28 @@
         "privacy",
         "compliance",
         "auth"
+      ],
+      "links": [
+        {
+          "title": "GDPR (Regulation (EU) 2016/679) on EUR-Lex",
+          "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj"
+        },
+        {
+          "title": "GDPR Art. 17: Right to erasure",
+          "url": "https://gdpr-info.eu/art-17-gdpr/"
+        },
+        {
+          "title": "GDPR Art. 20: Right to data portability",
+          "url": "https://gdpr-info.eu/art-20-gdpr/"
+        },
+        {
+          "title": "California Consumer Privacy Act (CCPA)",
+          "url": "https://oag.ca.gov/privacy/ccpa"
+        },
+        {
+          "title": "OWASP User Privacy Protection Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/User_Privacy_Protection_Cheat_Sheet.html"
+        }
       ]
     },
     {
@@ -133,6 +663,32 @@
       "categories": [
         "push",
         "notifications"
+      ],
+      "links": [
+        {
+          "title": "Expo: Send notifications with the Expo push service",
+          "url": "https://docs.expo.dev/push-notifications/sending-notifications/"
+        },
+        {
+          "title": "Expo: Push notifications overview",
+          "url": "https://docs.expo.dev/push-notifications/overview/"
+        },
+        {
+          "title": "Expo: Push notifications setup",
+          "url": "https://docs.expo.dev/push-notifications/push-notifications-setup/"
+        },
+        {
+          "title": "Expo SDK: Notifications (expo-notifications)",
+          "url": "https://docs.expo.dev/versions/latest/sdk/notifications/"
+        },
+        {
+          "title": "Expo: FCM credentials",
+          "url": "https://docs.expo.dev/push-notifications/fcm-credentials/"
+        },
+        {
+          "title": "expo-server-sdk-node (GitHub)",
+          "url": "https://github.com/expo/expo-server-sdk-node"
+        }
       ]
     },
     {
@@ -143,6 +699,32 @@
       "categories": [
         "push",
         "notifications"
+      ],
+      "links": [
+        {
+          "title": "Firebase Cloud Messaging",
+          "url": "https://firebase.google.com/docs/cloud-messaging"
+        },
+        {
+          "title": "FCM: Send a message (HTTP v1)",
+          "url": "https://firebase.google.com/docs/cloud-messaging/send/v1-api"
+        },
+        {
+          "title": "FCM HTTP v1 REST reference: projects.messages",
+          "url": "https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages"
+        },
+        {
+          "title": "FCM HTTP v1 error codes",
+          "url": "https://firebase.google.com/docs/reference/fcm/rest/v1/ErrorCode"
+        },
+        {
+          "title": "FCM: Manage registration tokens",
+          "url": "https://firebase.google.com/docs/cloud-messaging/manage-tokens"
+        },
+        {
+          "title": "Google OAuth 2.0 for server to server applications",
+          "url": "https://developers.google.com/identity/protocols/oauth2/service-account"
+        }
       ]
     },
     {
@@ -153,6 +735,32 @@
       "categories": [
         "security",
         "scaling"
+      ],
+      "links": [
+        {
+          "title": "MongoDB TTL indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-ttl/"
+        },
+        {
+          "title": "MongoDB findOneAndUpdate",
+          "url": "https://www.mongodb.com/docs/manual/reference/method/db.collection.findOneAndUpdate/"
+        },
+        {
+          "title": "MongoDB $inc",
+          "url": "https://www.mongodb.com/docs/manual/reference/operator/update/inc/"
+        },
+        {
+          "title": "IETF draft: RateLimit header fields for HTTP",
+          "url": "https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/"
+        },
+        {
+          "title": "RFC 6585: 429 Too Many Requests",
+          "url": "https://www.rfc-editor.org/rfc/rfc6585.html"
+        },
+        {
+          "title": "OWASP Denial of Service Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Denial_of_Service_Cheat_Sheet.html"
+        }
       ]
     },
     {
@@ -162,6 +770,162 @@
       "version": "1.1.0",
       "categories": [
         "realtime"
+      ],
+      "links": [
+        {
+          "title": "WHATWG HTML Standard: Server-sent events",
+          "url": "https://html.spec.whatwg.org/multipage/server-sent-events.html"
+        },
+        {
+          "title": "MDN: Using server-sent events",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events"
+        },
+        {
+          "title": "MDN: EventSource",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/EventSource"
+        },
+        {
+          "title": "MongoDB change streams",
+          "url": "https://www.mongodb.com/docs/manual/changeStreams/"
+        },
+        {
+          "title": "NGINX proxy module (proxy_buffering, X-Accel-Buffering)",
+          "url": "https://nginx.org/en/docs/http/ngx_http_proxy_module.html"
+        }
+      ]
+    },
+    {
+      "name": "search-meilisearch",
+      "title": "Search with Meilisearch",
+      "description": "Full-text search for the resources you choose: records sync to Meilisearch in the background with retries, only public fields are indexed, a reindex route pages through the collection, and search results are loaded back through each resource's own policy, so search never leaks a record or a field. Zero dependencies.",
+      "version": "1.0.0",
+      "categories": [
+        "search",
+        "data"
+      ],
+      "links": [
+        {
+          "title": "Meilisearch documents API",
+          "url": "https://www.meilisearch.com/docs/reference/api/documents"
+        },
+        {
+          "title": "Meilisearch search API",
+          "url": "https://www.meilisearch.com/docs/reference/api/search"
+        },
+        {
+          "title": "Meilisearch index settings API",
+          "url": "https://www.meilisearch.com/docs/reference/api/settings"
+        },
+        {
+          "title": "Securing your project (API keys)",
+          "url": "https://www.meilisearch.com/docs/learn/security/basic_security"
+        },
+        {
+          "title": "Asynchronous operations (tasks)",
+          "url": "https://www.meilisearch.com/docs/learn/async/asynchronous_operations"
+        }
+      ]
+    },
+    {
+      "name": "sentry",
+      "title": "Error reporting with Sentry",
+      "description": "Report unhandled errors (5xx) and failed background work to Sentry without the SDK: stack frames, route, user id, breadcrumbs from the request's logs, release and environment. Secrets are scrubbed, 4xx ignored, bursts deduplicated, sampling and a per minute cap.",
+      "version": "1.0.0",
+      "categories": [
+        "monitoring",
+        "errors"
+      ],
+      "links": [
+        {
+          "title": "Sentry envelopes",
+          "url": "https://develop.sentry.dev/sdk/data-model/envelopes/"
+        },
+        {
+          "title": "Sentry event payloads",
+          "url": "https://develop.sentry.dev/sdk/data-model/event-payloads/"
+        },
+        {
+          "title": "Sentry SDK overview (authentication, DSN)",
+          "url": "https://develop.sentry.dev/sdk/overview/"
+        },
+        {
+          "title": "Data Source Name (DSN)",
+          "url": "https://docs.sentry.io/concepts/key-terms/dsn-explainer/"
+        },
+        {
+          "title": "Scrubbing sensitive data",
+          "url": "https://docs.sentry.io/security-legal-pii/scrubbing/"
+        }
+      ]
+    },
+    {
+      "name": "slack",
+      "title": "Slack notifications",
+      "description": "Post to Slack from app events (signups, orders...) and get security alerts, through an incoming webhook or a bot token. Values are escaped so user data cannot ping @channel, bursts become one digest, 429 waits for Retry-After, and nothing blocks a request. Zero dependencies.",
+      "version": "1.0.0",
+      "categories": [
+        "notifications",
+        "integrations",
+        "security"
+      ],
+      "links": [
+        {
+          "title": "Sending messages using incoming webhooks",
+          "url": "https://api.slack.com/messaging/webhooks"
+        },
+        {
+          "title": "chat.postMessage",
+          "url": "https://api.slack.com/methods/chat.postMessage"
+        },
+        {
+          "title": "Formatting text (escaping)",
+          "url": "https://api.slack.com/reference/surfaces/formatting"
+        },
+        {
+          "title": "Rate limits",
+          "url": "https://api.slack.com/apis/rate-limits"
+        },
+        {
+          "title": "Block Kit",
+          "url": "https://api.slack.com/block-kit"
+        }
+      ]
+    },
+    {
+      "name": "sms-twilio",
+      "title": "SMS and phone verification via Twilio",
+      "description": "Send SMS through the Twilio Messages API (app.ext.sms.send) and verify phone numbers with 6-digit codes: stored hashed, 10 minute expiry, attempt limits, resend cooldown, per number, IP and user limits. Signed delivery reports. Dev console transport without credentials. Zero dependencies.",
+      "version": "1.0.0",
+      "categories": [
+        "sms",
+        "auth",
+        "notifications"
+      ],
+      "links": [
+        {
+          "title": "Twilio Messages resource (send an SMS)",
+          "url": "https://www.twilio.com/docs/messaging/api/message-resource"
+        },
+        {
+          "title": "Webhooks security (X-Twilio-Signature)",
+          "url": "https://www.twilio.com/docs/usage/webhooks/webhooks-security"
+        },
+        {
+          "title": "Track the message status (status callbacks)",
+          "url": "https://www.twilio.com/docs/messaging/guides/track-outbound-message-status"
+        },
+        {
+          "title": "Messaging Services",
+          "url": "https://www.twilio.com/docs/messaging/services"
+        },
+        {
+          "title": "E.164 phone number format",
+          "url": "https://www.twilio.com/docs/glossary/what-e164"
+        },
+        {
+          "title": "Twilio error and warning dictionary",
+          "url": "https://www.twilio.com/docs/api/errors"
+        }
       ]
     },
     {
@@ -171,6 +935,28 @@
       "version": "1.0.0",
       "categories": [
         "data"
+      ],
+      "links": [
+        {
+          "title": "Mongoose: Middleware",
+          "url": "https://mongoosejs.com/docs/middleware.html"
+        },
+        {
+          "title": "Mongoose: Plugins",
+          "url": "https://mongoosejs.com/docs/plugins.html"
+        },
+        {
+          "title": "Mongoose: Query API",
+          "url": "https://mongoosejs.com/docs/api/query.html"
+        },
+        {
+          "title": "MongoDB partial indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-partial/"
+        },
+        {
+          "title": "MongoDB TTL indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-ttl/"
+        }
       ]
     },
     {
@@ -181,6 +967,28 @@
       "categories": [
         "storage",
         "uploads"
+      ],
+      "links": [
+        {
+          "title": "OWASP File Upload Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html"
+        },
+        {
+          "title": "Multer (GitHub)",
+          "url": "https://github.com/expressjs/multer"
+        },
+        {
+          "title": "Express API reference (res.sendFile)",
+          "url": "https://expressjs.com/en/api.html"
+        },
+        {
+          "title": "MDN: Content-Disposition",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Disposition"
+        },
+        {
+          "title": "MDN: X-Content-Type-Options",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/X-Content-Type-Options"
+        }
       ]
     },
     {
@@ -191,6 +999,69 @@
       "categories": [
         "storage",
         "uploads"
+      ],
+      "links": [
+        {
+          "title": "Amazon S3: Working with presigned URLs",
+          "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html"
+        },
+        {
+          "title": "Amazon S3: Uploading objects with presigned URLs",
+          "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html"
+        },
+        {
+          "title": "Amazon S3: CORS",
+          "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/cors.html"
+        },
+        {
+          "title": "Cloudflare R2: Presigned URLs",
+          "url": "https://developers.cloudflare.com/r2/api/s3/presigned-urls/"
+        },
+        {
+          "title": "MinIO documentation",
+          "url": "https://docs.min.io/"
+        },
+        {
+          "title": "OWASP File Upload Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html"
+        }
+      ]
+    },
+    {
+      "name": "teams",
+      "title": "Teams (organizations, members, invitations)",
+      "description": "Multi-tenancy for SaaS: teams with owner, admin, member and your own roles, email invitations (hashed single use tokens, expiry, resend, revoke), last owner protection and ownership transfer. Mark a resource team: true and its records stay inside their team in every route; 'member' and 'team:admin' work in any policy.",
+      "version": "1.0.0",
+      "categories": [
+        "auth",
+        "multi-tenancy",
+        "security"
+      ],
+      "links": [
+        {
+          "title": "OWASP Authorization Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html"
+        },
+        {
+          "title": "OWASP Insecure Direct Object Reference Prevention Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html"
+        },
+        {
+          "title": "OWASP API Security Top 10: Broken Object Level Authorization",
+          "url": "https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/"
+        },
+        {
+          "title": "MongoDB: Model One-to-Many Relationships with Document References",
+          "url": "https://www.mongodb.com/docs/manual/tutorial/model-referenced-one-to-many-relationships-between-documents/"
+        },
+        {
+          "title": "MongoDB: Compound Indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/indexes/index-types/index-compound/"
+        },
+        {
+          "title": "CalmAPI: Building blocks",
+          "url": "https://docs.calmapi.dev/building-blocks"
+        }
       ]
     },
     {
@@ -201,17 +1072,97 @@
       "categories": [
         "security",
         "auth"
+      ],
+      "links": [
+        {
+          "title": "RFC 6238: TOTP",
+          "url": "https://datatracker.ietf.org/doc/html/rfc6238"
+        },
+        {
+          "title": "RFC 4226: HOTP",
+          "url": "https://datatracker.ietf.org/doc/html/rfc4226"
+        },
+        {
+          "title": "Google Authenticator: Key URI format",
+          "url": "https://github.com/google/google-authenticator/wiki/Key-Uri-Format"
+        },
+        {
+          "title": "OWASP Multifactor Authentication Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html"
+        },
+        {
+          "title": "OWASP Authentication Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"
+        },
+        {
+          "title": "NIST SP 800-63B: Authentication and Lifecycle Management",
+          "url": "https://pages.nist.gov/800-63-3/sp800-63b.html"
+        }
+      ]
+    },
+    {
+      "name": "waitlist",
+      "title": "Waitlist",
+      "description": "A launch waitlist: public join (idempotent per email) with a place in line, referral codes that move people up, admin list, stats, single use email invites (hashed tokens) in batches, and an optional gate so only invited addresses can register.",
+      "version": "1.0.0",
+      "categories": [
+        "growth",
+        "auth"
+      ],
+      "links": [
+        {
+          "title": "OWASP Forgot Password Cheat Sheet (single use token handling)",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html"
+        },
+        {
+          "title": "OWASP Authentication Cheat Sheet (account enumeration)",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"
+        },
+        {
+          "title": "MongoDB unique indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-unique/"
+        },
+        {
+          "title": "MongoDB findOneAndUpdate",
+          "url": "https://www.mongodb.com/docs/manual/reference/method/db.collection.findOneAndUpdate/"
+        },
+        {
+          "title": "MongoDB aggregation $group",
+          "url": "https://www.mongodb.com/docs/manual/reference/operator/aggregation/group/"
+        }
       ]
     },
     {
       "name": "webhooks",
       "title": "Webhooks",
       "description": "Outgoing webhooks for resource events: Standard Webhooks signatures, a MongoDB delivery queue with retries and a delivery log, per-user visibility, SSRF protection and secret rotation. Zero dependencies.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "categories": [
         "webhooks",
         "integrations",
         "events"
+      ],
+      "links": [
+        {
+          "title": "Standard Webhooks",
+          "url": "https://www.standardwebhooks.com/"
+        },
+        {
+          "title": "Standard Webhooks specification (GitHub)",
+          "url": "https://github.com/standard-webhooks/standard-webhooks/blob/main/spec/standard-webhooks.md"
+        },
+        {
+          "title": "OWASP Server Side Request Forgery Prevention Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html"
+        },
+        {
+          "title": "Node.js: http.request (lookup and agent options)",
+          "url": "https://nodejs.org/api/http.html"
+        },
+        {
+          "title": "MongoDB TTL indexes",
+          "url": "https://www.mongodb.com/docs/manual/core/index-ttl/"
+        }
       ]
     }
   ]

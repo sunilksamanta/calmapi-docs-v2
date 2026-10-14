@@ -2,15 +2,12 @@ import Script from 'next/script';
 import { SITE } from '../src/docs/manifest.js';
 import Header from '../src/components/Header.jsx';
 import Sidebar from '../src/components/Sidebar.jsx';
-// Same order as the Vite bundle had them, so equal-specificity rules resolve the same way.
-import '../src/components/Sidebar.css';
-import '../src/components/ThemeToggle.css';
-import '../src/components/Search.css';
-import '../src/components/Header.css';
-import '../src/components/Layout.css';
-import '../src/components/Toc.css';
-import '../src/components/DocsPage.css';
-import '../src/index.css';
+import Footer from '../src/components/Footer.jsx';
+import '../src/styles/base.css';
+import '../src/styles/layout.css';
+import '../src/styles/prose.css';
+import '../src/styles/search.css';
+import '../src/styles/home.css';
 
 export const metadata = {
   metadataBase: new URL(SITE.url),
@@ -29,18 +26,25 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#24272e' },
+    { media: '(prefers-color-scheme: light)', color: '#f6f7f5' },
+    { media: '(prefers-color-scheme: dark)', color: '#0c0f0e' },
   ],
 };
 
-// Apply the saved theme before the first paint (no light flash in dark mode). The class it adds
-// to <html> is not in the prerendered HTML, hence suppressHydrationWarning on <html>.
-const THEME_SCRIPT = `try {
-  var t = localStorage.getItem('theme') || 'system';
-  var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  document.documentElement.classList.add(dark ? 'dark' : 'light');
-} catch (e) {}`;
+// Applies the theme before the first paint, as on the website: the saved choice, else the
+// system setting. "theme" is the key older versions of the docs saved the choice under.
+// data-theme is not in the prerendered HTML, hence suppressHydrationWarning on <html>.
+const THEME_SCRIPT = `(function () {
+  var saved = null;
+  try {
+    saved = localStorage.getItem('calm-theme');
+    var old = localStorage.getItem('theme');
+    if (!saved && (old === 'light' || old === 'dark')) { saved = old; localStorage.setItem('calm-theme', old); }
+    if (old) localStorage.removeItem('theme');
+  } catch (e) {}
+  var dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+})();`;
 
 export default function RootLayout({ children }) {
   return (
@@ -50,18 +54,17 @@ export default function RootLayout({ children }) {
         <link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt" />
       </head>
       <body>
-        <div className="layout">
-          <a className="skip-link" href="#main">
-            Skip to content
-          </a>
-          <Header />
-          <div className="layout-container">
-            <Sidebar />
-            <main className="main-content" id="main" tabIndex={-1}>
-              {children}
-            </main>
-          </div>
+        <a className="skip-link" href="#main">
+          Skip to content
+        </a>
+        <Header />
+        <div className="shell">
+          <Sidebar />
+          <main className="main" id="main" tabIndex={-1}>
+            {children}
+          </main>
         </div>
+        <Footer />
         {/* The Lyket clap button: the widget fills this container once it has loaded. */}
         <div className="floating-like-button">
           <div data-lyket-type="clap" data-lyket-id="calmapi-docs" />

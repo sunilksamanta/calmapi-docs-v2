@@ -40,3 +40,30 @@ calm.mailer.use({
   async send({ to, from, subject, text, html }) { /* deliver it */ },
 });
 ```
+
+<!-- block-guide:start (generated from block.json by scripts/sync-block-guides.mjs) -->
+
+## Official documentation
+
+Read these before changing the block; they are also in `app/blocks/mail-resend/AGENTS.md` and in the devtools Blocks panel.
+
+- [Resend: Introduction](https://resend.com/docs/introduction)
+- [Resend API: Send email](https://resend.com/docs/api-reference/emails/send-email)
+- [Resend API reference (authentication, rate limits)](https://resend.com/docs/api-reference/introduction)
+- [Resend: Domains](https://resend.com/docs/dashboard/domains/introduction)
+
+## For AI agents
+
+Coding agents read these notes in `app/blocks/mail-resend/AGENTS.md`:
+
+- Read first: `app/blocks/mail-resend/index.js` (one `calm.mailer.use` transport, about 30 lines).
+- Configuration: env `RESEND_API_KEY` (secret) and `MAIL_FROM`. No `calm.config.js` options. Without the key the block registers nothing: development mail stays in the devtools Mail panel and `calm doctor` reports an error in production.
+- Send mail with `app.mailer.send({ to, subject, text, html })` (`calm.mailer` inside blocks). Never call the Resend API directly from features, so tests and devtools keep seeing every message.
+- Invariant: never log or echo `RESEND_API_KEY`. Errors contain only the HTTP status and the first 300 characters of Resend's answer.
+- `MAIL_FROM` overrides the per message `from` and must be an address on a domain verified in Resend, otherwise Resend refuses the request.
+- The transport forwards only `from`, `to`, `subject`, `text` and `html`. To support `reply_to`, `cc`, `bcc`, `attachments`, `headers` or `tags`, map them in `send()` using Resend's field names. `meta` is stripped by the core before the transport sees it.
+- Only one mail transport is active: `calm.mailer.use` replaces the previous one, so do not install mail-smtp next to it.
+- Pitfall: Resend rate limits API requests (429). Send bulk mail from a job (jobs block) with retries, not in a loop inside a request.
+- Pitfall: `send()` throws on any non 2xx answer. The notifications block catches it; your own callers should too, or send from a job.
+
+<!-- block-guide:end -->

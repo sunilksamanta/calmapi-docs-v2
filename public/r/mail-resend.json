@@ -20,7 +20,29 @@
   "meta": {
     "calmapi": {
       "minVersion": "2.0.0-alpha.0",
-      "conflicts": []
+      "conflicts": [
+        "mail-smtp",
+        "mail-postmark"
+      ],
+      "links": [
+        {
+          "title": "Resend: Introduction",
+          "url": "https://resend.com/docs/introduction"
+        },
+        {
+          "title": "Resend API: Send email",
+          "url": "https://resend.com/docs/api-reference/emails/send-email"
+        },
+        {
+          "title": "Resend API reference (authentication, rate limits)",
+          "url": "https://resend.com/docs/api-reference/introduction"
+        },
+        {
+          "title": "Resend: Domains",
+          "url": "https://resend.com/docs/dashboard/domains/introduction"
+        }
+      ],
+      "agents": "- Read first: `app/blocks/mail-resend/index.js` (one `calm.mailer.use` transport, about 30 lines).\n- Configuration: env `RESEND_API_KEY` (secret) and `MAIL_FROM`. No `calm.config.js` options. Without the key the block registers nothing: development mail stays in the devtools Mail panel and `calm doctor` reports an error in production.\n- Send mail with `app.mailer.send({ to, subject, text, html })` (`calm.mailer` inside blocks). Never call the Resend API directly from features, so tests and devtools keep seeing every message.\n- Invariant: never log or echo `RESEND_API_KEY`. Errors contain only the HTTP status and the first 300 characters of Resend's answer.\n- `MAIL_FROM` overrides the per message `from` and must be an address on a domain verified in Resend, otherwise Resend refuses the request.\n- The transport forwards only `from`, `to`, `subject`, `text` and `html`. To support `reply_to`, `cc`, `bcc`, `attachments`, `headers` or `tags`, map them in `send()` using Resend's field names. `meta` is stripped by the core before the transport sees it.\n- Only one mail transport is active: `calm.mailer.use` replaces the previous one, so do not install mail-smtp next to it.\n- Pitfall: Resend rate limits API requests (429). Send bulk mail from a job (jobs block) with retries, not in a loop inside a request.\n- Pitfall: `send()` throws on any non 2xx answer. The notifications block catches it; your own callers should too, or send from a job."
     }
   },
   "files": [
@@ -29,6 +51,12 @@
       "type": "registry:file",
       "target": "app/blocks/mail-resend/index.js",
       "content": "import { definePlugin } from '#calm';\n\n// Sends app.mailer messages through https://resend.com. Without RESEND_API_KEY in\n// development, the built-in dev transport (devtools Mail panel) keeps working.\nexport default definePlugin({\n  name: 'mail-resend',\n  env: {\n    RESEND_API_KEY: { secret: true, description: 'API key from resend.com: without it, mail stays in devtools' },\n    MAIL_FROM: 'Sender address, for example \"Acme <hello@acme.com>\"',\n  },\n  setup(calm) {\n    const key = process.env.RESEND_API_KEY;\n    if (!key) {\n      calm.doctor(() =>\n        calm.config.mode === 'production'\n          ? [{ level: 'error', id: 'resend-key', title: 'RESEND_API_KEY is not set', detail: 'Emails cannot be delivered in production.' }]\n          : [],\n      );\n      return;\n    }\n    calm.mailer.use({\n      name: 'resend',\n      async send({ to, from, subject, text, html }) {\n        const res = await fetch('https://api.resend.com/emails', {\n          method: 'POST',\n          headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },\n          body: JSON.stringify({ from: process.env.MAIL_FROM || from, to: [to].flat(), subject, text, html }),\n        });\n        if (!res.ok) throw new Error(`Resend answered ${res.status}: ${(await res.text()).slice(0, 300)}`);\n        return res.json();\n      },\n    });\n  },\n});\n"
+    },
+    {
+      "path": "registry/blocks/mail-resend/files/app/blocks/mail-resend/AGENTS.md",
+      "type": "registry:file",
+      "target": "app/blocks/mail-resend/AGENTS.md",
+      "content": "# Email via Resend (block: mail-resend)\n\nDeliver emails (password resets, notifications) through the Resend HTTP API. No SDK, just fetch.\n\nThe code is in `app/blocks/mail-resend/` and belongs to this project. Options go in `calm.config.js` under `blocks['mail-resend']`; secrets go in `.env`.\n\n## For AI agents\n\n- Read first: `app/blocks/mail-resend/index.js` (one `calm.mailer.use` transport, about 30 lines).\n- Configuration: env `RESEND_API_KEY` (secret) and `MAIL_FROM`. No `calm.config.js` options. Without the key the block registers nothing: development mail stays in the devtools Mail panel and `calm doctor` reports an error in production.\n- Send mail with `app.mailer.send({ to, subject, text, html })` (`calm.mailer` inside blocks). Never call the Resend API directly from features, so tests and devtools keep seeing every message.\n- Invariant: never log or echo `RESEND_API_KEY`. Errors contain only the HTTP status and the first 300 characters of Resend's answer.\n- `MAIL_FROM` overrides the per message `from` and must be an address on a domain verified in Resend, otherwise Resend refuses the request.\n- The transport forwards only `from`, `to`, `subject`, `text` and `html`. To support `reply_to`, `cc`, `bcc`, `attachments`, `headers` or `tags`, map them in `send()` using Resend's field names. `meta` is stripped by the core before the transport sees it.\n- Only one mail transport is active: `calm.mailer.use` replaces the previous one, so do not install mail-smtp next to it.\n- Pitfall: Resend rate limits API requests (429). Send bulk mail from a job (jobs block) with retries, not in a loop inside a request.\n- Pitfall: `send()` throws on any non 2xx answer. The notifications block catches it; your own callers should too, or send from a job.\n\n## Official documentation\n\n- [Resend: Introduction](https://resend.com/docs/introduction)\n- [Resend API: Send email](https://resend.com/docs/api-reference/emails/send-email)\n- [Resend API reference (authentication, rate limits)](https://resend.com/docs/api-reference/introduction)\n- [Resend: Domains](https://resend.com/docs/dashboard/domains/introduction)\n\n## Usage\n\nSet RESEND_API_KEY and MAIL_FROM (a sender on a domain verified in Resend). In development without a key, emails still go to devtools.\n\n## Environment variables\n\n- `RESEND_API_KEY`\n- `MAIL_FROM`: My App <no-reply@example.com>\n\nMore: https://docs.calmapi.dev/blocks/mail-resend\n"
     }
   ]
 }

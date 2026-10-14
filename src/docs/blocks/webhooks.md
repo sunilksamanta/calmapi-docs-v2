@@ -259,3 +259,35 @@ await t.app.ext.webhooks.drain();   // and they are sent
 ```
 
 `receiverUrl` is a small `node:http` server your test starts on a random port. Check what it received with `verifyWebhook()` and the secret from the create response.
+
+<!-- block-guide:start (generated from block.json by scripts/sync-block-guides.mjs) -->
+
+## Official documentation
+
+Read these before changing the block; they are also in `app/blocks/webhooks/AGENTS.md` and in the devtools Blocks panel.
+
+- [Standard Webhooks](https://www.standardwebhooks.com/)
+- [Standard Webhooks specification (GitHub)](https://github.com/standard-webhooks/standard-webhooks/blob/main/spec/standard-webhooks.md)
+- [OWASP Server Side Request Forgery Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html)
+- [Node.js: http.request (lookup and agent options)](https://nodejs.org/api/http.html)
+- [MongoDB TTL indexes](https://www.mongodb.com/docs/manual/core/index-ttl/)
+
+## For AI agents
+
+Coding agents read these notes in `app/blocks/webhooks/AGENTS.md`:
+
+- Read first: `app/blocks/webhooks/index.js` (options, models, `dispatch`, `bodyFor`, the API), `delivery.js` (queue, retries, sender), `signing.js` (`sign`, `verifyWebhook`) and `ssrf.js` (`urlProblem`, `guardedLookup`).
+- Configuration: `calm.config.js` `blocks.webhooks`: `policy`, `globalPolicy`, `allowPrivate`, `requireHttps`, `maxEndpointsPerUser`, `maxEventsPerEndpoint`, `maxUrlLength`, `retrySchedule`, `timeoutMs`, `pollMs`, `concurrency`, `disableAfterFailures`, `keepDeliveriesDays`, `secretGraceHours`, `notifyOwner`. Env `WEBHOOKS_WORKER` (`off`: this instance does not send). Set `CALM_ENCRYPTION_KEYS` so secrets and queued payloads are encrypted.
+- Events: every `<resource>.created|updated|deleted|restored` emitted by resource services is sent to endpoints following that name, `<resource>.*` or `*`. New resources are followable automatically; opt out with `resource('x', { webhooks: false })`.
+- Task, a non resource event: extend `RESOURCE_EVENT`, `ACTIONS` and `eventsProblem` together, and build the body with the same visibility checks as `bodyFor`.
+- Invariant: per subscriber visibility. `bodyFor` uses `calm.app.canRead` (own endpoints) or `mayGoGlobal` plus `calm.app.inScope` (global) and `serialize()` for the endpoint owner. Never send `payload.doc` raw or skip these checks.
+- Invariant: Standard Webhooks signing. `webhook-id` is the same on every retry, `webhook-timestamp` is per attempt, `webhook-signature` is `v1,` + base64 HMAC-SHA256 of `id.timestamp.body` keyed with the decoded `whsec_` secret. The stored body string is exactly what is signed and sent; never re-serialize it.
+- Invariant: secrets are returned only by create and `rotate-secret`; `secret` and `previousSecret` are `select: false` and absent from every view. Never log them.
+- Invariant: SSRF. `urlProblem` runs on save and on every attempt, `guardedLookup` pins the connection to the checked public addresses, redirects are never followed. Keep `node:http(s)` with `lookup` (not fetch) and never turn `allowPrivate` on in production.
+- Invariant: endpoints are owner scoped; `findOwn` answers 404 for anyone else. Use it in every new `/:id` route.
+- Retries follow `retrySchedule` with 20% jitter, honoring `Retry-After` up to the last step. `410 Gone` disables at once; `disableAfterFailures` failed deliveries in a row disable the endpoint, emit `webhook.disabled` and email the owner.
+- Tests: `await t.idle()` then `await t.app.ext.webhooks.drain()`; use a `retrySchedule` in milliseconds.
+- Receivers: copy `signing.js` and call `verifyWebhook(secret, headers, rawBody)` with the raw body (not parsed JSON); dedupe on `webhook-id`, since deliveries are at least once and unordered.
+- Pitfall: the delivery log shows the endpoint owner a 2 KB payload preview and 1 KB of the receiver's answer.
+
+<!-- block-guide:end -->

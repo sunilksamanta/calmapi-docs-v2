@@ -1,61 +1,64 @@
-import {
-  Home, Rocket, FolderTree, Database, ShieldCheck, Settings, Route, Filter, KeyRound, TriangleAlert, SlidersHorizontal,
-  Gauge, FlaskConical, Terminal, Bot, RefreshCw, Blocks, BookOpen, ClipboardList, Clock, Send, Mail, Plug, Timer, Radio,
-  ArchiveRestore, HardDrive, CloudUpload, PackagePlus, Cloud, Shield, ShieldAlert, ArrowRightLeft, Zap, Layers, Package,
-  Gamepad2, FileText, Puzzle, Lightbulb, ScanSearch, Smartphone, Bell, BellRing, Key, ToggleRight, Repeat, WandSparkles, Inbox,
-  UserX, Webhook, Hammer, GitCompare, Lock, FileSearch, Eye, History, UserCog,
-} from 'lucide-react';
 import { sections } from '../lib/docs.js';
-import LegacyNav from './LegacyNav.jsx';
 import NavLink from './NavLink.jsx';
+import SidebarGroup from './SidebarGroup.jsx';
 import SidebarShell from './SidebarShell.jsx';
 
-const ICONS = {
-  Home, Rocket, FolderTree, Database, ShieldCheck, Settings, Route, Filter, KeyRound, TriangleAlert, SlidersHorizontal,
-  Gauge, FlaskConical, Terminal, Bot, RefreshCw, Blocks, BookOpen, ClipboardList, Clock, Send, Mail, Plug, Timer, Radio,
-  ArchiveRestore, HardDrive, CloudUpload, PackagePlus, Cloud, Shield, ShieldAlert, ArrowRightLeft, Zap, Layers, Package,
-  Gamepad2, FileText, Puzzle, Lightbulb, ScanSearch, Smartphone, Bell, BellRing, Key, ToggleRight, Repeat, WandSparkles, Inbox,
-  UserX, Webhook, Hammer, GitCompare, Lock, FileSearch, Eye, History, UserCog,
-};
+const isBlockPage = (page) => page.slug.startsWith('blocks/');
 
-function PageLink({ page }) {
-  const Icon = ICONS[page.icon] ?? FileText;
-  return (
-    <li>
-      <NavLink href={page.path}>
-        <Icon size={16} className="nav-icon" aria-hidden="true" />
-        <span>{page.nav}</span>
+function PageLinks({ pages }) {
+  return pages.map((page) => (
+    <li key={page.path}>
+      <NavLink href={page.path} mono={isBlockPage(page)}>
+        {page.nav}
       </NavLink>
     </li>
-  );
+  ));
 }
 
 /**
- * The sidebar is rendered on the server with every link, so crawlers see the whole site.
- * The open and close state on phones, the active link and the 1.x group run in the browser.
+ * The sidebar is rendered on the server with every link (collapsed groups keep theirs in the
+ * HTML, hidden), so crawlers see the whole site. Which group is open, the current page and the
+ * drawer on small screens run in the browser. The official blocks get a group of their own
+ * inside "Blocks", open on a block page.
  */
 function Sidebar() {
   return (
     <SidebarShell>
       <nav className="sidebar-nav" aria-label="Documentation">
-        {sections.map((section) =>
-          section.legacy ? (
-            <LegacyNav key={section.title} title={section.title} paths={section.pages.map((page) => page.path)}>
-              {section.pages.map((page) => (
-                <PageLink key={page.path} page={page} />
-              ))}
-            </LegacyNav>
-          ) : (
-            <div key={section.title} className="nav-section">
-              <h3 className="section-title">{section.title}</h3>
-              <ul className="nav-list">
-                {section.pages.map((page) => (
-                  <PageLink key={page.path} page={page} />
-                ))}
-              </ul>
-            </div>
-          ),
-        )}
+        {sections.map((section) => {
+          const paths = section.pages.map((page) => page.path);
+          const blocks = section.pages.filter(isBlockPage);
+          const id = `nav-${section.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+          if (!blocks.length) {
+            return (
+              <SidebarGroup key={section.title} id={id} title={section.title} paths={paths} defaultOpen={!section.legacy} legacy={section.legacy}>
+                <PageLinks pages={section.pages} />
+              </SidebarGroup>
+            );
+          }
+          // Blocks: the overview, the official blocks (a nested group), then building and publishing.
+          const first = section.pages.indexOf(blocks[0]);
+          const before = section.pages.slice(0, first);
+          const after = section.pages.slice(first).filter((page) => !isBlockPage(page));
+          return (
+            <SidebarGroup key={section.title} id={id} title={section.title} paths={paths} defaultOpen>
+              <PageLinks pages={before} />
+              <li>
+                <SidebarGroup
+                  id={`${id}-official`}
+                  title="Official blocks"
+                  count={blocks.length}
+                  paths={blocks.map((page) => page.path)}
+                  defaultOpen={false}
+                  nested
+                >
+                  <PageLinks pages={blocks} />
+                </SidebarGroup>
+              </li>
+              <PageLinks pages={after} />
+            </SidebarGroup>
+          );
+        })}
       </nav>
     </SidebarShell>
   );
