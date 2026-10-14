@@ -104,11 +104,11 @@ The registry is built in the calmapi repository and copied here:
 
 ```bash
 # in the calmapi repository
-cd v2 && node scripts/build-registry.js
+node scripts/build-registry.js
 
 # in this repository
-npm run sync-registry -- ../calmapi/v2           # or the path to v2/registry/r
-npm run sync-registry -- ../calmapi/v2 --prune   # also remove blocks that no longer exist
+npm run sync-registry -- ../calmapi              # or the path to registry/r
+npm run sync-registry -- ../calmapi --prune      # also remove blocks that no longer exist
 ```
 
 Commit the updated `public/r/` files. The script validates each item and refuses to copy a registry that has not been built.

@@ -82,7 +82,7 @@ Invalid configuration:
 | `pagination.defaultLimit` | `20` | Page size when `?limit` is absent |
 | `pagination.maxLimit` | `100` | Largest `?limit` allowed |
 | `unknownFields` | `'reject'` | Unknown body fields are a `422`. Any other value (`'strip'`) drops them silently. |
-| `rateLimit.enabled` | `true` (`false` in test mode) | |
+| `rateLimit.enabled` | `true` (`false` in test mode) | Counted in memory per process; with more than one instance add [rate-limit-mongo](/blocks/rate-limit-mongo) |
 | `rateLimit.global` | `{ windowMs: 60000, max: 300 }` | Every `/api` route, per IP |
 | `rateLimit.auth` | `{ windowMs: 900000, max: 10 }` | Login, register, password routes, per IP and route |
 | `auth.enabled` | `true` | Auth also needs a `user` resource |

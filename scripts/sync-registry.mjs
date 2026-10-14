@@ -2,11 +2,11 @@
 // Copy the built CalmAPI block registry into public/r so it is served at
 // https://docs.calmapi.dev/r/<name>.json (the URL `calm add --remote` and custom tooling use).
 //
-//   node scripts/sync-registry.mjs ../calmapi/v2            a calmapi v2 checkout
-//   node scripts/sync-registry.mjs ../calmapi/v2/registry/r  or the built folder itself
+//   node scripts/sync-registry.mjs ../calmapi               a calmapi checkout
+//   node scripts/sync-registry.mjs ../calmapi/registry/r    or the built folder itself
 //   node scripts/sync-registry.mjs <path> --prune             also remove blocks that no longer exist
 //
-// Build the registry first in the calmapi repo: `node scripts/build-registry.js` (v2 folder).
+// Build the registry first in the calmapi repo: `node scripts/build-registry.js`.
 
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -23,7 +23,7 @@ const fail = (message) => {
   process.exit(1);
 };
 
-if (!input) fail('pass the path to a calmapi v2 checkout (or its registry/r folder).\n  node scripts/sync-registry.mjs ../calmapi/v2');
+if (!input) fail('pass the path to a calmapi checkout (or its registry/r folder).\n  node scripts/sync-registry.mjs ../calmapi');
 
 const base = resolve(input);
 const candidates = [base, join(base, 'registry', 'r'), join(base, 'v2', 'registry', 'r')];

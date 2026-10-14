@@ -61,6 +61,8 @@ MONGODB_TEST_URI=mongodb://localhost:27018 npm test   # another server
 CALM_TEST_LOG=info npm test                           # see the app logs
 ```
 
+`MONGODB_TEST_URI` can also go in `.env` (handy with Atlas): `createTestApp` reads `.env` before it picks the server. Leave the database name out; each test app gets its own `calm_test_...` database, dropped on `t.close()`.
+
 ## The test client
 
 | Member | Does |

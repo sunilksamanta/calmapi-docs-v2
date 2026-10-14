@@ -93,16 +93,17 @@ Field syntax: `name:type[:arg][=default][+modifier...]`
 | Spec | Generated |
 |---|---|
 | `title:string+required` | `f.string().required()` |
-| `price:number=0` | `f.number().default(0).sortable().filterable()` |
+| `price:number=0` | `f.number().default(0)` |
+| `price:number+filterable+sortable` | `f.number().sortable().filterable()` |
 | `code:string=A-1+unique` | `f.string().default('A-1').unique()` (modifiers may follow a default) |
-| `status:enum:draft,live=draft` | `f.enum(['draft', 'live']).default('draft').filterable()` |
-| `category:ref:category` | `f.ref('category').filterable()` |
-| `author:ref` | `f.ref('author').filterable()` (the field name is the resource) |
+| `status:enum:draft,live=draft+filterable` | `f.enum(['draft', 'live']).default('draft').filterable()` |
+| `category:ref:category` | `f.ref('category')` |
+| `author:ref` | `f.ref('author')` (the field name is the resource) |
 | `tags:string+array` | `f.array(f.string()).default([])` |
 | `name:string+required+searchable+sortable` | `f.string().required().searchable().sortable()` |
-| `publishedAt:date=now` | `f.date().default(() => new Date()).sortable().filterable()` |
+| `publishedAt:date=now+sortable` | `f.date().default(() => new Date()).sortable()` |
 
-Types: `string text email url password number integer boolean date enum ref id json` (also `str`, `num`, `float`, `int`, `bool`, `datetime`, `object`). Modifiers: `required` (also `req`), `array` (also `list`, `many`), and `searchable sortable filterable unique index hidden writeOnly readOnly immutable populate owner`. Enums, booleans and refs are made filterable, numbers and dates filterable and sortable. A default may contain `+` (`phone:string=+44`); only known modifiers after it are read as modifiers.
+Types: `string text email url password number integer boolean date enum ref id json` (also `str`, `num`, `float`, `int`, `bool`, `datetime`, `object`). Modifiers: `required` (also `req`), `array` (also `list`, `many`), and `searchable sortable filterable unique index hidden writeOnly readOnly immutable populate owner`. You get exactly the modifiers you write: nothing is made filterable or sortable unasked, so clients can only filter and sort on what you chose (`price:number+filterable+sortable`). When a field could use them, the command says so. A default may contain `+` (`phone:string=+44`); only known modifiers after it are read as modifiers.
 
 Every form above is safe to type unquoted in bash, zsh (the macOS default shell) and fish. The short forms of earlier releases still work: `title:string!` for `+required` and `tags:string[]` for `+array`. In zsh they need quotes, because `!` starts history expansion (`zsh: event not found`) and `[]` is a filename pattern:
 
@@ -308,7 +309,7 @@ Security and correctness checks: config, policies, private fields, personal data
   CalmAPI doctor · my-api · production rules
 
   ! warn   No mail transport in production
-           Password reset emails cannot be delivered. Run `calm add @calmapi/mail-resend` or register a transport.
+           Password reset emails cannot be delivered. Run `calm add mail-resend` or register a transport.
   • info   TRUST_PROXY is not set
            Behind a load balancer every client shares one IP for rate limiting. Set TRUST_PROXY (e.g. 1).
 

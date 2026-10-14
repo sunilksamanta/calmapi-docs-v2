@@ -2,6 +2,8 @@
 
 Stores rate limit counters in MongoDB, so limits hold across every instance of your API instead of per process.
 
+**When you need it:** not for one server, where the built-in in-memory store is right. You need it as soon as more than one process serves the API: several containers or VMs, a load balancer, PM2 cluster mode, or autoscaling.
+
 ```bash
 npx calm add rate-limit-mongo
 ```

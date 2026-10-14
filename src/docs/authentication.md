@@ -133,7 +133,10 @@ curl http://localhost:5001/api/auth/sessions -H "Authorization: Bearer $TOKEN"
 
 Register, login, password change, forgot and reset share the **auth** limiter: 10 requests per 15 minutes per client IP and endpoint (`rateLimit.auth`). Every `/api` route also has a **global** limit of 300 requests per minute per IP (`rateLimit.global`). Responses carry `RateLimit-Limit`, `RateLimit-Remaining` and `RateLimit-Reset`; over the limit you get `429 RATE_LIMITED` with `Retry-After`.
 
-Limits are counted per process in memory. Behind a proxy set `TRUST_PROXY` so the real client IP is used, and with several instances add [rate-limit-mongo](/blocks/rate-limit-mongo). Rate limiting is off in tests (`mode: 'test'`).
+> [!IMPORTANT]
+> **Limits are counted in memory, per process.** That is right for one server. As soon as you run more than one (several containers, a load balancer, PM2 cluster mode, autoscaling), each process counts on its own and a client gets the limit once per process: with three instances the login limit of 10 becomes 30. Add [rate-limit-mongo](/blocks/rate-limit-mongo) (`npx calm add rate-limit-mongo`) so every instance shares one counter.
+
+Behind a proxy, also set `TRUST_PROXY` so the real client IP is used. Rate limiting is off in tests (`mode: 'test'`).
 
 ## Account lockout
 

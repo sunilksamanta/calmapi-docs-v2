@@ -12,6 +12,16 @@ npx calmapi@next doctor
 
 It checks the project against the advisories published for 1.x templates and prints the fix for each finding. Apply those fixes to the 1.x app running in production before you start migrating.
 
+### Which command is which
+
+This guide uses three commands. They are not interchangeable:
+
+| Command | What it is | Where you run it |
+|---|---|---|
+| `npx calmapi@next doctor` | The CalmAPI 2 CLI, downloaded by npx for this one run. It notices a 1.x project and checks it. | Inside your **1.x** project, which does not have the 2.0 CLI installed |
+| `npx calm doctor` | The same CLI, installed in a 2.0 project as a dev dependency. `calm` and `calmapi` are two names for the same binary. | Inside your **2.0** project |
+| `calmapi generate module x` | The **1.x** generator. It no longer exists; in 2.0 use `npx calm make resource x field:type ...` | Nowhere, from now on |
+
 ## Concept map
 
 | 1.x | 2.0 |
@@ -85,6 +95,25 @@ export default class PostService extends ResourceService {
 
 See [Errors](/errors) and [Querying](/querying) for the details.
 
+## Stored data: `_id` stays, the API says `id`
+
+Your documents do not change. MongoDB still stores every document with its `_id` (an ObjectId), and references between collections stay ObjectIds, so a 2.0 resource reads the collections 1.x wrote. Only the API changes the name:
+
+```js
+// In MongoDB (unchanged, as 1.x wrote it)
+{ _id: ObjectId('6acb46a57e4a738ebdd998b4'), title: 'Hello', createdBy: ObjectId('6acb46a57e4a738ebdd998b1'), __v: 0 }
+
+// From GET /api/posts/6acb46a57e4a738ebdd998b4 in 2.0
+{ "data": { "id": "6acb46a57e4a738ebdd998b4", "title": "Hello", "createdBy": "6acb46a57e4a738ebdd998b1" } }
+```
+
+- **Responses** carry `id` (a string) and never `_id`. References are id strings too, or the populated object with its own `id` when you ask for `?include=createdBy`.
+- **Requests** use `id` as well: `GET /api/posts/:id`, `?id[in]=a,b`, `sort=id`, and plain id strings in reference fields of a body.
+- **`__v`** from 1.x stays in old documents and is ignored: 2.0 neither returns it nor updates it.
+- **In your own code** (services, routes, scripts) you still work with Mongoose documents, so it is `doc._id` there, exactly as in 1.x.
+
+On the frontend, replace `item._id` with `item.id`. No data migration script is needed.
+
 ## Authentication changes
 
 - **Users sign in again.** 1.x issued JWTs; 2.0 uses opaque session tokens stored as hashes in `calm_sessions`. Existing tokens are not accepted, so every user logs in once after the switch.
@@ -121,5 +150,11 @@ See [Errors](/errors) and [Querying](/querying) for the details.
 7. **Update your frontend** for the new response shape, status codes, pagination and auth.
 
 8. **Switch over** and let users sign in again.
+
+## Support for 1.x
+
+- **No new features.** CalmAPI 1.x is no longer developed. Its code stays on the [`v1` branch](https://github.com/sunilksamanta/calmapi/tree/v1) and the 1.x package stays installable from npm.
+- **Security advisories until 2.0 has been stable for 12 months.** Problems found in the 1.x templates are published as advisories with a fix, and `npx calmapi@next doctor` checks your project against them. 1.x copies its code into your project, so you apply the fix yourself; there is no 1.x package update to install.
+- **After that**, 1.x gets nothing more. Plan the move to 2.0 within that window.
 
 Questions are welcome in [GitHub Discussions](https://github.com/sunilksamanta/calmapi/discussions). The [1.x documentation](/v1) stays available while you migrate.

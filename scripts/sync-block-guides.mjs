@@ -1,16 +1,16 @@
 #!/usr/bin/env node
-// Block pages from a calmapi v2 checkout: a page for every block that has none yet (from its
+// Block pages from a calmapi checkout: a page for every block that has none yet (from its
 // docs.md), and on every block page the generated "Official documentation" and "For AI agents"
 // sections from block.json (links, agents), between markers so they can be written again.
 //
-//   node scripts/sync-block-guides.mjs ../calmapi/v2
+//   node scripts/sync-block-guides.mjs ../calmapi
 
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const source = resolve(process.argv[2] ?? '../calmapi/v2');
+const source = resolve(process.argv[2] ?? '../calmapi');
 const blocksDir = join(source, 'registry', 'blocks');
 if (!existsSync(blocksDir)) {
   console.error(`sync-block-guides: no registry/blocks under ${source}`);

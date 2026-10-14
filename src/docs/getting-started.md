@@ -5,11 +5,32 @@ Create a project, run it, and talk to it with `curl`. This takes about five minu
 ## Requirements
 
 - **Node.js 22.12 or newer** (24 LTS recommended). The CLI refuses to run on older versions.
-- **MongoDB** 6 or newer, local or hosted (for example MongoDB Atlas). For a quick local server:
+- **MongoDB 6 or newer**, on your machine or hosted. Pick one of the options below.
+
+### Option A: MongoDB with Docker
 
 ```bash
 docker run -d --name mongo -p 27017:27017 mongo:8
 ```
+
+That gives you `mongodb://127.0.0.1:27017`, the default CalmAPI uses. `docker start mongo` brings it back after a reboot.
+
+### Option B: MongoDB Atlas (hosted, free tier)
+
+1. Sign up at [mongodb.com/atlas](https://www.mongodb.com/cloud/atlas/register) and create a free **M0** cluster.
+2. **Database Access**: add a database user with a password (role: *Read and write to any database*).
+3. **Network Access**: add your current IP address. `0.0.0.0/0` (anywhere) also works for a quick try, but do not keep it for production.
+4. **Connect** > **Drivers**: copy the connection string, put your password in it, and add a database name after the host:
+
+```text
+mongodb+srv://ada:<password>@cluster0.abc12.mongodb.net/my_api?retryWrites=true&w=majority
+```
+
+Give that string to the wizard below (or put it in `.env` later). If the password has characters like `@`, `:` or `/`, URL-encode them (`@` becomes `%40`).
+
+### Option C: MongoDB installed locally
+
+Follow the [official install guide](https://www.mongodb.com/docs/manual/administration/install-community/) for your system (on macOS: `brew tap mongodb/brew && brew install mongodb-community && brew services start mongodb-community`). It listens on `127.0.0.1:27017`, like Docker.
 
 ## Create a project
 
@@ -21,8 +42,10 @@ The wizard asks for:
 
 1. **Project folder** (default `my-api`).
 2. **Template**: `api` or `minimal` (see below).
-3. **MongoDB URI** (default `mongodb://127.0.0.1:27017/<project_name>`), written to `.env`.
+3. **MongoDB URI** (default `mongodb://127.0.0.1:27017/<project_name>`), written to `.env`. Paste your Atlas string here if you use Atlas.
 4. Whether to **install dependencies** and **initialize git**.
+
+The default database is named after the folder with `-` turned into `_`: `my-api` gives `my_api`. Dashes are allowed in MongoDB names, but underscores avoid quoting in the shell and in tools like `mongosh`. Any name works: edit `MONGODB_URI` in `.env`.
 
 To skip the questions, pass flags after `--` so npm forwards them:
 
@@ -35,7 +58,20 @@ npm create calmapi@latest my-api -- --yes --template api --db mongodb://127.0.0.
 | `api` (default) | A `user` resource with sign up, login, sessions and password reset under `/api/auth`, an example `post` resource with a service and custom routes, and a test. |
 | `minimal` | Just the framework, an `app/routes.js` with `GET /api/hello`, and a test. No `user` resource, so no auth until you add one. |
 
-Every template also contains `calm/` (the framework), `calm.config.js`, `calm.lock`, `.env`, `AGENTS.md`, a `Dockerfile` and an ESLint config. See [Project structure](/project-structure).
+Every template also contains:
+
+| File | What it is for |
+|---|---|
+| `calm/` | The framework itself, copied into your project. It is your code: read it, change it. |
+| `calm.config.js` | Settings in code: CORS, rate limits, auth, invariants. See [Configuration](/configuration). |
+| `calm.lock` | The framework version and a hash of every file in `calm/` and in installed blocks. `calm upgrade` uses it to tell your edits apart from upstream changes, and `calm doctor` to report changed files. Commit it; do not edit it by hand. |
+| `.env` | Settings for this machine (`MONGODB_URI`, `PORT`, `APP_URL`). Git ignores it. |
+| `.env.example` | The same settings without secrets, committed. On a new machine: `cp .env.example .env`. |
+| `Dockerfile` | A production image: `node:24-alpine`, production dependencies only, runs as the `node` user, exposes 5001, with a health check on `/health/ready`. Build it with `docker build -t my-api .`, see [Deployment](/deployment). |
+| `AGENTS.md`, `CLAUDE.md` | Instructions for AI coding agents. |
+| `eslint.config.js` | Lint rules (`npm run lint`). |
+
+See [Project structure](/project-structure) for everything else.
 
 ## Run it
 
@@ -53,6 +89,8 @@ npm run dev
 
   2 resources · 30 routes · 0 blocks · MongoDB connected
 ```
+
+The API listens on **port 5001**. Ports 3000 and 5000 are left free on purpose: 3000 is where most frontend dev servers (Next.js, Vite, React Native tools) start, and 5000 is taken by AirPlay on macOS. Change it with `PORT` (and `APP_URL`) in `.env`.
 
 `npm run dev` runs `calm dev`: development mode, a restart whenever something in `app/`, `calm/`, `calm.config.js`, `server.js` or `.env` changes, and [devtools](/devtools) at `/_calm`. If MongoDB is not reachable, the app retries a few times and then exits with a clear message.
 
@@ -205,7 +243,7 @@ Visit `http://localhost:5001/_calm`. Every request you just made is there with i
 ## Add your own resource
 
 ```bash
-npx calm make resource product name:string+required+searchable price:number+required status:enum:draft,live=draft --service
+npx calm make resource product name:string+required+searchable price:number+required+sortable status:enum:draft,live=draft+filterable --service
 ```
 
 ```text
@@ -215,14 +253,25 @@ npx calm make resource product name:string+required+searchable price:number+requ
   + test/products.test.js
 ```
 
-The dev server restarts and `/api/products` is live with all five CRUD routes. Open the resource file to adjust fields and policies, then:
+The dev server restarts and `/api/products` is live with all five CRUD routes. Each field gets exactly the modifiers you typed: here clients may search by name, sort by price and filter by status, and nothing else. Leave out `+sortable` and `?sort=price` is a `400`. Open the resource file to adjust fields and policies, then:
 
 ```bash
 npx calm routes    # every route with its policy
 npx calm doctor    # security and correctness checks
 npx calm audit     # every route as every role, on a throwaway database
-npm test           # node --test, needs MongoDB
+npm test           # node --test, on throwaway databases
 ```
+
+## Which database does what
+
+| Command | Database |
+|---|---|
+| `npm run dev`, `npm start` | `MONGODB_URI` from the environment, else `.env` (`my_api`) |
+| `npm test` | A new `calm_test_<random>` database per test app, on `MONGODB_TEST_URI` (default `mongodb://127.0.0.1:27017`), dropped when the test closes it |
+| `npx calm audit` | The same kind of throwaway database on `MONGODB_TEST_URI`, dropped at the end |
+| `npx calm dev --agent-db` | A copy of your dev database (`my_api_agent`), dropped when `calm dev` stops |
+
+Tests and the audit never touch your development data. With Atlas, or any server that is not on `127.0.0.1:27017`, set `MONGODB_TEST_URI` too, in `.env` or the environment, without a database name (for example `MONGODB_TEST_URI=mongodb+srv://ada:<password>@cluster0.abc12.mongodb.net`). The database user needs permission to create and drop databases. See [Testing](/testing).
 
 ## Next steps
 

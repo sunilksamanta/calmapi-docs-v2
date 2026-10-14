@@ -143,7 +143,7 @@ Sessions live in MongoDB, so any instance can serve any user. A few things are p
 
 | Concern | Default | With several instances |
 |---|---|---|
-| Rate limits | counted in memory | add [rate-limit-mongo](/blocks/rate-limit-mongo) |
+| Rate limits | counted in memory, per process | **required:** add [rate-limit-mongo](/blocks/rate-limit-mongo), or each instance allows the full limit on its own |
 | Background jobs | every instance runs a worker | fine (jobs are claimed atomically); or set `JOBS_WORKER=off` on web instances and run dedicated workers |
 | Uploads | [storage-local](/blocks/storage-local) writes to local disk | use [storage-s3](/blocks/storage-s3) |
 | Realtime events | in-process | subscribers only see changes from their instance; see [realtime-sse](/blocks/realtime-sse#several-instances) |
