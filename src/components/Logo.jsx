@@ -1,6 +1,6 @@
 // The Calm API logo: the line lotus and the "Calm API" wordmark (Spectral Regular, outlined),
 // drawn in currentColor so CSS gives it navy on light pages and moon on dark ones.
-// Source and usage guide: github.com/sunilksamanta/calmapi, v2/brand (the website uses the same file).
+// Source and usage guide: github.com/sunilksamanta/calmapi, brand/ (the website uses the same file).
 
 const LOTUS = [
   'M32 12C38.5 19 38.5 34 32 43C25.5 34 25.5 19 32 12Z',
