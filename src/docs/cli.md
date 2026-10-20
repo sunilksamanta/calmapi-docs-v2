@@ -254,10 +254,12 @@ It refuses to run with `NODE_ENV=production`. In devtools, **Sample data** in th
 ## calm routes
 
 ```text
-calm routes [--json]
+calm routes [path] [--resource <name>] [--json]
 ```
 
 Every route the app serves with its method, path, policy and the file it comes from. Defaulted policies are marked `(default)`. `--json` prints machine readable output.
+
+A path filter narrows the list to routes whose path contains it (`calm routes products`, any case), and `--resource <name>` to one resource's routes (`calm routes --resource product`); both work together and with `--json`. When nothing matches, the command says so and exits 0 (`[]` with `--json`).
 
 ## calm openapi
 
