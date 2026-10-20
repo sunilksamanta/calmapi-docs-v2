@@ -816,3 +816,13 @@
     padding: 5px 12px;
   }
 }
+
+.footer .fine + .fine {
+  margin-top: 8px;
+}
+
+.footer .fine a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

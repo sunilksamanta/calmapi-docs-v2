@@ -35,8 +35,10 @@ Follow the [official install guide](https://www.mongodb.com/docs/manual/administ
 ## Create a project
 
 ```bash
-npm create calmapi@latest my-api
+npm create calmapi@latest my-api     # CalmAPI 2 (beta)
 ```
+
+CalmAPI 2 is in beta: ready to build on, but APIs may still change before 2.0.0.
 
 The wizard asks for:
 

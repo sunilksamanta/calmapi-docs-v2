@@ -3,7 +3,7 @@
 **CalmAPI 2 is the backend framework you own.** Resources, policies, auth, devtools and an upgrade path for Node.js and MongoDB, with every line of framework code living in your repo.
 
 ```bash
-npm create calmapi@latest my-api
+npm create calmapi@latest my-api     # CalmAPI 2 (beta)
 cd my-api
 npm run dev
 ```

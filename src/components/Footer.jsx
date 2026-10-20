@@ -27,6 +27,7 @@ const columns = [
       ['GitHub', SITE.github],
       ['npm', NPM],
       ['Blocks', '/blocks'],
+      ['Roadmap', `${SITE.github}/blob/master/ROADMAP.md`],
       ['Report a vulnerability', `${SITE.github}/security`],
     ],
   },
@@ -52,6 +53,13 @@ function Footer() {
             <Logo className="logo" />
           </Link>
           <p className="fine">The Node.js backend framework you own. MIT licensed. Created by Sunil Kumar Samanta.</p>
+          <p className="fine">
+            Built and maintained by the Broadifi team. Need help shipping with CalmAPI?{' '}
+            <a href="https://www.broadifitech.com/contact" target="_blank" rel="noopener noreferrer">
+              Talk to the maintainers
+            </a>
+            .
+          </p>
         </div>
         {columns.map((column) => (
           <div key={column.title}>
